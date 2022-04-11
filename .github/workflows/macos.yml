@@ -1,0 +1,29 @@
+name: macos
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+
+      - uses: actions/checkout@v2
+
+      # Uses Go version from the repository.
+      - name: Read .go-version file
+        id: goversion
+        run: echo "::set-output name=version::$(cat .go-version)"
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: "${{ steps.goversion.outputs.version }}"
+
+      - name: Run build
+        run: go build
+
+      - name: Run test
+        run: go test -v ./...
