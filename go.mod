@@ -3,7 +3,7 @@ module github.com/elastic/elastic-agent-system-metrics
 go 1.17
 
 require (
-	github.com/elastic/elastic-agent-libs v0.1.2-0.20220411163553-45d6da9489d4
+	github.com/elastic/elastic-agent-libs v0.1.3-0.20220413130536-4b45f2742994
 	github.com/elastic/go-sysinfo v1.7.1
 	github.com/elastic/gosigar v0.14.2
 	github.com/magefile/mage v1.13.0
