@@ -15,6 +15,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
+//go:build linux
+// +build linux
+
 package cgroup
 
 import (
@@ -129,7 +132,7 @@ func TestSupportedSubsystems(t *testing.T) {
 
 func TestSupportedSubsystemsErrCgroupsMissing(t *testing.T) {
 	_, err := SupportedSubsystems(resolve.NewTestResolver("testdata/doesnotexist"))
-	if errors.Is(err, ErrCgroupsMissing) {
+	if !errors.Is(err, ErrCgroupsMissing) {
 		t.Fatalf("expected ErrCgroupsMissing, but got %v", err)
 	}
 }

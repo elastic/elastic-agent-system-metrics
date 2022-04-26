@@ -15,13 +15,33 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//go:build tools
-// +build tools
+//go:build aix || darwin || freebsd || linux
+// +build aix darwin freebsd linux
 
-package tools
+package filesystem
 
 import (
-	_ "go.elastic.co/go-licence-detector"
+	"fmt"
+	"syscall"
 
-	_ "github.com/elastic/elastic-agent-libs/dev-tools/mage"
+	"github.com/elastic/elastic-agent-libs/opt"
 )
+
+// GetUsage returns the filesystem usage
+func (fs *FSStat) GetUsage() error {
+	stat := syscall.Statfs_t{}
+	err := syscall.Statfs(fs.Directory, &stat)
+	if err != nil {
+		return fmt.Errorf("error in Statfs syscall: %w", err)
+	}
+
+	fs.Total = opt.UintWith(stat.Blocks).MultUint64OrNone(uint64(stat.Bsize))
+	fs.Free = opt.UintWith(stat.Bfree).MultUint64OrNone(uint64(stat.Bsize))
+	fs.Avail = opt.UintWith(stat.Bavail).MultUint64OrNone(uint64(stat.Bsize))
+	fs.Files = opt.UintWith(stat.Files)
+	fs.FreeFiles = opt.UintWith(stat.Ffree)
+
+	fs.fillMetrics()
+
+	return nil
+}

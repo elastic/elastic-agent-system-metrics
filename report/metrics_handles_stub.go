@@ -15,13 +15,15 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//go:build tools
-// +build tools
+//go:build !windows
+// +build !windows
 
-package tools
+package report
 
 import (
-	_ "go.elastic.co/go-licence-detector"
-
-	_ "github.com/elastic/elastic-agent-libs/dev-tools/mage"
+	"github.com/elastic/elastic-agent-libs/logp"
+	"github.com/elastic/elastic-agent-libs/monitoring"
 )
+
+// Counting number of open handles is only supported on Windows.
+func SetupWindowsHandlesMetrics(_ *logp.Logger, _ *monitoring.Registry) {}

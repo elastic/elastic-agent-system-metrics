@@ -15,13 +15,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//go:build tools
-// +build tools
+//go:build !linux && (!freebsd || !cgo)
+// +build !linux
+// +build !freebsd !cgo
 
-package tools
+package report
 
 import (
-	_ "go.elastic.co/go-licence-detector"
-
-	_ "github.com/elastic/elastic-agent-libs/dev-tools/mage"
+	"github.com/elastic/elastic-agent-libs/logp"
+	"github.com/elastic/elastic-agent-libs/monitoring"
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/process"
 )
+
+// FDUsage is only supported on Linux and FreeBSD.
+func SetupLinuxBSDFDMetrics(_ *logp.Logger, _ *monitoring.Registry, _ *process.Stats) {
+}
