@@ -86,7 +86,7 @@ func TestFilter(t *testing.T) {
 	err := testConfig.Init()
 	assert.NoError(t, err, "Init")
 
-	procData, err := testConfig.GetOne(os.Getpid())
+	procData, _, err := testConfig.Get()
 	assert.NoError(t, err, "GetOne")
 	assert.Equal(t, 2, len(procData))
 
@@ -132,14 +132,14 @@ func TestGetProcess(t *testing.T) {
 	assert.NotEqual(t, "unknown", process.State)
 
 	// Memory Checks
-	assert.True(t, (process.Memory.Size.ValueOr(0) >= 0))      //nolint: staticcheck // it's not pointless in this case?
-	assert.True(t, (process.Memory.Rss.Bytes.ValueOr(0) >= 0)) //nolint: staticcheck // it's not pointless in this case?
-	assert.True(t, (process.Memory.Share.ValueOr(0) >= 0))     //nolint: staticcheck // it's not pointless in this case?
+	assert.True(t, process.Memory.Size.Exists())
+	assert.True(t, (process.Memory.Rss.Bytes.ValueOr(0) > 0))
+	assert.True(t, process.Memory.Share.Exists())
 
 	// CPU Checks
 	assert.True(t, (process.CPU.Total.Value.ValueOr(0) >= 0))
-	assert.True(t, (process.CPU.User.Ticks.ValueOr(0) >= 0))   //nolint: staticcheck // it's not pointless in this case?
-	assert.True(t, (process.CPU.System.Ticks.ValueOr(0) >= 0)) //nolint: staticcheck // it's not pointless in this case?
+	assert.True(t, process.CPU.User.Ticks.Exists())
+	assert.True(t, process.CPU.System.Ticks.Exists())
 
 	assert.True(t, (process.SampleTime.Unix() <= time.Now().Unix()))
 
