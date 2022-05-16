@@ -18,6 +18,7 @@
 package process
 
 import (
+	"math"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/opt"
@@ -84,6 +85,11 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 	totalCPUDeltaMillis := int64(s1.CPU.Total.Ticks.ValueOr(0) - s0.CPU.Total.Ticks.ValueOr(0))
 
 	pct := float64(totalCPUDeltaMillis) / float64(timeDeltaDur)
+	// In theory this can only happen if the time delta is 0, which is unlikely but possible.
+	// With all the type conversion and non-integer math, this is probably the safest way to check.
+	if math.IsNaN(pct) {
+		return s1
+	}
 	normalizedPct := pct / float64(numcpu.NumCPU())
 
 	s1.CPU.Total.Norm.Pct = opt.FloatWith(metric.Round(normalizedPct))
