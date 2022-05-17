@@ -134,7 +134,7 @@ func TestGetProcess(t *testing.T) {
 	// Memory Checks
 	assert.True(t, process.Memory.Size.Exists())
 	assert.True(t, (process.Memory.Rss.Bytes.ValueOr(0) > 0))
-	if runtime.GOOS != "windows" {
+	if runtime.GOOS == "linux" {
 		assert.True(t, process.Memory.Share.Exists())
 	}
 
