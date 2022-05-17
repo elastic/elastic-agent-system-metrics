@@ -134,7 +134,9 @@ func TestGetProcess(t *testing.T) {
 	// Memory Checks
 	assert.True(t, process.Memory.Size.Exists())
 	assert.True(t, (process.Memory.Rss.Bytes.ValueOr(0) > 0))
-	assert.True(t, process.Memory.Share.Exists())
+	if runtime.GOOS != "windows" {
+		assert.True(t, process.Memory.Share.Exists())
+	}
 
 	// CPU Checks
 	assert.True(t, (process.CPU.Total.Value.ValueOr(0) >= 0))
