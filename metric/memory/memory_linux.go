@@ -20,7 +20,7 @@ package memory
 import (
 	"github.com/pkg/errors"
 
-	"github.com/elastic/beats/v7/libbeat/opt"
+	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
@@ -48,7 +48,7 @@ func get(rootfs resolve.Resolver) (Memory, error) {
 	// overlook parsing issues here
 	// On the very small chance some of these don't exist,
 	// It's not the end of the world
-	buffers, _ := table["Buffers"]
+	buffers := table["Buffers"]
 
 	if memAvail, ok := table["MemAvailable"]; ok {
 		// MemAvailable is in /proc/meminfo (kernel 3.14+)

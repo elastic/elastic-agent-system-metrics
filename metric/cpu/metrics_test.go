@@ -22,8 +22,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/elastic/beats/v7/libbeat/opt"
 	"github.com/elastic/elastic-agent-libs/mapstr"
+	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
@@ -51,7 +51,6 @@ func TestCoresMonitorSample(t *testing.T) {
 	}
 
 	for _, s := range sample {
-		evt := mapstr.M{}
 		metricOpts := MetricOpts{Percentages: true, Ticks: true}
 		evt, err := s.Format(metricOpts)
 		assert.NoError(t, err, "error in Format")
@@ -107,6 +106,7 @@ func TestMetricsRounding(t *testing.T) {
 	}
 
 	evt, err := sample.Format(MetricOpts{NormalizedPercentages: true})
+	assert.NoError(t, err, "error in Format")
 	normUser, err := evt.GetValue("user.norm.pct")
 	assert.NoError(t, err, "error getting user.norm.pct")
 	normSystem, err := evt.GetValue("system.norm.pct")

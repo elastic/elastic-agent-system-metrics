@@ -18,10 +18,10 @@
 package memory
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
-	"github.com/elastic/beats/v7/libbeat/common"
-	"github.com/elastic/beats/v7/libbeat/opt"
+	"github.com/elastic/elastic-agent-libs/opt"
+	"github.com/elastic/elastic-agent-system-metrics/metric"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
@@ -69,7 +69,7 @@ type SwapMetrics struct {
 func Get(procfs resolve.Resolver) (Memory, error) {
 	base, err := get(procfs)
 	if err != nil {
-		return Memory{}, errors.Wrap(err, "error getting system memory info")
+		return Memory{}, fmt.Errorf("error getting system memory info: %w", err)
 	}
 	base.fillPercentages()
 	return base, nil
@@ -90,14 +90,14 @@ func (base *Memory) fillPercentages() {
 	// In theory, `Used` and `Total` are available everywhere, so assume values are good.
 	if base.Total.Exists() && base.Total.ValueOr(0) != 0 {
 		percUsed := float64(base.Used.Bytes.ValueOr(0)) / float64(base.Total.ValueOr(1))
-		base.Used.Pct = opt.FloatWith(common.Round(percUsed, common.DefaultDecimalPlacesCount))
+		base.Used.Pct = opt.FloatWith(metric.Round(percUsed))
 
 		actualPercUsed := float64(base.Actual.Used.Bytes.ValueOr(0)) / float64(base.Total.ValueOr(0))
-		base.Actual.Used.Pct = opt.FloatWith(common.Round(actualPercUsed, common.DefaultDecimalPlacesCount))
+		base.Actual.Used.Pct = opt.FloatWith(metric.Round(actualPercUsed))
 	}
 
 	if base.Swap.Total.ValueOr(0) != 0 && base.Swap.Used.Bytes.Exists() {
 		perc := float64(base.Swap.Used.Bytes.ValueOr(0)) / float64(base.Swap.Total.ValueOr(0))
-		base.Swap.Used.Pct = opt.FloatWith(common.Round(perc, common.DefaultDecimalPlacesCount))
+		base.Swap.Used.Pct = opt.FloatWith(metric.Round(perc))
 	}
 }

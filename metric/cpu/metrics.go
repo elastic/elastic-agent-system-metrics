@@ -18,11 +18,12 @@
 package cpu
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
 
-	"github.com/elastic/beats/v7/libbeat/common"
-	"github.com/elastic/beats/v7/libbeat/opt"
 	"github.com/elastic/elastic-agent-libs/mapstr"
+	"github.com/elastic/elastic-agent-libs/opt"
+	"github.com/elastic/elastic-agent-system-metrics/metric"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
@@ -85,7 +86,7 @@ func New(hostfs resolve.Resolver) *Monitor {
 func (m *Monitor) Fetch() (Metrics, error) {
 	metric, err := Get(m.Hostfs)
 	if err != nil {
-		return Metrics{}, errors.Wrap(err, "Error fetching CPU metrics")
+		return Metrics{}, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
 
 	oldLastSample := m.lastSample
@@ -100,7 +101,7 @@ func (m *Monitor) FetchCores() ([]Metrics, error) {
 
 	metric, err := Get(m.Hostfs)
 	if err != nil {
-		return nil, errors.Wrap(err, "Error fetching CPU metrics")
+		return nil, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
 
 	coreMetrics := make([]Metrics, len(metric.list))
@@ -133,7 +134,7 @@ func (metric Metrics) Format(opts MetricOpts) (mapstr.M, error) {
 
 	timeDelta := metric.currentSample.Total() - metric.previousSample.Total()
 	if timeDelta <= 0 {
-		return nil, errors.New("Previous sample is newer than current sample")
+		return nil, errors.New("previous sample is newer than current sample")
 	}
 	normCPU := metric.count
 	if !metric.isTotals {
@@ -149,10 +150,10 @@ func (metric Metrics) Format(opts MetricOpts) (mapstr.M, error) {
 	}
 
 	if opts.Percentages {
-		formattedMetrics.Put("total.pct", createTotal(metric.previousSample, metric.currentSample, timeDelta, normCPU))
+		_, _ = formattedMetrics.Put("total.pct", createTotal(metric.previousSample, metric.currentSample, timeDelta, normCPU))
 	}
 	if opts.NormalizedPercentages {
-		formattedMetrics.Put("total.norm.pct", createTotal(metric.previousSample, metric.currentSample, timeDelta, 1))
+		_, _ = formattedMetrics.Put("total.norm.pct", createTotal(metric.previousSample, metric.currentSample, timeDelta, 1))
 	}
 
 	reportOptMetric("user", metric.currentSample.User, metric.previousSample.User, normCPU)
@@ -174,32 +175,32 @@ func createTotal(prev, cur CPU, timeDelta uint64, numCPU int) float64 {
 	if !cur.Wait.IsZero() {
 		idleTime = idleTime + cpuMetricTimeDelta(prev.Wait, cur.Wait, timeDelta, numCPU)
 	}
-	return common.Round(float64(numCPU)-idleTime, common.DefaultDecimalPlacesCount)
+	return metric.Round(float64(numCPU) - idleTime)
 }
 
 func fillMetric(opts MetricOpts, cur, prev opt.Uint, timeDelta uint64, numCPU int) mapstr.M {
 	event := mapstr.M{}
 	if opts.Ticks {
-		event.Put("ticks", cur.ValueOr(0))
+		_, _ = event.Put("ticks", cur.ValueOr(0))
 	}
 	if opts.Percentages {
-		event.Put("pct", cpuMetricTimeDelta(prev, cur, timeDelta, numCPU))
+		_, _ = event.Put("pct", cpuMetricTimeDelta(prev, cur, timeDelta, numCPU))
 	}
 	if opts.NormalizedPercentages {
-		event.Put("norm.pct", cpuMetricTimeDelta(prev, cur, timeDelta, 1))
+		_, _ = event.Put("norm.pct", cpuMetricTimeDelta(prev, cur, timeDelta, 1))
 	}
 
 	return event
 }
 
 // CPUCount returns the count of CPUs. When available, use this instead of runtime.NumCPU()
-func (m *Metrics) CPUCount() int {
-	return m.count
+func (metric *Metrics) CPUCount() int {
+	return metric.count
 }
 
 // cpuMetricTimeDelta is a helper used by fillTicks to calculate the delta between two CPU tick values
 func cpuMetricTimeDelta(prev, current opt.Uint, timeDelta uint64, numCPU int) float64 {
 	cpuDelta := int64(current.ValueOr(0) - prev.ValueOr(0))
 	pct := float64(cpuDelta) / float64(timeDelta)
-	return common.Round(pct*float64(numCPU), common.DefaultDecimalPlacesCount)
+	return metric.Round(pct * float64(numCPU))
 }
