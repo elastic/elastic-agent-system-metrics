@@ -37,8 +37,6 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/pkg/errors"
-
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -56,12 +54,12 @@ func get(_ resolve.Resolver) (Memory, error) {
 	var total uint64
 
 	if err := sysctlbyname("hw.memsize", &total); err != nil {
-		return Memory{}, errors.Wrap(err, "error getting memsize")
+		return Memory{}, fmt.Errorf("error getting memsize: %w", err)
 	}
 	mem.Total = opt.UintWith(total)
 
 	if err := vmInfo(&vmstat); err != nil {
-		return Memory{}, errors.Wrap(err, "error getting VM info")
+		return Memory{}, fmt.Errorf("error getting VM info")
 	}
 
 	kern := uint64(vmstat.inactive_count) << 12
@@ -76,7 +74,7 @@ func get(_ resolve.Resolver) (Memory, error) {
 	var err error
 	mem.Swap, err = getSwap()
 	if err != nil {
-		return mem, errors.Wrap(err, "error getting swap memory")
+		return mem, fmt.Errorf("error getting swap memory: %w", err)
 	}
 
 	return mem, nil
@@ -88,7 +86,7 @@ func getSwap() (SwapMetrics, error) {
 
 	swap := SwapMetrics{}
 	if err := sysctlbyname("vm.swapusage", &swUsage); err != nil {
-		return swap, errors.Wrap(err, "error getting swap usage")
+		return swap, fmt.Errorf("error getting swap usage: %w", err)
 	}
 
 	swap.Total = opt.UintWith(swUsage.Total)

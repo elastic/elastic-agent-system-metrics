@@ -23,9 +23,8 @@ vagrant winrm -s cmd -e -c "cd C:\\Gopath\src\\github.com\\elastic\\beats\\metri
 package cpu
 
 import (
+	"fmt"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -36,7 +35,7 @@ import (
 func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	idle, kernel, user, err := windows.GetSystemTimes()
 	if err != nil {
-		return CPUMetrics{}, errors.Wrap(err, "GetSystemTimes failed")
+		return CPUMetrics{}, fmt.Errorf("call to GetSystemTimes failed: %w", err)
 	}
 
 	globalMetrics := CPUMetrics{}
@@ -51,7 +50,7 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	// get per-cpu data
 	cpus, err := windows.NtQuerySystemProcessorPerformanceInformation()
 	if err != nil {
-		return CPUMetrics{}, errors.Wrap(err, "NtQuerySystemProcessorPerformanceInformation failed")
+		return CPUMetrics{}, fmt.Errorf("catll to NtQuerySystemProcessorPerformanceInformation failed: %w", err)
 	}
 	globalMetrics.list = make([]CPU, 0, len(cpus))
 	for _, cpu := range cpus {

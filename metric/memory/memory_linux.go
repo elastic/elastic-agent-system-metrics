@@ -18,7 +18,7 @@
 package memory
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -28,7 +28,7 @@ import (
 func get(rootfs resolve.Resolver) (Memory, error) {
 	table, err := ParseMeminfo(rootfs)
 	if err != nil {
-		return Memory{}, errors.Wrap(err, "error fetching meminfo")
+		return Memory{}, fmt.Errorf("error fetching meminfo: %w", err)
 	}
 
 	memData := Memory{}

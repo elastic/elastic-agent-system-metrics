@@ -18,9 +18,8 @@
 package memory
 
 import (
+	"errors"
 	"unsafe"
-
-	"github.com/pkg/errors"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -49,7 +48,7 @@ func get(_ resolve.Resolver) (Memory, error) {
 	_, err := C.sysctlbyname(name, unsafe.Pointer(&val), &sc, nil, 0)
 	C.free(unsafe.Pointer(name))
 	if err != nil {
-		return memData, errors.Errorf("error in vm.stats.vm.v_page_count")
+		return memData, errors.New("error in vm.stats.vm.v_page_count")
 	}
 	pagecount := uint64(val)
 
@@ -57,7 +56,7 @@ func get(_ resolve.Resolver) (Memory, error) {
 	_, err = C.sysctlbyname(name, unsafe.Pointer(&val), &sc, nil, 0)
 	C.free(unsafe.Pointer(name))
 	if err != nil {
-		return memData, errors.Errorf("error in vm.stats.vm.v_page_size")
+		return memData, errors.New("error in vm.stats.vm.v_page_size")
 	}
 	pagesize := uint64(val)
 
@@ -65,7 +64,7 @@ func get(_ resolve.Resolver) (Memory, error) {
 	_, err = C.sysctlbyname(name, unsafe.Pointer(&val), &sc, nil, 0)
 	C.free(unsafe.Pointer(name))
 	if err != nil {
-		return memData, errors.Errorf("error in vm.stats.vm.v_free_count")
+		return memData, errors.New("error in vm.stats.vm.v_free_count")
 	}
 
 	memFree := uint64(val) * pagesize
@@ -75,7 +74,7 @@ func get(_ resolve.Resolver) (Memory, error) {
 	_, err = C.sysctlbyname(name, unsafe.Pointer(&val), &sc, nil, 0)
 	C.free(unsafe.Pointer(name))
 	if err != nil {
-		return memData, errors.Errorf("error in vm.stats.vm.v_inactive_count")
+		return memData, errors.New("error in vm.stats.vm.v_inactive_count")
 	}
 	kern := uint64(val)
 
