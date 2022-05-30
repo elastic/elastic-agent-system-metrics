@@ -36,8 +36,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
-
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -64,12 +62,12 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 
 	totals, err := getCPUTotals()
 	if err != nil {
-		return CPUMetrics{}, errors.Wrap(err, "error getting CPU totals")
+		return CPUMetrics{}, fmt.Errorf("error getting CPU totals: %w", err)
 	}
 
 	list, err := getPerCPUMetrics()
 	if err != nil {
-		return CPUMetrics{}, errors.Wrap(err, "error getting per-cpu metrics")
+		return CPUMetrics{}, fmt.Errorf("error getting per-cpu metrics: %w", err)
 	}
 
 	return CPUMetrics{totals: totals, list: list}, nil
