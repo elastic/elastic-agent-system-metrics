@@ -20,7 +20,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Move pacakges from Metricbeat: `internal/metrics/cpu` and `internal/metrics/memory`. #27
+- Move packages from Metricbeat: `internal/metrics/cpu` and `internal/metrics/memory`. #27
 
 ## [0.3.1]
 
