@@ -23,7 +23,6 @@ package process
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -329,18 +328,10 @@ func getArgs(hostfs resolve.Resolver, pid int) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error opening file %s: %w", path, err)
 	}
-	bbuf := bytes.NewBuffer(data)
 
-	var args []string
-
-	for {
-		arg, err := bbuf.ReadBytes(0)
-		if err == io.EOF {
-			break
-		}
-		trimmedArg := string(arg[0 : len(arg)-1])
-		args = append(args, trimmedArg)
-	}
+	args := strings.FieldsFunc(string(data), func(r rune) bool {
+		return r == '\u0000'
+	})
 
 	return args, nil
 }
