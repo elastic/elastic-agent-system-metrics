@@ -24,8 +24,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	psutil "github.com/shirou/gopsutil/process"
@@ -65,6 +67,23 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 // GetPIDState returns the state of a given PID
 // It will return ProcNotExist if the process was not found.
 func GetPIDState(hostfs resolve.Resolver, pid int) (PidState, error) {
+	// As psutils doesn't support AIX, we use GetInfoForPid directly.
+	// It returns an ESRCH if no process is found.
+	if runtime.GOOS == "aix" {
+		state, err := GetInfoForPid(hostfs, pid)
+		if err == syscall.ESRCH {
+			// We assume that syscall.ESRCH is mapped for all GOOS
+			// this package is compiled for. If not, we will have to give this
+			// to a build-flag controlled function to check.
+			return "", ProcNotExist
+		}
+		if err != nil {
+			return "", fmt.Errorf("error getting PID info for %d: %w", pid, err)
+		}
+
+		return state.State, nil
+	}
+
 	// This library still doesn't have a good cross-platform way to distinguish between "does not eixst" and other process errors.
 	// This is a fairly difficult problem to solve in a cross-platform way
 	exists, err := psutil.PidExistsWithContext(context.Background(), int32(pid))
@@ -74,6 +93,7 @@ func GetPIDState(hostfs resolve.Resolver, pid int) (PidState, error) {
 	if !exists {
 		return "", ProcNotExist
 	}
+
 	//GetInfoForPid will return the smallest possible dataset for a PID
 	procState, err := GetInfoForPid(hostfs, pid)
 	if err != nil {

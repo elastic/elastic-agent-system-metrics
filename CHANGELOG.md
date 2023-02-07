@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Add process existence check for AIX in system/process #61
 
 ### Changed
 
@@ -17,6 +18,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fix thread safety in process code #43
 - Fix process package build on AIX #54
+- Fix out-of-range panic on AIX in system/process while getting exe from procargs #61
+- Implement GetPIDState for AIX in system/process #61
 
 ## [0.4.4]
 

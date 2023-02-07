@@ -48,7 +48,6 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	procMap := make(ProcsMap, 0)
 	var plist []ProcState
 	for {
-		// getprocs first argument is a void*
 		num, err := C.getprocs(unsafe.Pointer(&info), C.sizeof_struct_procsinfo64, nil, 0, &pid, 1)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error fetching PIDs: %w", err)
@@ -62,16 +61,54 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	return procMap, plist, nil
 }
 
+// procExists returns true if a process is present in the AIX process table
+func procExists(pid int) (bool, error) {
+	info := [20]C.struct_procsinfo64{}
+	idxPtr := C.pid_t(0)
+
+	for {
+		num, err := C.getprocs(unsafe.Pointer(&info), C.sizeof_struct_procsinfo64, nil, 0, &idxPtr, 20)
+		if err != nil {
+			return false, fmt.Errorf("error fetching PID at IndexPointer %d: %w", int(idxPtr), err)
+		}
+
+		if num == 0 {
+			break
+		}
+
+		for i := 0; i < len(info); i++ {
+			if int(info[i].pi_pid) == pid {
+				return true, nil
+			}
+		}
+
+	}
+
+	return false, nil
+}
+
 // GetInfoForPid returns basic info for the process
 func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 	info := C.struct_procsinfo64{}
 	cpid := C.pid_t(pid)
 
+	// getprocs uses an IndexPointer, which doesn't need to correlate in every case to the PID
+	// but here we fetch a count of 1 procs and therefore it should match it.
 	num, err := C.getprocs(unsafe.Pointer(&info), C.sizeof_struct_procsinfo64, nil, 0, &cpid, 1)
 	if err != nil {
 		return ProcState{}, fmt.Errorf("error in getprocs: %w", err)
 	}
 	if num != 1 {
+		return ProcState{}, syscall.ESRCH
+	}
+
+	// Since getprocs can return a proccess with pi_state=Running which is already
+	// dead, we need to check if it really exist.
+	ok, err := procExists(pid)
+	if err != nil {
+		return ProcState{}, fmt.Errorf("error in procExists: %w", err)
+	}
+	if !ok {
 		return ProcState{}, syscall.ESRCH
 	}
 
@@ -109,12 +146,16 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 	return state, nil
 }
 
-// FillPidMetrics is the aix implementation
+// FillPidMetrics is the aix implementation. If the process died in the meantime and is still present in the
+// process table, this call still succeeds.
 func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, filter func(string) bool) (ProcState, error) {
 	pagesize := uint64(os.Getpagesize())
 	info := C.struct_procsinfo64{}
 	cpid := C.pid_t(pid)
 
+	// getprocs uses an IndexPointer, which doesn't need to correlate in every case to the PID
+	// but here we fetch a count of 1 procs and therefore it should match it.
+	// A dead process could still be looked up when directly using the IndexPointer as pid.
 	num, err := C.getprocs(unsafe.Pointer(&info), C.sizeof_struct_procsinfo64, nil, 0, &cpid, 1)
 	if err != nil {
 		return state, fmt.Errorf("error in getprocs: %w", err)
@@ -155,8 +196,11 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, filter func(st
 
 		args = append(args, stripNullByte(arg))
 	}
+
 	state.Args = args
-	state.Exe = args[0]
+	if len(args) > 0 {
+		state.Exe = args[0]
+	}
 
 	// get env vars
 	buf = make([]byte, 8192)
