@@ -16,7 +16,6 @@
 // under the License.
 
 //go:build darwin || freebsd || linux || windows || aix || netbsd || openbsd
-// +build darwin freebsd linux windows aix netbsd openbsd
 
 package process
 
@@ -31,13 +30,13 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	"github.com/elastic/go-sysinfo/types"
 
-	sysinfo "github.com/elastic/go-sysinfo"
+	"github.com/elastic/go-sysinfo"
 )
 
 // ProcNotExist indicates that a process was not found.
 var ProcNotExist = errors.New("process does not exist")
 
-//ProcsMap is a convinence wrapper for the oft-used ideom of map[int]ProcState
+// ProcsMap is a convinence wrapper for the oft-used ideom of map[int]ProcState
 type ProcsMap map[int]ProcState
 
 // ProcsTrack is a thread-safe wrapper for a process Stat object's internal map of processes.
@@ -109,7 +108,7 @@ type Stats struct {
 	host         types.Host
 }
 
-//PidState are the constants for various PID states
+// PidState are the constants for various PID states
 type PidState string
 
 var (
