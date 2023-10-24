@@ -32,6 +32,7 @@ import (
 )
 
 // FetchPids returns a map and array of pids
+// Entrypoint to fetch information for PIDs
 func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	pids, err := windows.EnumProcesses()
 	if err != nil {
@@ -201,8 +202,7 @@ func getProcTimes(pid int) (uint64, uint64, uint64, error) {
 
 func procMem(pid int) (uint64, uint64, error) {
 	handle, err := syscall.OpenProcess(
-		windows.PROCESS_QUERY_LIMITED_INFORMATION|
-			windows.PROCESS_VM_READ,
+		windows.PROCESS_QUERY_LIMITED_INFORMATION,
 		false,
 		uint32(pid))
 	if err != nil {
@@ -278,7 +278,7 @@ func getParentPid(pid int) (int, error) {
 }
 
 func getProcCredName(pid int) (string, error) {
-	handle, err := syscall.OpenProcess(syscall.PROCESS_QUERY_INFORMATION, false, uint32(pid))
+	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err != nil {
 		return "", fmt.Errorf("OpenProcess failed for pid=%v: %w", pid, err)
 	}
@@ -312,4 +312,55 @@ func getProcCredName(pid int) (string, error) {
 	}
 
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
+}
+
+func GetInforForMe(pid int) (ProcState, error) {
+	state := ProcState{Pid: opt.IntWith(pid)}
+	name, err := getProcName(pid)
+	if err != nil {
+		return state, fmt.Errorf("cannot get proc name: %w", err)
+	}
+	fmt.Printf(">>>>>>>>>> procName: %s\n", name)
+	state.Name = name
+
+	userTime, sysTime, startTime, err := getProcTimes(pid)
+	if err != nil {
+		return state, fmt.Errorf("could not call getProcTimes: %w", err)
+	}
+	fmt.Printf(">>>>>>>>>> userTime: %d, sysTime: %d, startTime: %d \n", userTime, sysTime, startTime)
+	state.CPU.System.Ticks = opt.UintWith(sysTime)
+	state.CPU.User.Ticks = opt.UintWith(userTime)
+	state.CPU.Total.Ticks = opt.UintWith(userTime + sysTime)
+
+	state.CPU.StartTime = unixTimeMsToTime(startTime)
+
+	wss, size, err := procMem(pid)
+	if err != nil {
+		return state, fmt.Errorf("error fetching memory: %w", err)
+	}
+	fmt.Printf(">>>>>>>>>> Rss.Bytes: %d, Size: %d\n", wss, size)
+	state.Memory.Rss.Bytes = opt.UintWith(wss)
+	state.Memory.Size = opt.UintWith(size)
+
+	status, err := getPidStatus(pid)
+	if err != nil {
+		return state, fmt.Errorf("cannot get Pid status: %w", err)
+	}
+	state.State = status
+
+	user, err := getProcCredName(pid)
+	if err != nil {
+		return state, fmt.Errorf("error fetching username: %w", err)
+	}
+	state.Username = user
+
+	numThreads, err := FetchNumThreads(pid)
+	if err != nil {
+		return state, fmt.Errorf("error fetching num threads: %w", err)
+	}
+	fmt.Printf(">>>>>>>>>> numThreads: %d\n", numThreads)
+
+	state.NumThreads = opt.IntWith(numThreads)
+
+	return state, nil
 }

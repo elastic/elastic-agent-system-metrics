@@ -166,6 +166,7 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 // pidIter wraps a few lines of generic code that all OS-specific FetchPids() functions must call.
 // this also handles the process of adding to the maps/lists in order to limit the code duplication in all the OS implementations
 func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState) (ProcsMap, []ProcState) {
+	// That's the method that fails, however it seems to return a partial state
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
 		procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
@@ -189,9 +190,17 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	// Fetch proc state so we can get the name for filtering based on user's filter.
 
 	// OS-specific entrypoint, get basic info so we can at least run matchProcess
+	// last non-os-specific call. Here "the problem begins"
 	status, err := GetInfoForPid(procStats.Hostfs, pid)
 	if err != nil {
-		return status, true, fmt.Errorf("GetInfoForPid: %w", err)
+		// here put the endpoint exception
+		if status.Name == "elastic-endpoint.exe" {
+			fmt.Println(">>>>>>>>>> status.Name", status.Name)
+			fmt.Println(">>>>>>>>>>", status)
+			fmt.Println("========== Ignoring error")
+		} else {
+			return status, true, fmt.Errorf("GetInfoForPid: %w", err)
+		}
 	}
 	if procStats.skipExtended {
 		return status, true, nil
@@ -208,7 +217,13 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	// If we've passed the filter, continue to fill out the rest of the metrics
 	status, err = FillPidMetrics(procStats.Hostfs, pid, status, procStats.isWhitelistedEnvVar)
 	if err != nil {
-		return status, true, fmt.Errorf("FillPidMetrics: %w", err)
+		if status.Name == "elastic-endpoint.exe" {
+			fmt.Println(">>>>>>>>>> status.Name", status.Name)
+			fmt.Println(">>>>>>>>>>", status)
+			fmt.Println("========== Ignoring error")
+		} else {
+			return status, true, fmt.Errorf("FillPidMetrics: %w", err)
+		}
 	}
 	if len(status.Args) > 0 && status.Cmdline == "" {
 		status.Cmdline = strings.Join(status.Args, " ")
