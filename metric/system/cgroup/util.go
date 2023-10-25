@@ -67,7 +67,7 @@ type PathList struct {
 
 // Flatten combines the V1 and V2 cgroups in cases where we don't need a map with keys
 func (pl PathList) Flatten() []ControllerPath {
-	list := []ControllerPath{}
+	list := make([]ControllerPath, 0, len(pl.V1)+len(pl.V2))
 	for _, v1 := range pl.V1 {
 		list = append(list, v1)
 	}
