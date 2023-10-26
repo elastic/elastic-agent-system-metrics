@@ -255,6 +255,7 @@ func (r Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		if r.cgroupsHierarchyOverride != "" {
 			path = r.cgroupsHierarchyOverride
 		}
+
 		// cgroup V2
 		// cgroup v2 controllers will always start with this string
 		if strings.Contains(line, "0::/") {
@@ -275,6 +276,14 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 				controllerPath = r.rootfsMountpoint.ResolveHostFS(filepath.Join("/sys/fs/cgroup/unified", path))
 			}
 
+			if tmp, ok := r.v2ControllerPathCache.Load(controllerPath); ok {
+				pathList, ok := tmp.(PathList)
+				if ok {
+					cPaths.V2 = pathList.V2
+					continue
+				}
+			}
+
 			cgpaths, err := os.ReadDir(controllerPath)
 			if err != nil {
 				return cPaths, fmt.Errorf("error fetching cgroupV2 controllers for cgroup location '%s' and path line '%s': %w", r.cgroupMountpoints.V2Loc, line, err)
@@ -287,6 +296,7 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 					cPaths.V2[controllerName] = ControllerPath{ControllerPath: path, FullPath: controllerPath, IsV2: true}
 				}
 			}
+			r.v2ControllerPathCache.Store(controllerPath, cPaths)
 			// cgroup v1
 		} else {
 			subsystems := strings.Split(fields[1], ",")

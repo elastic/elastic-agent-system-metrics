@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgv1"
@@ -68,7 +69,7 @@ const (
 	memoryStat  = "memory"
 )
 
-//nolint: deadcode,structcheck,unused // needed by other platforms
+// nolint: deadcode,structcheck,unused // needed by other platforms
 type mount struct {
 	subsystem  string // Subsystem name (e.g. cpuacct).
 	mountpoint string // Mountpoint of the subsystem (e.g. /cgroup/cpuacct).
@@ -85,6 +86,9 @@ type Reader struct {
 	ignoreRootCgroups        bool // Ignore a cgroup when its path is "/".
 	cgroupsHierarchyOverride string
 	cgroupMountpoints        Mountpoints // Mountpoints for each subsystem (e.g. cpu, cpuacct, memory, blkio).
+
+	// Cache to map known v2 cgroup controllerPaths to PathList.
+	v2ControllerPathCache sync.Map
 }
 
 // ReaderOptions holds options for NewReaderOptions.
