@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgv1"
@@ -78,6 +79,12 @@ type mount struct {
 	fullPath   string // Absolute path to the cgroup. It's the mountpoint joined with the path.
 }
 
+// pathListWithTime combines PathList with a timestamp.
+type pathListWithTime struct {
+	added    time.Time
+	pathList PathList
+}
+
 // Reader reads cgroup metrics and limits.
 type Reader struct {
 	// Mountpoint of the root filesystem. Defaults to / if not set. This can be
@@ -87,7 +94,7 @@ type Reader struct {
 	cgroupsHierarchyOverride string
 	cgroupMountpoints        Mountpoints // Mountpoints for each subsystem (e.g. cpu, cpuacct, memory, blkio).
 
-	// Cache to map known v2 cgroup controllerPaths to PathList.
+	// Cache to map known v2 cgroup controllerPaths to pathListWithTime.
 	v2ControllerPathCache sync.Map
 }
 

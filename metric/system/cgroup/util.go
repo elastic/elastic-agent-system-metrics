@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -276,12 +277,20 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 				controllerPath = r.rootfsMountpoint.ResolveHostFS(filepath.Join("/sys/fs/cgroup/unified", path))
 			}
 
+			// Check if there is an entry for controllerPath already cached.
 			if tmp, ok := r.v2ControllerPathCache.Load(controllerPath); ok {
-				pathList, ok := tmp.(PathList)
+				cacheEntry, ok := tmp.(pathListWithTime)
 				if ok {
-					cPaths.V2 = pathList.V2
-					continue
+					// If the cached entry for controllerPath is not older than 5 minutes,
+					// return the cached entry.
+					if time.Since(cacheEntry.added) < time.Duration(5*time.Minute) {
+						cPaths.V2 = cacheEntry.pathList.V2
+						continue
+					}
 				}
+				// Consider the existing entry for controllerPath invalid. The entry can
+				// (1) not be casted to pathListWithTime or (2) is older than 5 minutes.
+				r.v2ControllerPathCache.Delete(controllerPath)
 			}
 
 			cgpaths, err := os.ReadDir(controllerPath)
@@ -296,7 +305,10 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 					cPaths.V2[controllerName] = ControllerPath{ControllerPath: path, FullPath: controllerPath, IsV2: true}
 				}
 			}
-			r.v2ControllerPathCache.Store(controllerPath, cPaths)
+			r.v2ControllerPathCache.Store(controllerPath, pathListWithTime{
+				added:    time.Now(),
+				pathList: cPaths,
+			})
 			// cgroup v1
 		} else {
 			subsystems := strings.Split(fields[1], ",")
