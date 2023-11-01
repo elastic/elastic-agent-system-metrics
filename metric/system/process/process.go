@@ -21,6 +21,7 @@ package process
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -169,8 +170,10 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	// That's the method that fails, however it seems to return a partial state
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
-		procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-		return procMap, proclist
+		if !errors.Is(err, CanIgnoreErr{}) {
+			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
+			return procMap, proclist
+		}
 	}
 	if !saved {
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
@@ -180,6 +183,19 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	proclist = append(proclist, status)
 
 	return procMap, proclist
+}
+
+type CanIgnoreErr struct {
+	Err error
+}
+
+func (c CanIgnoreErr) Error() string {
+	return "Not enough privileges to fetch information: " + c.Err.Error()
+}
+
+func (c CanIgnoreErr) Is(other error) bool {
+	_, is := other.(CanIgnoreErr)
+	return is
 }
 
 // pidFill is an entrypoint used by OS-specific code to fill out a pid.
@@ -193,14 +209,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	// last non-os-specific call. Here "the problem begins"
 	status, err := GetInfoForPid(procStats.Hostfs, pid)
 	if err != nil {
-		// here put the endpoint exception
-		if status.Name == "elastic-endpoint.exe" {
-			fmt.Println(">>>>>>>>>> status.Name", status.Name)
-			fmt.Println(">>>>>>>>>>", status)
-			fmt.Println("========== Ignoring error")
-		} else {
-			return status, true, fmt.Errorf("GetInfoForPid: %w", err)
-		}
+		return status, true, fmt.Errorf("GetInfoForPid: %w", err)
 	}
 	if procStats.skipExtended {
 		return status, true, nil
@@ -217,21 +226,22 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	// If we've passed the filter, continue to fill out the rest of the metrics
 	status, err = FillPidMetrics(procStats.Hostfs, pid, status, procStats.isWhitelistedEnvVar)
 	if err != nil {
-		if status.Name == "elastic-endpoint.exe" {
-			fmt.Println(">>>>>>>>>> status.Name", status.Name)
-			fmt.Println(">>>>>>>>>>", status)
-			fmt.Println("========== Ignoring error")
-		} else {
-			return status, true, fmt.Errorf("FillPidMetrics: %w", err)
-		}
+		return status, true, fmt.Errorf("FillPidMetrics: %w", err)
 	}
 	if len(status.Args) > 0 && status.Cmdline == "" {
 		status.Cmdline = strings.Join(status.Args, " ")
+	}
+	if status.CPU.Total.Ticks.Exists() {
+		status.CPU.Total.Value = opt.FloatWith(metric.Round(float64(status.CPU.Total.Ticks.ValueOr(0))))
 	}
 
 	// postprocess with cgroups and percentages
 	last, ok := procStats.ProcsMap.GetPid(status.Pid.ValueOr(0))
 	status.SampleTime = time.Now()
+	if ok {
+		status = GetProcCPUPercentage(last, status)
+	}
+
 	if procStats.EnableCgroups {
 		cgStats, err := procStats.cgroups.GetStatsForPid(status.Pid.ValueOr(0))
 		if err != nil {
@@ -242,6 +252,12 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 			status.Cgroup.FillPercentages(last.Cgroup, status.SampleTime, last.SampleTime)
 		}
 	} // end cgroups processor
+
+	status, err = FillOtherMetricsMoreAccess(pid, status)
+	if err != nil {
+		err = fmt.Errorf("FillOtherMetricsMoreAccess: %w", err)
+		return status, true, CanIgnoreErr{Err: err}
+	}
 
 	// network data
 	if procStats.EnableNetwork {
@@ -258,13 +274,6 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 				}
 			}
 		}
-	}
-
-	if status.CPU.Total.Ticks.Exists() {
-		status.CPU.Total.Value = opt.FloatWith(metric.Round(float64(status.CPU.Total.Ticks.ValueOr(0))))
-	}
-	if ok {
-		status = GetProcCPUPercentage(last, status)
 	}
 
 	return status, true, nil

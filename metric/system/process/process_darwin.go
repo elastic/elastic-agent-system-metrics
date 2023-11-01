@@ -243,3 +243,7 @@ func sysctl(mib []C.int, old *byte, oldlen *uintptr,
 	}
 	return err
 }
+
+func FillOtherMetricsMoreAccess(_ int, state ProcState) (ProcState, error) {
+	return state, nil
+}

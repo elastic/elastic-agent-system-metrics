@@ -72,12 +72,6 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 		state.State = status
 	}
 
-	if numThreads, err := FetchNumThreads(pid); err != nil {
-		errs = append(errs, fmt.Errorf("error fetching num threads: %w", err))
-	} else {
-		state.NumThreads = opt.IntWith(numThreads)
-	}
-
 	if err := errors.Join(errs...); err != nil {
 		return state, fmt.Errorf("could not get all information for PID %d: %w",
 			pid, err)
@@ -141,11 +135,24 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 
 	state.CPU.StartTime = unixTimeMsToTime(startTime)
 
+	return state, nil
+}
+
+// FillOtherMetricsMoreAccess
+// All calls that need more than windows.PROCESS_QUERY_LIMITED_INFORMATION
+func FillOtherMetricsMoreAccess(pid int, state ProcState) (ProcState, error) {
 	argList, err := getProcArgs(pid)
 	if err != nil {
 		return state, fmt.Errorf("error fetching process args: %w", err)
 	}
 	state.Args = argList
+
+	if numThreads, err := FetchNumThreads(pid); err != nil {
+		return state, fmt.Errorf("error fetching num threads: %w", err)
+	} else {
+		state.NumThreads = opt.IntWith(numThreads)
+	}
+
 	return state, nil
 }
 
