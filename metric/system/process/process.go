@@ -170,7 +170,7 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	// That's the method that fails, however it seems to return a partial state
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
-		if !errors.Is(err, CanIgnoreErr{}) {
+		if !errors.Is(err, NotEnoughPrivilegiesErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
 			return procMap, proclist
 		}
@@ -185,16 +185,21 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	return procMap, proclist
 }
 
-type CanIgnoreErr struct {
+// NotEnoughPrivilegiesErr is returned when the current access
+// rights are not enough to get some metrics.
+// This error can be safely ignored and only means the function/method
+// could not gather all metrics, however whatever has been gethered
+// is still valid.
+type NotEnoughPrivilegiesErr struct {
 	Err error
 }
 
-func (c CanIgnoreErr) Error() string {
+func (c NotEnoughPrivilegiesErr) Error() string {
 	return "Not enough privileges to fetch information: " + c.Err.Error()
 }
 
-func (c CanIgnoreErr) Is(other error) bool {
-	_, is := other.(CanIgnoreErr)
+func (c NotEnoughPrivilegiesErr) Is(other error) bool {
+	_, is := other.(NotEnoughPrivilegiesErr)
 	return is
 }
 
@@ -255,8 +260,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 
 	status, err = FillOtherMetricsMoreAccess(pid, status)
 	if err != nil {
-		err = fmt.Errorf("FillOtherMetricsMoreAccess: %w", err)
-		return status, true, CanIgnoreErr{Err: err}
+		return status, true, fmt.Errorf("FillOtherMetricsMoreAccess: %w", err)
 	}
 
 	// network data

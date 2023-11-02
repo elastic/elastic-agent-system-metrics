@@ -143,12 +143,12 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 func FillOtherMetricsMoreAccess(pid int, state ProcState) (ProcState, error) {
 	argList, err := getProcArgs(pid)
 	if err != nil {
-		return state, fmt.Errorf("error fetching process args: %w", err)
+		return state, fmt.Errorf("error fetching process args: %w", NotEnoughPrivilegiesErr{Err: err})
 	}
 	state.Args = argList
 
 	if numThreads, err := FetchNumThreads(pid); err != nil {
-		return state, fmt.Errorf("error fetching num threads: %w", err)
+		return state, fmt.Errorf("error fetching num threads: %w", NotEnoughPrivilegiesErr{Err: err})
 	} else {
 		state.NumThreads = opt.IntWith(numThreads)
 	}
