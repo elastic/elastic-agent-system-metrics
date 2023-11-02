@@ -32,7 +32,6 @@ import (
 )
 
 // FetchPids returns a map and array of pids
-// Entrypoint to fetch information for PIDs
 func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	pids, err := windows.EnumProcesses()
 	if err != nil {
@@ -139,7 +138,8 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 }
 
 // FillOtherMetricsMoreAccess
-// All calls that need more than windows.PROCESS_QUERY_LIMITED_INFORMATION
+// All calls that need more access rights than
+// windows.PROCESS_QUERY_LIMITED_INFORMATION
 func FillOtherMetricsMoreAccess(pid int, state ProcState) (ProcState, error) {
 	argList, err := getProcArgs(pid)
 	if err != nil {
@@ -319,55 +319,4 @@ func getProcCredName(pid int) (string, error) {
 	}
 
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
-}
-
-func GetInforForMe(pid int) (ProcState, error) {
-	state := ProcState{Pid: opt.IntWith(pid)}
-	name, err := getProcName(pid)
-	if err != nil {
-		return state, fmt.Errorf("cannot get proc name: %w", err)
-	}
-	fmt.Printf(">>>>>>>>>> procName: %s\n", name)
-	state.Name = name
-
-	userTime, sysTime, startTime, err := getProcTimes(pid)
-	if err != nil {
-		return state, fmt.Errorf("could not call getProcTimes: %w", err)
-	}
-	fmt.Printf(">>>>>>>>>> userTime: %d, sysTime: %d, startTime: %d \n", userTime, sysTime, startTime)
-	state.CPU.System.Ticks = opt.UintWith(sysTime)
-	state.CPU.User.Ticks = opt.UintWith(userTime)
-	state.CPU.Total.Ticks = opt.UintWith(userTime + sysTime)
-
-	state.CPU.StartTime = unixTimeMsToTime(startTime)
-
-	wss, size, err := procMem(pid)
-	if err != nil {
-		return state, fmt.Errorf("error fetching memory: %w", err)
-	}
-	fmt.Printf(">>>>>>>>>> Rss.Bytes: %d, Size: %d\n", wss, size)
-	state.Memory.Rss.Bytes = opt.UintWith(wss)
-	state.Memory.Size = opt.UintWith(size)
-
-	status, err := getPidStatus(pid)
-	if err != nil {
-		return state, fmt.Errorf("cannot get Pid status: %w", err)
-	}
-	state.State = status
-
-	user, err := getProcCredName(pid)
-	if err != nil {
-		return state, fmt.Errorf("error fetching username: %w", err)
-	}
-	state.Username = user
-
-	numThreads, err := FetchNumThreads(pid)
-	if err != nil {
-		return state, fmt.Errorf("error fetching num threads: %w", err)
-	}
-	fmt.Printf(">>>>>>>>>> numThreads: %d\n", numThreads)
-
-	state.NumThreads = opt.IntWith(numThreads)
-
-	return state, nil
 }
