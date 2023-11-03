@@ -169,10 +169,11 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState) (ProcsMap, []ProcState) {
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
-		if !errors.Is(err, NotEnoughPrivilegesErr{}) {
+		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
 			return procMap, proclist
 		}
+		procStats.logger.Debugf("Non fatal error fetching PID some info for %d, metrics are valid, but partial: %s", pid, err)
 	}
 	if !saved {
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
@@ -184,21 +185,25 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	return procMap, proclist
 }
 
-// NotEnoughPrivilegesErr is returned when the current access
-// rights are not enough to get some metrics.
-// This error can be safely ignored and only means the function/method
-// could not gather all metrics, however whatever has been gethered
-// is still valid.
-type NotEnoughPrivilegesErr struct {
+// NonFatalErr is returned when there was an error
+// collecting metrics, however the metrics already
+// gathered and returned are still valid.
+// This error can be safely ignored, this will result
+// in having partial metrics for a process rather than
+// no metrics at all.
+//
+// It was introduced to allow for partial metrics collection
+// on privileged process on Windows.
+type NonFatalErr struct {
 	Err error
 }
 
-func (c NotEnoughPrivilegesErr) Error() string {
+func (c NonFatalErr) Error() string {
 	return "Not enough privileges to fetch information: " + c.Err.Error()
 }
 
-func (c NotEnoughPrivilegesErr) Is(other error) bool {
-	_, is := other.(NotEnoughPrivilegesErr)
+func (c NonFatalErr) Is(other error) bool {
+	_, is := other.(NonFatalErr)
 	return is
 }
 
