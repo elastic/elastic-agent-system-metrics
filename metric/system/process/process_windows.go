@@ -137,18 +137,18 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 	return state, nil
 }
 
-// FillOtherMetricsMoreAccess
+// FillMetricsRequiringMoreAccess
 // All calls that need more access rights than
 // windows.PROCESS_QUERY_LIMITED_INFORMATION
-func FillOtherMetricsMoreAccess(pid int, state ProcState) (ProcState, error) {
+func FillMetricsRequiringMoreAccess(pid int, state ProcState) (ProcState, error) {
 	argList, err := getProcArgs(pid)
 	if err != nil {
-		return state, fmt.Errorf("error fetching process args: %w", NotEnoughPrivilegiesErr{Err: err})
+		return state, fmt.Errorf("error fetching process args: %w", NotEnoughPrivilegesErr{Err: err})
 	}
 	state.Args = argList
 
 	if numThreads, err := FetchNumThreads(pid); err != nil {
-		return state, fmt.Errorf("error fetching num threads: %w", NotEnoughPrivilegiesErr{Err: err})
+		return state, fmt.Errorf("error fetching num threads: %w", NotEnoughPrivilegesErr{Err: err})
 	} else {
 		state.NumThreads = opt.IntWith(numThreads)
 	}
@@ -207,6 +207,11 @@ func getProcTimes(pid int) (uint64, uint64, uint64, error) {
 	return uint64(windows.FiletimeToDuration(&cpu.UserTime).Nanoseconds() / 1e6), uint64(windows.FiletimeToDuration(&cpu.KernelTime).Nanoseconds() / 1e6), uint64(cpu.CreationTime.Nanoseconds() / 1e6), nil
 }
 
+// procMem gets the memory usage for the given PID.
+// The current implementation calls
+// GetProcessMemoryInfo (https://learn.microsoft.com/en-us/windows/win32/api/psapi/nf-psapi-getprocessmemoryinfo)
+// We only need `PROCESS_QUERY_LIMITED_INFORMATION` because we do not support
+// Windows Server 2003 or Windows XP
 func procMem(pid int) (uint64, uint64, error) {
 	handle, err := syscall.OpenProcess(
 		windows.PROCESS_QUERY_LIMITED_INFORMATION,

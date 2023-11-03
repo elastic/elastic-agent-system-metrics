@@ -462,6 +462,6 @@ func getProcState(b byte) PidState {
 	return Unknown
 }
 
-func FillOtherMetricsMoreAccess(_ int, state ProcState) (ProcState, error) {
+func FillMetricsRequiringMoreAccess(_ int, state ProcState) (ProcState, error) {
 	return state, nil
 }

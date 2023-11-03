@@ -167,10 +167,9 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 // pidIter wraps a few lines of generic code that all OS-specific FetchPids() functions must call.
 // this also handles the process of adding to the maps/lists in order to limit the code duplication in all the OS implementations
 func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState) (ProcsMap, []ProcState) {
-	// That's the method that fails, however it seems to return a partial state
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
-		if !errors.Is(err, NotEnoughPrivilegiesErr{}) {
+		if !errors.Is(err, NotEnoughPrivilegesErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
 			return procMap, proclist
 		}
@@ -185,21 +184,21 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	return procMap, proclist
 }
 
-// NotEnoughPrivilegiesErr is returned when the current access
+// NotEnoughPrivilegesErr is returned when the current access
 // rights are not enough to get some metrics.
 // This error can be safely ignored and only means the function/method
 // could not gather all metrics, however whatever has been gethered
 // is still valid.
-type NotEnoughPrivilegiesErr struct {
+type NotEnoughPrivilegesErr struct {
 	Err error
 }
 
-func (c NotEnoughPrivilegiesErr) Error() string {
+func (c NotEnoughPrivilegesErr) Error() string {
 	return "Not enough privileges to fetch information: " + c.Err.Error()
 }
 
-func (c NotEnoughPrivilegiesErr) Is(other error) bool {
-	_, is := other.(NotEnoughPrivilegiesErr)
+func (c NotEnoughPrivilegesErr) Is(other error) bool {
+	_, is := other.(NotEnoughPrivilegesErr)
 	return is
 }
 
@@ -211,7 +210,6 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	// Fetch proc state so we can get the name for filtering based on user's filter.
 
 	// OS-specific entrypoint, get basic info so we can at least run matchProcess
-	// last non-os-specific call. Here "the problem begins"
 	status, err := GetInfoForPid(procStats.Hostfs, pid)
 	if err != nil {
 		return status, true, fmt.Errorf("GetInfoForPid: %w", err)
@@ -258,9 +256,9 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		}
 	} // end cgroups processor
 
-	status, err = FillOtherMetricsMoreAccess(pid, status)
+	status, err = FillMetricsRequiringMoreAccess(pid, status)
 	if err != nil {
-		return status, true, fmt.Errorf("FillOtherMetricsMoreAccess: %w", err)
+		return status, true, fmt.Errorf("FillMetricsRequiringMoreAccess: %w", err)
 	}
 
 	// network data

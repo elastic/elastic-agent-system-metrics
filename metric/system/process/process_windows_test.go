@@ -46,9 +46,9 @@ func TestGetInfoForPid_numThreads(t *testing.T) {
 		resolve.NewTestResolver("/"), cmd.Process.Pid)
 	require.NoError(t, err, "failed to GetInfoForPid")
 
-	state, err = FillOtherMetricsMoreAccess(cmd.Process.Pid, state)
+	state, err = FillMetricsRequiringMoreAccess(cmd.Process.Pid, state)
 	if err != nil {
-		t.Fatalf("error calling FillOtherMetricsMoreAccess: %s", err)
+		t.Fatalf("error calling FillMetricsRequiringMoreAccess: %s", err)
 	}
 
 	if !state.NumThreads.Exists() {
