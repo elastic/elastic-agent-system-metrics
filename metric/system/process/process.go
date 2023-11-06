@@ -222,7 +222,6 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	if procStats.skipExtended {
 		return status, true, nil
 	}
-	status = procStats.cacheCmdLine(status)
 
 	// Filter based on user-supplied func
 	if filter {
@@ -236,9 +235,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	if err != nil {
 		return status, true, fmt.Errorf("FillPidMetrics: %w", err)
 	}
-	if len(status.Args) > 0 && status.Cmdline == "" {
-		status.Cmdline = strings.Join(status.Args, " ")
-	}
+
 	if status.CPU.Total.Ticks.Exists() {
 		status.CPU.Total.Value = opt.FloatWith(metric.Round(float64(status.CPU.Total.Ticks.ValueOr(0))))
 	}
@@ -265,6 +262,11 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	if err != nil {
 		return status, true, fmt.Errorf("FillMetricsRequiringMoreAccess: %w", err)
 	}
+
+	if len(status.Args) > 0 && status.Cmdline == "" {
+		status.Cmdline = strings.Join(status.Args, " ")
+	}
+	status = procStats.cacheCmdLine(status)
 
 	// network data
 	if procStats.EnableNetwork {
