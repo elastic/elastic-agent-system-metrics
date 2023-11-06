@@ -278,20 +278,21 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 			}
 
 			// Check if there is an entry for controllerPath already cached.
-			if tmp, ok := r.v2ControllerPathCache.Load(controllerPath); ok {
-				cacheEntry, ok := tmp.(pathListWithTime)
-				if ok {
-					// If the cached entry for controllerPath is not older than 5 minutes,
-					// return the cached entry.
-					if time.Since(cacheEntry.added) < time.Duration(5*time.Minute) {
-						cPaths.V2 = cacheEntry.pathList.V2
-						continue
-					}
+			r.v2ControllerPathCache.Lock()
+			cacheEntry, ok := r.v2ControllerPathCache.cache[controllerPath]
+			if ok {
+				// If the cached entry for controllerPath is not older than 5 minutes,
+				// return the cached entry.
+				if time.Since(cacheEntry.added) < 5*time.Minute {
+					cPaths.V2 = cacheEntry.pathList.V2
+					r.v2ControllerPathCache.Unlock()
+					continue
 				}
-				// Consider the existing entry for controllerPath invalid. The entry can
-				// (1) not be casted to pathListWithTime or (2) is older than 5 minutes.
-				r.v2ControllerPathCache.Delete(controllerPath)
 			}
+			// Consider the existing entry for controllerPath invalid, as it is
+			// older than 5 minutes.
+			delete(r.v2ControllerPathCache.cache, controllerPath)
+			r.v2ControllerPathCache.Unlock()
 
 			cgpaths, err := os.ReadDir(controllerPath)
 			if err != nil {
@@ -305,10 +306,12 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 					cPaths.V2[controllerName] = ControllerPath{ControllerPath: path, FullPath: controllerPath, IsV2: true}
 				}
 			}
-			r.v2ControllerPathCache.Store(controllerPath, pathListWithTime{
+			r.v2ControllerPathCache.Lock()
+			r.v2ControllerPathCache.cache[controllerPath] = pathListWithTime{
 				added:    time.Now(),
 				pathList: cPaths,
-			})
+			}
+			r.v2ControllerPathCache.Unlock()
 			// cgroup v1
 		} else {
 			subsystems := strings.Split(fields[1], ",")

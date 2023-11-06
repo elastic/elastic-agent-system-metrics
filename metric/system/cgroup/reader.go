@@ -85,6 +85,11 @@ type pathListWithTime struct {
 	pathList PathList
 }
 
+type pathCache struct {
+	sync.RWMutex
+	cache map[string]pathListWithTime
+}
+
 // Reader reads cgroup metrics and limits.
 type Reader struct {
 	// Mountpoint of the root filesystem. Defaults to / if not set. This can be
@@ -95,7 +100,7 @@ type Reader struct {
 	cgroupMountpoints        Mountpoints // Mountpoints for each subsystem (e.g. cpu, cpuacct, memory, blkio).
 
 	// Cache to map known v2 cgroup controllerPaths to pathListWithTime.
-	v2ControllerPathCache sync.Map
+	v2ControllerPathCache pathCache
 }
 
 // ReaderOptions holds options for NewReaderOptions.
@@ -146,6 +151,7 @@ func NewReaderOptions(opts ReaderOptions) (*Reader, error) {
 		ignoreRootCgroups:        opts.IgnoreRootCgroups,
 		cgroupsHierarchyOverride: opts.CgroupsHierarchyOverride,
 		cgroupMountpoints:        mountpoints,
+		v2ControllerPathCache:    pathCache{cache: make(map[string]pathListWithTime)},
 	}, nil
 }
 
