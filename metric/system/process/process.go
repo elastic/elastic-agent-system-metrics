@@ -223,6 +223,10 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		return status, true, nil
 	}
 
+	// Some OSes use the cache to avoid expensive system calls,
+	// cacheCmdLine reads from the cache.
+	status = procStats.cacheCmdLine(status)
+
 	// Filter based on user-supplied func
 	if filter {
 		if !procStats.matchProcess(status.Name) {
@@ -263,10 +267,11 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		return status, true, fmt.Errorf("FillMetricsRequiringMoreAccess: %w", err)
 	}
 
+	// Generate `status.Cmdline` here for compatibility because on Windows
+	// `status.Args` is set by `FillMetricsRequiringMoreAccess`.
 	if len(status.Args) > 0 && status.Cmdline == "" {
 		status.Cmdline = strings.Join(status.Args, " ")
 	}
-	status = procStats.cacheCmdLine(status)
 
 	// network data
 	if procStats.EnableNetwork {
