@@ -49,6 +49,7 @@ type ProcState struct {
 	CPU     ProcCPUInfo                       `struct:"cpu,omitempty"`
 	FD      ProcFDInfo                        `struct:"fd,omitempty"`
 	Network *sysinfotypes.NetworkCountersInfo `struct:"-,omitempty"`
+	IO      ProcIOInfo                        `struct:"io,omitempty"`
 
 	// cgroups
 	Cgroup cgroup.CGStats `struct:"cgroup,omitempty"`
@@ -77,6 +78,16 @@ type CPUTotal struct {
 	Ticks opt.Uint   `struct:"ticks,omitempty"`
 	Pct   opt.Float  `struct:"pct,omitempty"`
 	Norm  opt.PctOpt `struct:"norm,omitempty"`
+}
+
+type ProcIOInfo struct {
+	ReadChar            opt.Uint `struct:"rchar,omitempty"`
+	WriteChar           opt.Uint `struct:"wchar,omitempty"`
+	ReadSyscalls        opt.Uint `struct:"syscr,omitempty"`
+	WriteSyscalls       opt.Uint `struct:"syscw,omitempty"`
+	ReadBytes           opt.Uint `struct:"read_bytes,omitempty"`
+	WriteBytes          opt.Uint `struct:"write_bytes,omitempty"`
+	CancelledWriteBites opt.Uint `struct:"cancelled_write_bytes,omitempty"`
 }
 
 // ProcMemInfo is the struct for cpu.memory metrics
