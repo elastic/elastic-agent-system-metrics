@@ -279,6 +279,8 @@ func TestGetProcess(t *testing.T) {
 	case "linux":
 		assert.True(t, (len(process.Cwd) > 0))
 	}
+
+	assert.NotEmptyf(t, process.Cmdline, "cmdLine must be present")
 }
 
 func TestMatchProcs(t *testing.T) {
@@ -612,7 +614,11 @@ func runThreads(t *testing.T) *exec.Cmd {
 	var log string
 	require.Eventually(t,
 		func() bool {
-			log += b.String()
+			if cmd.ProcessState != nil {
+				t.Fatalf("Process exited with error: '%s'", cmd.ProcessState.String())
+			}
+			line := b.String()
+			log += line
 			return strings.Contains(log, "running")
 		},
 		time.Second, 50*time.Millisecond,
