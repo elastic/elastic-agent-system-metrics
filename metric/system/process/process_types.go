@@ -80,13 +80,21 @@ type CPUTotal struct {
 	Norm  opt.PctOpt `struct:"norm,omitempty"`
 }
 
+// ProcIOInfo is the struct for I/O counters from /proc/[pid]/io
 type ProcIOInfo struct {
-	ReadChar            opt.Uint `struct:"rchar,omitempty"`
-	WriteChar           opt.Uint `struct:"wchar,omitempty"`
-	ReadSyscalls        opt.Uint `struct:"syscr,omitempty"`
-	WriteSyscalls       opt.Uint `struct:"syscw,omitempty"`
-	ReadBytes           opt.Uint `struct:"read_bytes,omitempty"`
-	WriteBytes          opt.Uint `struct:"write_bytes,omitempty"`
+	// ReadChar is bytes read from the system, as passed from read() and similar syscalls
+	ReadChar opt.Uint `struct:"read_char,omitempty"`
+	// WriteChar is bytes written to the system, as passed to various syscalls
+	WriteChar opt.Uint `struct:"write_char,omitempty"`
+	//ReadSyscalls counts the number of read operations
+	ReadSyscalls opt.Uint `struct:"read_ops,omitempty"`
+	//WriteSyscalls counts the number of write operations
+	WriteSyscalls opt.Uint `struct:"write_ops,omitempty"`
+	// ReadBytes is the count of bytes that were actually fetched from the storage layer
+	ReadBytes opt.Uint `struct:"read_bytes,omitempty"`
+	// WriteBytes is the count of bytes that were actually written to the storage layer
+	WriteBytes opt.Uint `struct:"write_bytes,omitempty"`
+	// the number of bytes which this process caused to not happen, by truncating pagecache
 	CancelledWriteBites opt.Uint `struct:"cancelled_write_bytes,omitempty"`
 }
 
