@@ -52,3 +52,5 @@ steps:
         allow_failure: true
       - step: "windows-test"
         allow_failure: true
+      - step: "macos-test"
+        allow_failure: true
