@@ -339,7 +339,7 @@ func getIOData(hostfs resolve.Resolver, pid int) (ProcIOInfo, error) {
 		case "write_bytes":
 			state.WriteBytes = opt.UintWith(value)
 		case "cancelled_write_bytes":
-			state.CancelledWriteBites = opt.UintWith(value)
+			state.CancelledWriteBytes = opt.UintWith(value)
 		}
 	}
 	return state, nil

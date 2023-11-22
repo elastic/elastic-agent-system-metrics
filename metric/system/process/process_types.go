@@ -95,7 +95,7 @@ type ProcIOInfo struct {
 	// WriteBytes is the count of bytes that were actually written to the storage layer
 	WriteBytes opt.Uint `struct:"write_bytes,omitempty"`
 	// the number of bytes which this process caused to not happen, by truncating pagecache
-	CancelledWriteBites opt.Uint `struct:"cancelled_write_bytes,omitempty"`
+	CancelledWriteBytes opt.Uint `struct:"cancelled_write_bytes,omitempty"`
 }
 
 // ProcMemInfo is the struct for cpu.memory metrics

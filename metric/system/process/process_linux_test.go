@@ -146,7 +146,7 @@ func TestParseIO(t *testing.T) {
 		WriteSyscalls:       opt.UintWith(1),
 		ReadBytes:           opt.UintWith(5243),
 		WriteBytes:          opt.UintWith(128),
-		CancelledWriteBites: opt.UintWith(4),
+		CancelledWriteBytes: opt.UintWith(4),
 	}
 
 	require.Equal(t, good, data)
