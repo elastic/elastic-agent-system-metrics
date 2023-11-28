@@ -68,7 +68,7 @@ const (
 	memoryStat  = "memory"
 )
 
-//nolint: deadcode,structcheck,unused // needed by other platforms
+// nolint: deadcode,structcheck,unused // needed by other platforms
 type mount struct {
 	subsystem  string // Subsystem name (e.g. cpuacct).
 	mountpoint string // Mountpoint of the subsystem (e.g. /cgroup/cpuacct).
@@ -189,7 +189,7 @@ func (r *Reader) GetStatsForPid(pid int) (CGStats, error) {
 // GetV1StatsForProcess returns cgroup metrics and limits associated with a process.
 func (r *Reader) GetV1StatsForProcess(pid int) (*StatsV1, error) { //nolint: dupl // return value is different
 	// Read /proc/[pid]/cgroup to get the paths to the cgroup metrics.
-	paths, err := r.ProcessCgroupPaths(pid)
+	paths, err := r.ProcessCgroupPaths(CgroupsV1, pid)
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (r *Reader) GetV1StatsForProcess(pid int) (*StatsV1, error) { //nolint: dup
 // GetV2StatsForProcess returns cgroup metrics and limits associated with a process.
 func (r *Reader) GetV2StatsForProcess(pid int) (*StatsV2, error) { //nolint: dupl // return value is different
 	// Read /proc/[pid]/cgroup to get the paths to the cgroup metrics.
-	paths, err := r.ProcessCgroupPaths(pid)
+	paths, err := r.ProcessCgroupPaths(CgroupsV2, pid)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,11 @@ func ProcessCgroupPaths(hostfs resolve.Resolver, pid int) (PathList, error) {
 	if err != nil {
 		return PathList{}, fmt.Errorf("error creating cgroups reader: %w", err)
 	}
-	return reader.ProcessCgroupPaths(pid)
+	v, err := reader.CgroupsVersion(pid)
+	if err != nil {
+		return PathList{}, fmt.Errorf("error finding cgroup version for pid %d: %w", pid, err)
+	}
+	return reader.ProcessCgroupPaths(v, pid)
 }
 
 func getStatsV2(path ControllerPath, name string, stats *StatsV2) error {

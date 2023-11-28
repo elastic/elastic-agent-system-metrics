@@ -229,7 +229,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 
 // ProcessCgroupPaths returns the cgroups to which a process belongs and the
 // pathname of the cgroup relative to the mountpoint of the subsystem.
-func (r Reader) ProcessCgroupPaths(pid int) (PathList, error) {
+func (r Reader) ProcessCgroupPaths(version CgroupsVersion, pid int) (PathList, error) {
 	cgroupPath := filepath.Join("proc", strconv.Itoa(pid), "cgroup")
 	cgroup, err := os.Open(r.rootfsMountpoint.ResolveHostFS(cgroupPath))
 	if err != nil {
@@ -256,8 +256,7 @@ func (r Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 			path = r.cgroupsHierarchyOverride
 		}
 		// cgroup V2
-		// cgroup v2 controllers will always start with this string
-		if strings.Contains(line, "0::/") {
+		if version == CgroupsV2 {
 			// if you're running inside a container
 			// that's operating with a hybrid cgroups config,
 			// the containerized process won't see the V2 mount
@@ -289,6 +288,10 @@ the container as /sys/fs/cgroup/unified and start the system module with the hos
 			}
 			// cgroup v1
 		} else {
+			// in case of hybrid mode, we ignore cgroup v2 controllers which will always start with this string
+			if strings.HasPrefix(line, "0::/") {
+				continue
+			}
 			subsystems := strings.Split(fields[1], ",")
 			for _, subsystem := range subsystems {
 				fullPath := filepath.Join(r.cgroupMountpoints.V1Mounts[subsystem], path)
