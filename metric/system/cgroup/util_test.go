@@ -183,7 +183,7 @@ func TestProcessCgroupPaths(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error in NewReader: %s", err)
 	}
-	paths, err := reader.ProcessCgroupPaths(CgroupsV1, 985)
+	paths, err := reader.ProcessCgroupPaths(985)
 	if err != nil {
 		t.Fatalf("error in ProcessCgroupPaths: %s", err)
 	}
@@ -207,7 +207,7 @@ func TestProcessCgroupHybridPaths(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error in NewReader: %s", err)
 	}
-	paths, err := reader.ProcessCgroupPaths(CgroupsV1, 493239)
+	paths, err := reader.ProcessCgroupPaths(493239)
 	if err != nil {
 		t.Fatalf("error in ProcessCgroupPaths: %s", err)
 	}
@@ -233,7 +233,7 @@ func TestProcessCgroupPathsV2(t *testing.T) {
 		t.Fatalf("error in NewReader: %s", err)
 	}
 
-	paths, err := reader.ProcessCgroupPaths(CgroupsV2, 312)
+	paths, err := reader.ProcessCgroupPaths(312)
 	if err != nil {
 		t.Fatalf("error in ProcessCgroupPaths: %s", err)
 	}
