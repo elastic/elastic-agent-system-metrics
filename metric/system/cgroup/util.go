@@ -230,7 +230,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 
 // ProcessCgroupPaths returns the cgroups to which a process belongs and the
 // pathname of the cgroup relative to the mountpoint of the subsystem.
-func (r Reader) ProcessCgroupPaths(pid int) (PathList, error) {
+func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 	cgroupPath := filepath.Join("proc", strconv.Itoa(pid), "cgroup")
 	cgroup, err := os.Open(r.rootfsMountpoint.ResolveHostFS(cgroupPath))
 	if err != nil {
