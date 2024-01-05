@@ -196,7 +196,7 @@ func TestFilter(t *testing.T) {
 
 	procData, _, err := testConfig.Get()
 	assert.NoError(t, err, "GetOne")
-	assert.Equal(t, 2, len(procData))
+	assert.Len(t, procData, 2)
 
 	testZero := Stats{
 		Procs:  []string{".*"},
