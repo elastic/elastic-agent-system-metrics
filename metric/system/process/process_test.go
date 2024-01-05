@@ -199,7 +199,7 @@ func TestFilter(t *testing.T) {
 	// the total count of processes can either be one or two,
 	// depending on if the highest-mem-usage process and
 	// highest-cpu-usage process are the same.
-	assert.GreaterOrEqual(t, 1, len(procData))
+	assert.GreaterOrEqual(t, len(procData), 1)
 
 	testZero := Stats{
 		Procs:  []string{".*"},
