@@ -360,9 +360,6 @@ func TestProcCpuPercentage(t *testing.T) {
 }
 
 func TestIncludeTopProcesses(t *testing.T) {
-	// noop line so `runThreads` is not marked as unsued for CI on linux
-	// can't use linter directives, since they'll fail on platforms where `runthreads` IS used
-	// so just do this.
 	_ = runThreads
 	processes := []ProcState{
 		{
@@ -588,7 +585,7 @@ func TestIncludeTopProcesses(t *testing.T) {
 //go:generate docker run --rm -v ./testdata:/app --entrypoint g++ docker.elastic.co/beats-dev/golang-crossbuild:1.21.0-main -pthread -std=c++11 -o /app/threads /app/threads.cpp
 //go:generate docker run --rm -v ./testdata:/app --entrypoint o64-clang++ docker.elastic.co/beats-dev/golang-crossbuild:1.21.0-darwin -pthread -std=c++11 -o /app/threads-darwin /app/threads.cpp
 //go:generate docker run --rm -v ./testdata:/app --entrypoint x86_64-w64-mingw32-g++-posix docker.elastic.co/beats-dev/golang-crossbuild:1.21.0-main -pthread -std=c++11 -o /app/threads.exe /app/threads.cpp
-func runThreads(t *testing.T) *exec.Cmd {
+func runThreads(t *testing.T) *exec.Cmd { //nolint: deadcode,structcheck,unused // needed by other platforms
 	t.Helper()
 
 	supportedPlatforms := []string{"linux/amd64", "darwin/amd64", "windows/amd64"}
@@ -661,7 +658,7 @@ func initTestResolver() (Stats, error) {
 	return testConfig, err
 }
 
-func sliceContains(s []string, e string) bool {
+func sliceContains(s []string, e string) bool { //nolint: deadcode,structcheck,unused // needed by other platforms
 	for _, v := range s {
 		if e == v {
 			return true
