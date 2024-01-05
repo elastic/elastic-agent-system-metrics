@@ -360,7 +360,6 @@ func TestProcCpuPercentage(t *testing.T) {
 }
 
 func TestIncludeTopProcesses(t *testing.T) {
-	_ = runThreads
 	processes := []ProcState{
 		{
 			Pid: opt.IntWith(1),
