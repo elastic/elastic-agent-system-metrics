@@ -173,7 +173,7 @@ func TestNetworkFilter(t *testing.T) {
 
 	_, exists := data.GetValue("network.ip.Forwarding")
 	require.NoError(t, exists, "filter did not preserve key")
-	ipMetrics, exists := data.GetValue("network.ip")
+	ipMetrics, _ := data.GetValue("network.ip")
 	require.Equal(t, 1, len(ipMetrics.(map[string]interface{})))
 }
 
@@ -196,7 +196,10 @@ func TestFilter(t *testing.T) {
 
 	procData, _, err := testConfig.Get()
 	assert.NoError(t, err, "GetOne")
-	assert.Equal(t, 2, len(procData))
+	// the total count of processes can either be one or two,
+	// depending on if the highest-mem-usage process and
+	// highest-cpu-usage process are the same.
+	assert.GreaterOrEqual(t, 1, len(procData))
 
 	testZero := Stats{
 		Procs:  []string{".*"},
