@@ -657,8 +657,7 @@ func initTestResolver() (Stats, error) {
 	return testConfig, err
 }
 
-// nolint: deadcode,structcheck,unused // needed by other platforms
-func sliceContains(s []string, e string) bool {
+func sliceContains(s []string, e string) bool { //nolint: deadcode,structcheck,unused // needed by other platforms
 	for _, v := range s {
 		if e == v {
 			return true
