@@ -360,6 +360,9 @@ func TestProcCpuPercentage(t *testing.T) {
 }
 
 func TestIncludeTopProcesses(t *testing.T) {
+	// noop line so `runThreads` is not marked as unsued for CI on linux
+	// can't use linter directives, since they'll fail on platforms where `runthreads` IS used
+	// so just do this.
 	_ = runThreads
 	processes := []ProcState{
 		{
