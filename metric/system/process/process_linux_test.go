@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -38,6 +39,7 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 	// where if the code wasn't working (and we were skipping over PIDs not owned by us) this test would pass.
 	// re-implement part of the core pid-fetch logic
 	// All this does is find a pid that's not owned by us.
+	_ = logp.DevelopmentSetup()
 	dir, err := os.Open("/proc/")
 	require.NoError(t, err, "error opening /proc")
 
