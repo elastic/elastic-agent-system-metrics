@@ -20,9 +20,14 @@
 package process
 
 import (
+	"errors"
+	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
+	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +39,65 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
+// CreateUser creates a user on the machine.
+func CreateUser(name string, gid int) (int, error) {
+	args := []string{
+		"--gid", strconv.Itoa(gid),
+		"--system",
+		"--no-user-group",
+		"--shell", "/usr/bin/false",
+		name,
+	}
+	cmd := exec.Command("useradd", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		command := fmt.Sprintf("useradd %s", strings.Join(args, " "))
+		return -1, fmt.Errorf("%s failed: %w (output: %s)", command, err, output)
+	}
+	return FindUID(name)
+}
+
+// FindUID returns the user's UID on the machine.
+func FindUID(name string) (int, error) {
+	id, err := getentGetID("passwd", name)
+	if e := (&exec.ExitError{}); errors.As(err, &e) {
+		if e.ExitCode() == 2 {
+			// exit code 2 is the key doesn't exist in the database
+			return -1, fmt.Errorf("User not found")
+		}
+	}
+	return id, err
+}
+
+func getentGetID(database string, key string) (int, error) {
+	cmd := exec.Command("getent", database, key)
+	output, err := cmd.Output()
+	if err != nil {
+		return -1, fmt.Errorf("getent %s %s failed: %w (output: %s)", database, key, err, output)
+	}
+	split := strings.Split(string(output), ":")
+	if len(split) < 3 {
+		return -1, fmt.Errorf("unexpected format: %s", output)
+	}
+	val, err := strconv.Atoi(split[2])
+	if err != nil {
+		return -1, fmt.Errorf("failed to convert %s to int: %w", split[2], err)
+	}
+	return val, nil
+}
+
 func TestFetchProcessFromOtherUser(t *testing.T) {
+	if runtime.GOOS == "linux" {
+		cmd := exec.Command("cat", "/etc/passwd")
+		out, err := cmd.CombinedOutput()
+		require.NoError(t, err)
+		t.Logf("Got users: %s", string(out))
+
+		uid, err := CreateUser("test", 1000)
+		require.NoError(t, err)
+		t.Logf("uid: %v", uid)
+	}
+
 	// If we just used Get() or FetchPids() to get a list of processes on the system, this would produce a bootstrapping problem
 	// where if the code wasn't working (and we were skipping over PIDs not owned by us) this test would pass.
 	// re-implement part of the core pid-fetch logic
