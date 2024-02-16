@@ -103,7 +103,7 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 		require.NoError(t, err)
 		t.Logf("whoami: %s", string(out))
 
-		uid, err := CreateUser("test", 1000)
+		uid, err := CreateUser("test", 0)
 		require.NoError(t, err)
 		t.Logf("uid: %v", uid)
 	}
