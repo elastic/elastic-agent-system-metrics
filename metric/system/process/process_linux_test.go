@@ -93,6 +93,11 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 		require.NoError(t, err)
 		t.Logf("Got users: %s", string(out))
 
+		cmd = exec.Command("groups")
+		out, err = cmd.CombinedOutput()
+		require.NoError(t, err)
+		t.Logf("Got groups: %s", string(out))
+
 		uid, err := CreateUser("test", 1000)
 		require.NoError(t, err)
 		t.Logf("uid: %v", uid)
