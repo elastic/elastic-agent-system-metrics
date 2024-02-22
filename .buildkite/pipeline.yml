@@ -7,7 +7,8 @@ env:
   WINDOWS_AGENT_IMAGE: "family/ci-windows-2022"
 
 steps:
-    - plugins:
+  - label: ":linux: Test unowned processes"
+    plugins:
       - docker#v5.10.0:
           image: "${LINUX_AGENT_IMAGE}"
           always-pull: true
