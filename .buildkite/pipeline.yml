@@ -14,7 +14,7 @@ steps:
           command: [".buildkite/scripts/run-linux-tests.sh"]
           volumes:
             - "/var/run/docker.sock:/var/run/docker.sock"
-            -"/proc/:/hostfs"
+            - "/proc/:/hostfs"
 
   - label: ":golangci-lint: Lint"
     key: lint-test
