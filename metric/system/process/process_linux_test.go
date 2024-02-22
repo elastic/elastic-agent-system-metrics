@@ -113,7 +113,7 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	// cmdHandler := exec.Command("sleep", "60")
 	// cmdHandler.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: 0}
 
-	cmd := exec.Command("ls", "/hostfs")
+	cmd := exec.Command("ls", "/")
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, "got out: %s", string(out))
 	t.Logf("Got hostfs: %s", string(out))
