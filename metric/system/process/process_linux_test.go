@@ -25,7 +25,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -86,32 +85,47 @@ func getentGetID(database string, key string) (int, error) {
 	return val, nil
 }
 
+func TestRunningProcessFromOtherUser(t *testing.T) {
+	// cmd := exec.Command("cat", "/etc/passwd")
+	// out, err := cmd.CombinedOutput()
+	// require.NoError(t, err)
+	// t.Logf("Got users: %s", string(out))
+
+	// cmd = exec.Command("cat", "/etc/group")
+	// out, err = cmd.CombinedOutput()
+	// require.NoError(t, err)
+	// t.Logf("Got groups: %s", string(out))
+
+	// cmd = exec.Command("whoami")
+	// out, err = cmd.CombinedOutput()
+	// require.NoError(t, err)
+	// t.Logf("whoami: %s", string(out))
+
+	// cmd = exec.Command("ps", "aux")
+	// out, err = cmd.CombinedOutput()
+	// require.NoError(t, err)
+	// t.Logf("ps: %s", string(out))
+
+	// uid, err := CreateUser("test", 0)
+	// require.NoError(t, err)
+	// t.Logf("uid: %v", uid)
+
+	// cmdHandler := exec.Command("sleep", "60")
+	// cmdHandler.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: 0}
+
+	cmd := exec.Command("ls", "/hostfs")
+	out, err := cmd.CombinedOutput()
+	require.NoError(t, err)
+	t.Logf("Got hostfs: %s", string(out))
+
+	cmd = exec.Command("docker", "ps")
+	out, err = cmd.CombinedOutput()
+	require.NoError(t, err)
+	t.Logf("Got docker out: %s", string(out))
+
+}
+
 func TestFetchProcessFromOtherUser(t *testing.T) {
-	if runtime.GOOS == "linux" {
-		cmd := exec.Command("cat", "/etc/passwd")
-		out, err := cmd.CombinedOutput()
-		require.NoError(t, err)
-		t.Logf("Got users: %s", string(out))
-
-		cmd = exec.Command("cat", "/etc/group")
-		out, err = cmd.CombinedOutput()
-		require.NoError(t, err)
-		t.Logf("Got groups: %s", string(out))
-
-		cmd = exec.Command("whoami")
-		out, err = cmd.CombinedOutput()
-		require.NoError(t, err)
-		t.Logf("whoami: %s", string(out))
-
-		cmd = exec.Command("ps", "aux")
-		out, err = cmd.CombinedOutput()
-		require.NoError(t, err)
-		t.Logf("ps: %s", string(out))
-
-		uid, err := CreateUser("test", 0)
-		require.NoError(t, err)
-		t.Logf("uid: %v", uid)
-	}
 
 	// If we just used Get() or FetchPids() to get a list of processes on the system, this would produce a bootstrapping problem
 	// where if the code wasn't working (and we were skipping over PIDs not owned by us) this test would pass.

@@ -7,6 +7,15 @@ env:
   WINDOWS_AGENT_IMAGE: "family/ci-windows-2022"
 
 steps:
+    - plugins:
+      - docker#v5.10.0:
+          image: "${LINUX_AGENT_IMAGE}"
+          always-pull: true
+          command: [".buildkite/scripts/run-linux-tests.sh"]
+          volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+            -"/proc/:/hostfs"
+
   - label: ":golangci-lint: Lint"
     key: lint-test
     command: ".buildkite/scripts/lint_test.sh"
