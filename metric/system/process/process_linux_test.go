@@ -115,12 +115,12 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 
 	cmd := exec.Command("ls", "/hostfs")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, "got out: %s", string(out))
 	t.Logf("Got hostfs: %s", string(out))
 
 	cmd = exec.Command("docker", "ps")
 	out, err = cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, "got out: %s", string(out))
 	t.Logf("Got docker out: %s", string(out))
 
 }
