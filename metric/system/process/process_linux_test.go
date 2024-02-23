@@ -27,6 +27,7 @@ import (
 	"os/user"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,43 +87,44 @@ func getentGetID(database string, key string) (int, error) {
 }
 
 func TestRunningProcessFromOtherUser(t *testing.T) {
-	// cmd := exec.Command("cat", "/etc/passwd")
-	// out, err := cmd.CombinedOutput()
-	// require.NoError(t, err)
-	// t.Logf("Got users: %s", string(out))
-
-	// cmd = exec.Command("cat", "/etc/group")
-	// out, err = cmd.CombinedOutput()
-	// require.NoError(t, err)
-	// t.Logf("Got groups: %s", string(out))
-
-	// cmd = exec.Command("whoami")
-	// out, err = cmd.CombinedOutput()
-	// require.NoError(t, err)
-	// t.Logf("whoami: %s", string(out))
-
-	// cmd = exec.Command("ps", "aux")
-	// out, err = cmd.CombinedOutput()
-	// require.NoError(t, err)
-	// t.Logf("ps: %s", string(out))
-
-	// uid, err := CreateUser("test", 0)
-	// require.NoError(t, err)
-	// t.Logf("uid: %v", uid)
-
-	// cmdHandler := exec.Command("sleep", "60")
-	// cmdHandler.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: 0}
-
-	cmd := exec.Command("ls", "/root")
+	cmd := exec.Command("cat", "/etc/passwd")
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err, "got out: %s", string(out))
-	t.Logf("Got hostfs: %s", string(out))
+	require.NoError(t, err)
+	t.Logf("Got users: %s", string(out))
 
-	cmd = exec.Command("docker", "ps")
+	cmd = exec.Command("cat", "/etc/group")
 	out, err = cmd.CombinedOutput()
-	require.NoError(t, err, "got out: %s", string(out))
-	t.Logf("Got docker out: %s", string(out))
+	require.NoError(t, err)
+	t.Logf("Got groups: %s", string(out))
 
+	cmd = exec.Command("whoami")
+	out, err = cmd.CombinedOutput()
+	require.NoError(t, err)
+	t.Logf("whoami: %s", string(out))
+
+	cmd = exec.Command("ps", "aux")
+	out, err = cmd.CombinedOutput()
+	require.NoError(t, err)
+	t.Logf("ps: %s", string(out))
+
+	uid, err := CreateUser("test", 0)
+	require.NoError(t, err)
+	t.Logf("uid: %v", uid)
+
+	cmdHandler := exec.Command("sleep", "60")
+	cmdHandler.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: 0}
+
+	go func() {
+		_, err := cmdHandler.CombinedOutput()
+		require.NoError(t, err)
+
+	}()
+
+	psHandle := exec.Command("ps", "aux")
+	psOut, err := psHandle.CombinedOutput()
+	require.NoError(t, err)
+
+	t.Logf("ps out: %s", string(psOut))
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
