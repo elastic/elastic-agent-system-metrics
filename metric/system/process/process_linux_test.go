@@ -128,7 +128,7 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	// require.NoError(t, err)
 	// t.Logf("got out: %s", string(fileOut))
 
-	testStats := Stats{CPUTicks: true, EnableCgroups: true, EnableNetwork: true}
+	testStats := Stats{CPUTicks: true, EnableCgroups: true, EnableNetwork: true, Hostfs: resolve.NewTestResolver("/")}
 	err = testStats.Init()
 	require.NoError(t, err)
 
