@@ -25,7 +25,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -125,9 +124,17 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 
 	t.Logf("ps out after create: %s", string(psOut))
 
-	fileOut, err := os.ReadFile(filepath.Join("/proc/", fmt.Sprintf("%d", runPid), "io"))
+	// fileOut, err := os.ReadFile(filepath.Join("/proc/", fmt.Sprintf("%d", runPid), "io"))
+	// require.NoError(t, err)
+	// t.Logf("got out: %s", string(fileOut))
+
+	testStats := Stats{CPUTicks: true, EnableCgroups: true, EnableNetwork: true}
+	err = testStats.Init()
 	require.NoError(t, err)
-	t.Logf("got out: %s", string(fileOut))
+
+	result, err := testStats.GetOne(runPid)
+	require.NoError(t, err)
+	t.Logf("got result: %#v", result)
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
