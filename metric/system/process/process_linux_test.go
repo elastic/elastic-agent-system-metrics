@@ -112,7 +112,7 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	t.Logf("uid: %v", uid)
 
 	cmdHandler := exec.Command("sleep", "60")
-	cmdHandler.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: 0}
+	cmdHandler.SysProcAttr = &syscall.SysProcAttr{Credential: &syscall.Credential{Uid: uint32(uid), Gid: 0}}
 
 	go func() {
 		_, err := cmdHandler.CombinedOutput()
