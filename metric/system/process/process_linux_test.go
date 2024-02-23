@@ -117,6 +117,7 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	// check to make sure we still got valid results
 	require.Equal(t, "sleep 60", result["cmdline"])
 	require.NotEqual(t, uname.Name, result["username"])
+	require.NotZero(t, result["memory"].(map[string]interface{})["size"])
 	t.Logf("got result: %s", result["username"])
 }
 
