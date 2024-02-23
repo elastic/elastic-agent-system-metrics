@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -114,17 +115,19 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	cmdHandler := exec.Command("sleep", "60")
 	cmdHandler.SysProcAttr = &syscall.SysProcAttr{Credential: &syscall.Credential{Uid: uint32(uid), Gid: 0}}
 
-	go func() {
-		_, err := cmdHandler.CombinedOutput()
-		require.NoError(t, err)
-
-	}()
+	err = cmdHandler.Start()
+	require.NoError(t, err)
+	runPid := cmdHandler.Process.Pid
 
 	psHandle := exec.Command("ps", "aux")
 	psOut, err := psHandle.CombinedOutput()
 	require.NoError(t, err)
 
-	t.Logf("ps out: %s", string(psOut))
+	t.Logf("ps out after create: %s", string(psOut))
+
+	fileOut, err := os.ReadFile(filepath.Join("/proc/", fmt.Sprintf("%d", runPid), "io"))
+	require.NoError(t, err)
+	t.Logf("got out: %s", string(fileOut))
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
