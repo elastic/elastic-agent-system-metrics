@@ -87,25 +87,6 @@ func getentGetID(database string, key string) (int, error) {
 }
 
 func TestRunningProcessFromOtherUser(t *testing.T) {
-	cmd := exec.Command("cat", "/etc/passwd")
-	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
-	t.Logf("Got users: %s", string(out))
-
-	cmd = exec.Command("cat", "/etc/group")
-	out, err = cmd.CombinedOutput()
-	require.NoError(t, err)
-	t.Logf("Got groups: %s", string(out))
-
-	cmd = exec.Command("whoami")
-	out, err = cmd.CombinedOutput()
-	require.NoError(t, err)
-	t.Logf("whoami: %s", string(out))
-
-	cmd = exec.Command("ps", "aux")
-	out, err = cmd.CombinedOutput()
-	require.NoError(t, err)
-	t.Logf("ps: %s", string(out))
 
 	uid, err := CreateUser("test", 0)
 	require.NoError(t, err)
@@ -118,28 +99,25 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	require.NoError(t, err)
 	runPid := cmdHandler.Process.Pid
 
-	psHandle := exec.Command("ps", "aux")
-	psOut, err := psHandle.CombinedOutput()
-	require.NoError(t, err)
-
-	t.Logf("ps out after create: %s", string(psOut))
-
-	// fileOut, err := os.ReadFile(filepath.Join("/proc/", fmt.Sprintf("%d", runPid), "io"))
-	// require.NoError(t, err)
-	// t.Logf("got out: %s", string(fileOut))
-
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
 		EnableNetwork: true,
 		Hostfs:        resolve.NewTestResolver("/"),
+		Procs:         []string{".*"},
 		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: resolve.NewTestResolver("/")},
 	}
 	err = testStats.Init()
 	require.NoError(t, err)
 
+	uname, err := user.Current()
+	require.NoError(t, err)
+
 	result, err := testStats.GetOne(runPid)
 	require.NoError(t, err)
-	t.Logf("got result: %#v", result)
+	// check to make sure we still got valid results
+	require.Equal(t, "sleep 60", result["cmdline"])
+	require.NotEqual(t, uname.Name, result["username"])
+	t.Logf("got result: %s", result["username"])
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
