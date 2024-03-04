@@ -45,6 +45,7 @@ func init() {
 // Elastic Agent under Docker.
 const monitoringCgroupsHierarchyOverride = "LIBBEAT_MONITORING_CGROUPS_HIERARCHY_OVERRIDE"
 
+// SetupMetrics creates a basic suite of metrics handlers for monitoring, including build info and system resources
 func SetupMetrics(logger *logp.Logger, name, version string) error {
 	monitoring.NewFunc(systemMetrics, "cpu", ReportSystemCPUUsage, monitoring.Report)
 

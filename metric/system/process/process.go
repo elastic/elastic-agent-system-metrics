@@ -16,26 +16,76 @@
 // under the License.
 
 //go:build (darwin && cgo) || freebsd || linux || windows || aix
-// +build darwin,cgo freebsd linux windows aix
 
 package process
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
+	psutil "github.com/shirou/gopsutil/process"
+
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-libs/transform/typeconv"
 	"github.com/elastic/elastic-agent-system-metrics/metric"
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/network"
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	"github.com/elastic/go-sysinfo"
+	sysinfotypes "github.com/elastic/go-sysinfo/types"
 )
+
+// ListStates is a wrapper that returns a list of processess with only the basic PID info filled out.
+func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
+	init := Stats{
+		Hostfs:        hostfs,
+		Procs:         []string{".*"},
+		EnableCgroups: false,
+		skipExtended:  true,
+	}
+	err := init.Init()
+	if err != nil {
+		return nil, fmt.Errorf("error initializing process collectors: %w", err)
+	}
+
+	// actually fetch the PIDs from the OS-specific code
+	_, plist, err := init.FetchPids()
+	if err != nil {
+		return nil, fmt.Errorf("error gathering PIDs: %w", err)
+	}
+
+	return plist, nil
+}
+
+// GetPIDState returns the state of a given PID
+// It will return ProcNotExist if the process was not found.
+func GetPIDState(hostfs resolve.Resolver, pid int) (PidState, error) {
+	// This library still doesn't have a good cross-platform way to distinguish between "does not eixst" and other process errors.
+	// This is a fairly difficult problem to solve in a cross-platform way
+	exists, err := psutil.PidExistsWithContext(context.Background(), int32(pid))
+	if err != nil {
+		return "", fmt.Errorf("Error trying to find process: %d: %w", pid, err)
+	}
+	if !exists {
+		return "", ProcNotExist
+	}
+	// GetInfoForPid will return the smallest possible dataset for a PID
+	procState, err := GetInfoForPid(hostfs, pid)
+	if err != nil {
+		return "", fmt.Errorf("error getting state info for pid %d: %w", pid, err)
+	}
+
+	return procState.State, nil
+}
 
 // Get fetches the configured processes and returns a list of formatted events and root ECS fields
 func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
-	//If the user hasn't configured any kind of process glob, return
+	// If the user hasn't configured any kind of process glob, return
 	if len(procStats.Procs) == 0 {
 		return nil, nil, nil
 	}
@@ -62,18 +112,17 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		} else {
 			totalPhyMem = memStats.Total
 		}
-
 	}
 
-	//Format the list to the MapStr type used by the outputs
-	procs := []mapstr.M{}
-	rootEvents := []mapstr.M{}
+	// Format the list to the MapStr type used by the outputs
+	procs := make([]mapstr.M, 0, len(plist))
+	rootEvents := make([]mapstr.M, 0, len(plist))
 
 	for _, process := range plist {
 		process := process
 		// Add the RSS pct memory first
 		process.Memory.Rss.Pct = GetProcMemPercentage(process, totalPhyMem)
-		//Create the root event
+		// Create the root event
 		root := process.FormatForRoot()
 		rootMap := mapstr.M{}
 		_ = typeconv.Convert(&rootMap, root)
@@ -120,8 +169,11 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState) (ProcsMap, []ProcState) {
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
-		procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-		return procMap, proclist
+		if !errors.Is(err, NonFatalErr{}) {
+			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
+			return procMap, proclist
+		}
+		procStats.logger.Debugf("Non fatal error fetching PID some info for %d, metrics are valid, but partial: %s", pid, err)
 	}
 	if !saved {
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
@@ -131,6 +183,28 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	proclist = append(proclist, status)
 
 	return procMap, proclist
+}
+
+// NonFatalErr is returned when there was an error
+// collecting metrics, however the metrics already
+// gathered and returned are still valid.
+// This error can be safely ignored, this will result
+// in having partial metrics for a process rather than
+// no metrics at all.
+//
+// It was introduced to allow for partial metrics collection
+// on privileged process on Windows.
+type NonFatalErr struct {
+	Err error
+}
+
+func (c NonFatalErr) Error() string {
+	return "Not enough privileges to fetch information: " + c.Err.Error()
+}
+
+func (c NonFatalErr) Is(other error) bool {
+	_, is := other.(NonFatalErr)
+	return is
 }
 
 // pidFill is an entrypoint used by OS-specific code to fill out a pid.
@@ -148,6 +222,9 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	if procStats.skipExtended {
 		return status, true, nil
 	}
+
+	// Some OSes use the cache to avoid expensive system calls,
+	// cacheCmdLine reads from the cache.
 	status = procStats.cacheCmdLine(status)
 
 	// Filter based on user-supplied func
@@ -157,18 +234,23 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		}
 	}
 
-	//If we've passed the filter, continue to fill out the rest of the metrics
+	// If we've passed the filter, continue to fill out the rest of the metrics
 	status, err = FillPidMetrics(procStats.Hostfs, pid, status, procStats.isWhitelistedEnvVar)
 	if err != nil {
 		return status, true, fmt.Errorf("FillPidMetrics: %w", err)
 	}
-	if len(status.Args) > 0 && status.Cmdline == "" {
-		status.Cmdline = strings.Join(status.Args, " ")
+
+	if status.CPU.Total.Ticks.Exists() {
+		status.CPU.Total.Value = opt.FloatWith(metric.Round(float64(status.CPU.Total.Ticks.ValueOr(0))))
 	}
 
-	//postprocess with cgroups and percentages
+	// postprocess with cgroups and percentages
 	last, ok := procStats.ProcsMap.GetPid(status.Pid.ValueOr(0))
 	status.SampleTime = time.Now()
+	if ok {
+		status = GetProcCPUPercentage(last, status)
+	}
+
 	if procStats.EnableCgroups {
 		cgStats, err := procStats.cgroups.GetStatsForPid(status.Pid.ValueOr(0))
 		if err != nil {
@@ -180,11 +262,32 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		}
 	} // end cgroups processor
 
-	if status.CPU.Total.Ticks.Exists() {
-		status.CPU.Total.Value = opt.FloatWith(metric.Round(float64(status.CPU.Total.Ticks.ValueOr(0))))
+	status, err = FillMetricsRequiringMoreAccess(pid, status)
+	if err != nil {
+		return status, true, fmt.Errorf("FillMetricsRequiringMoreAccess: %w", err)
 	}
-	if ok {
-		status = GetProcCPUPercentage(last, status)
+
+	// Generate `status.Cmdline` here for compatibility because on Windows
+	// `status.Args` is set by `FillMetricsRequiringMoreAccess`.
+	if len(status.Args) > 0 && status.Cmdline == "" {
+		status.Cmdline = strings.Join(status.Args, " ")
+	}
+
+	// network data
+	if procStats.EnableNetwork {
+		procHandle, err := sysinfo.Process(pid)
+		// treat this as a soft error
+		if err != nil {
+			procStats.logger.Debugf("error initializing process handler for pid %d while trying to fetch network data: %w", pid, err)
+		} else {
+			procNet, ok := procHandle.(sysinfotypes.NetworkCounters)
+			if ok {
+				status.Network, err = procNet.NetworkCounters()
+				if err != nil {
+					procStats.logger.Debugf("error fetching network counters for process %d: %w", pid, err)
+				}
+			}
+		}
 	}
 
 	return status, true, nil
@@ -215,6 +318,10 @@ func (procStats *Stats) getProcessEvent(process *ProcState) (mapstr.M, error) {
 
 	proc := mapstr.M{}
 	err := typeconv.Convert(&proc, process)
+
+	if procStats.EnableNetwork && process.Network != nil {
+		proc["network"] = network.MapProcNetCountersWithFilter(process.Network, procStats.NetworkMetrics)
+	}
 
 	return proc, err
 }
@@ -272,7 +379,7 @@ func (procStats *Stats) includeTopProcesses(processes []ProcState) []ProcState {
 
 // isWhitelistedEnvVar returns true if the given variable name is a match for
 // the whitelist. If the whitelist is empty it returns false.
-func (procStats Stats) isWhitelistedEnvVar(varName string) bool {
+func (procStats *Stats) isWhitelistedEnvVar(varName string) bool {
 	if len(procStats.envRegexps) == 0 {
 		return false
 	}

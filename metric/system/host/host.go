@@ -25,9 +25,15 @@ import (
 )
 
 // MapHostInfo converts the HostInfo to a MapStr based on ECS.
-func MapHostInfo(info types.HostInfo) mapstr.M {
+func MapHostInfo(info types.HostInfo, fqdn string) mapstr.M {
+	name := info.Hostname
+	if fqdn != "" {
+		name = fqdn
+	}
+
 	data := mapstr.M{
 		"host": mapstr.M{
+			"name":         name,
 			"hostname":     info.Hostname,
 			"architecture": info.Architecture,
 			"os": mapstr.M{
@@ -60,37 +66,44 @@ func MapHostInfo(info types.HostInfo) mapstr.M {
 }
 
 // ReportInfo reports the HostInfo to monitoring.
-func ReportInfo(_ monitoring.Mode, V monitoring.Visitor) {
-	V.OnRegistryStart()
-	defer V.OnRegistryFinished()
+func ReportInfo(fqdn string) func(_ monitoring.Mode, V monitoring.Visitor) {
+	return func(_ monitoring.Mode, V monitoring.Visitor) {
+		V.OnRegistryStart()
+		defer V.OnRegistryFinished()
 
-	h, err := sysinfo.Host()
-	if err != nil {
-		return
-	}
-	info := h.Info()
-
-	monitoring.ReportString(V, "hostname", info.Hostname)
-	monitoring.ReportString(V, "architecture", info.Architecture)
-	monitoring.ReportNamespace(V, "os", func() {
-		monitoring.ReportString(V, "platform", info.OS.Platform)
-		monitoring.ReportString(V, "version", info.OS.Version)
-		monitoring.ReportString(V, "family", info.OS.Family)
-		monitoring.ReportString(V, "name", info.OS.Name)
-		monitoring.ReportString(V, "kernel", info.KernelVersion)
-
-		if info.OS.Codename != "" {
-			monitoring.ReportString(V, "codename", info.OS.Codename)
+		h, err := sysinfo.Host()
+		if err != nil {
+			return
 		}
-		if info.OS.Build != "" {
-			monitoring.ReportString(V, "build", info.OS.Build)
-		}
-	})
+		info := h.Info()
 
-	if info.UniqueID != "" {
-		monitoring.ReportString(V, "id", info.UniqueID)
-	}
-	if info.Containerized != nil {
-		monitoring.ReportBool(V, "containerized", *info.Containerized)
+		hostname := info.Hostname
+		if fqdn != "" {
+			hostname = fqdn
+		}
+
+		monitoring.ReportString(V, "hostname", hostname)
+		monitoring.ReportString(V, "architecture", info.Architecture)
+		monitoring.ReportNamespace(V, "os", func() {
+			monitoring.ReportString(V, "platform", info.OS.Platform)
+			monitoring.ReportString(V, "version", info.OS.Version)
+			monitoring.ReportString(V, "family", info.OS.Family)
+			monitoring.ReportString(V, "name", info.OS.Name)
+			monitoring.ReportString(V, "kernel", info.KernelVersion)
+
+			if info.OS.Codename != "" {
+				monitoring.ReportString(V, "codename", info.OS.Codename)
+			}
+			if info.OS.Build != "" {
+				monitoring.ReportString(V, "build", info.OS.Build)
+			}
+		})
+
+		if info.UniqueID != "" {
+			monitoring.ReportString(V, "id", info.UniqueID)
+		}
+		if info.Containerized != nil {
+			monitoring.ReportBool(V, "containerized", *info.Containerized)
+		}
 	}
 }

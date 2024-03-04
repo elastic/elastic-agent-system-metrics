@@ -16,12 +16,10 @@
 // under the License.
 
 //go:build darwin || freebsd || linux || windows || aix || netbsd || openbsd
-// +build darwin freebsd linux windows aix netbsd openbsd
 
 package process
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -32,14 +30,13 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	"github.com/elastic/go-sysinfo/types"
 
-	sysinfo "github.com/elastic/go-sysinfo"
-	psutil "github.com/shirou/gopsutil/process"
+	"github.com/elastic/go-sysinfo"
 )
 
 // ProcNotExist indicates that a process was not found.
 var ProcNotExist = errors.New("process does not exist")
 
-// ProcsMap is a convinence wrapper for the oft-used ideom of map[int]ProcState
+// ProcsMap is a convenience wrapper for the oft-used idiom of map[int]ProcState
 type ProcsMap map[int]ProcState
 
 // ProcsTrack is a thread-safe wrapper for a process Stat object's internal map of processes.
@@ -98,6 +95,10 @@ type Stats struct {
 	IncludeTop    IncludeTopConfig
 	CgroupOpts    cgroup.ReaderOptions
 	EnableCgroups bool
+	EnableNetwork bool
+	// NetworkMetrics is an allowlist of network metrics,
+	// the names of which can be found in /proc/PID/net/snmp and /proc/PID/net/netstat
+	NetworkMetrics []string
 
 	skipExtended bool
 	procRegexps  []match.Matcher // List of regular expressions used to whitelist processes.
@@ -111,27 +112,27 @@ type Stats struct {
 type PidState string
 
 var (
-	//Dead state, on linux this is both "x" and "X"
+	// Dead state, on linux this is both "x" and "X"
 	Dead PidState = "dead"
-	//Running state
+	// Running state
 	Running PidState = "running"
-	//Sleeping state
+	// Sleeping state
 	Sleeping PidState = "sleeping"
-	//Idle state.
+	// Idle state.
 	Idle PidState = "idle"
-	//DiskSleep is uninterruptible disk sleep
+	// DiskSleep is uninterruptible disk sleep
 	DiskSleep PidState = "disk_sleep"
-	//Stopped state.
+	// Stopped state.
 	Stopped PidState = "stopped"
-	//Zombie state.
+	// Zombie state.
 	Zombie PidState = "zombie"
-	//WakeKill is a linux state only found on kernels 2.6.33-3.13
+	// WakeKill is a linux state only found on kernels 2.6.33-3.13
 	WakeKill PidState = "wakekill"
-	//Waking  is a linux state only found on kernels 2.6.33-3.13
+	// Waking  is a linux state only found on kernels 2.6.33-3.13
 	Waking PidState = "waking"
-	//Parked is a linux state. On the proc man page, it says it's available on 3.9-3.13, but it appears to still be in the code.
+	// Parked is a linux state. On the proc man page, it says it's available on 3.9-3.13, but it appears to still be in the code.
 	Parked PidState = "parked"
-	//Unknown state
+	// Unknown state
 	Unknown PidState = "unknown"
 )
 
@@ -161,9 +162,13 @@ func (procStats *Stats) Init() error {
 		procStats.logger.Warnf("Getting host details: %v", err)
 	}
 
-	//footcannon prevention
+	// footcannon prevention
 	if procStats.Hostfs == nil {
 		procStats.Hostfs = resolve.NewTestResolver("/")
+	}
+
+	if procStats.EnableNetwork && len(procStats.NetworkMetrics) == 0 {
+		procStats.logger.Warnf("Collecting all network metrics per-process; this will produce a large volume of data.")
 	}
 
 	procStats.ProcsMap = NewProcsTrack()
@@ -201,47 +206,4 @@ func (procStats *Stats) Init() error {
 		procStats.cgroups = cgReader
 	}
 	return nil
-}
-
-// ListStates is a wrapper that returns a list of processess with only the basic PID info filled out.
-func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
-	init := Stats{
-		Hostfs:        hostfs,
-		Procs:         []string{".*"},
-		EnableCgroups: false,
-		skipExtended:  true,
-	}
-	err := init.Init()
-	if err != nil {
-		return nil, fmt.Errorf("error initializing process collectors: %w", err)
-	}
-
-	// actually fetch the PIDs from the OS-specific code
-	_, plist, err := init.FetchPids()
-	if err != nil {
-		return nil, fmt.Errorf("error gathering PIDs: %w", err)
-	}
-
-	return plist, nil
-}
-
-// GetPIDState returns the state of a given PID
-// It will return ProcNotExist if the process was not found.
-func GetPIDState(hostfs resolve.Resolver, pid int) (PidState, error) {
-	// This library still doesn't have a good cross-platform way to distinguish between "does not eixst" and other process errors.
-	// This is a fairly difficult problem to solve in a cross-platform way
-	exists, err := psutil.PidExistsWithContext(context.Background(), int32(pid))
-	if err != nil {
-		return "", fmt.Errorf("Error truing to find process: %d: %w", pid, err)
-	}
-	if !exists {
-		return "", ProcNotExist
-	}
-	//GetInfoForPid will return the smallest possible dataset for a PID
-	procState, err := GetInfoForPid(hostfs, pid)
-	if err != nil {
-		return "", fmt.Errorf("error getting state info for pid %d: %w", pid, err)
-	}
-
-	return procState.State, nil
 }
