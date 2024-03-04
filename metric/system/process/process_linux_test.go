@@ -94,6 +94,13 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("uid: %v", uid)
 
+	t.Cleanup(func() {
+		// not sure how ephemeral the CI environment is, but delete the user anyway
+		cmd := exec.Command("userdel", "-f", testUsername)
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, "got error deleting user: %s", string(output))
+	})
+
 	cmdHandler := exec.Command("sleep", "60")
 	cmdHandler.SysProcAttr = &syscall.SysProcAttr{Credential: &syscall.Credential{Uid: uint32(uid), Gid: 0}}
 
@@ -122,10 +129,6 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	require.NotZero(t, result["memory"].(map[string]interface{})["size"])
 	t.Logf("got result: %s", result["username"])
 
-	// not sure how ephemeral the Ci environment is, but delete the user anyway
-	cmd := exec.Command("userdel", "-f", testUsername)
-	output, err := cmd.CombinedOutput()
-	require.NoError(t, err, "got error deleting user: %s", string(output))
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
