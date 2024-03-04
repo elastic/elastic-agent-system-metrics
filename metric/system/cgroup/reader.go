@@ -70,15 +70,6 @@ const (
 	memoryStat  = "memory"
 )
 
-//nolint: deadcode,structcheck,unused // needed by other platforms
-type mount struct {
-	subsystem  string // Subsystem name (e.g. cpuacct).
-	mountpoint string // Mountpoint of the subsystem (e.g. /cgroup/cpuacct).
-	path       string // Relative path to the cgroup (e.g. /docker/<id>).
-	id         string // ID of the cgroup.
-	fullPath   string // Absolute path to the cgroup. It's the mountpoint joined with the path.
-}
-
 // pathListWithTime combines PathList with a timestamp.
 type pathListWithTime struct {
 	added    time.Time
