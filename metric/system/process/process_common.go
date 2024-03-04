@@ -39,7 +39,7 @@ import (
 // ProcNotExist indicates that a process was not found.
 var ProcNotExist = errors.New("process does not exist")
 
-//ProcsMap is a convinence wrapper for the oft-used ideom of map[int]ProcState
+// ProcsMap is a convinence wrapper for the oft-used ideom of map[int]ProcState
 type ProcsMap map[int]ProcState
 
 // ProcsTrack is a thread-safe wrapper for a process Stat object's internal map of processes.
@@ -107,7 +107,7 @@ type Stats struct {
 	host         types.Host
 }
 
-//PidState are the constants for various PID states
+// PidState are the constants for various PID states
 type PidState string
 
 var (
