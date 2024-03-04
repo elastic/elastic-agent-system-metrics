@@ -69,6 +69,7 @@ func FindUID(name string) (int, error) {
 	return id, err
 }
 
+// helper to get a passwd entry for a user
 func getentGetID(database string, key string) (int, error) {
 	cmd := exec.Command("getent", database, key)
 	output, err := cmd.Output()
@@ -87,8 +88,9 @@ func getentGetID(database string, key string) (int, error) {
 }
 
 func TestRunningProcessFromOtherUser(t *testing.T) {
-
-	uid, err := CreateUser("test", 0)
+	// test for permission errors by creating a new user, then running a process as that user
+	testUsername := "test"
+	uid, err := CreateUser(testUsername, 0)
 	require.NoError(t, err)
 	t.Logf("uid: %v", uid)
 
@@ -119,6 +121,11 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 	require.NotEqual(t, uname.Name, result["username"])
 	require.NotZero(t, result["memory"].(map[string]interface{})["size"])
 	t.Logf("got result: %s", result["username"])
+
+	// not sure how ephemeral the Ci environment is, but delete the user anyway
+	cmd := exec.Command("userdel", "-f", testUsername)
+	output, err := cmd.CombinedOutput()
+	require.NoError(t, err, "got error deleting user: %s", string(output))
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
