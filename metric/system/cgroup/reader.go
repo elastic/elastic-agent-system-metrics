@@ -70,7 +70,7 @@ const (
 	memoryStat  = "memory"
 )
 
-// nolint: deadcode,structcheck,unused // needed by other platforms
+//nolint: deadcode,structcheck,unused // needed by other platforms
 type mount struct {
 	subsystem  string // Subsystem name (e.g. cpuacct).
 	mountpoint string // Mountpoint of the subsystem (e.g. /cgroup/cpuacct).
