@@ -234,6 +234,25 @@ func TestParseProcStat(t *testing.T) {
 	assert.Equal(t, want, got, "")
 }
 
+func TestCgroupsBadCgroupsConfig(t *testing.T) {
+	_ = logp.DevelopmentSetup()
+	testStats := Stats{CPUTicks: true,
+		EnableCgroups: true,
+		EnableNetwork: true,
+		Hostfs:        resolve.NewTestResolver("/"),
+		Procs:         []string{".*"},
+		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: resolve.NewTestResolver("testdata")}, // procs here have no cgroup data, leading to errors
+	}
+	err := testStats.Init()
+	require.NoError(t, err)
+
+	// make sure we still have proc data despite cgroups errors
+	procs, _, err := testStats.Get()
+	require.NoError(t, err)
+	t.Logf("got %d procs", len(procs))
+	require.NotEmpty(t, procs)
+}
+
 func TestParseIO(t *testing.T) {
 	path := resolve.NewTestResolver("testdata/")
 	data, err := getIOData(path, 42)
