@@ -261,6 +261,22 @@ func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		if r.cgroupsHierarchyOverride != "" {
 			path = r.cgroupsHierarchyOverride
 		}
+
+		//on newer docker versions (1.41+?), docker will do some special namespacing with cgroups and mountpoints
+		// such that we'll get a cgroup path like `0::/../../user.slice/user-1000.slice/session-520.scope`
+		// `man 7 cgroups` says the following about the path field in the `cgroup` file:
+		//
+		// This field contains the pathname of the control group
+		// in the hierarchy to which the process belongs.  This
+		// pathname is relative to the mount point of the
+		// hierarchy.
+		// However, when we try to append something like `/../..` to another path, we obviously blow things up.
+		// Because of the "relative" nature of the cgroup path, and unix conventions on `..`, I think we can assume
+		// that a path like `/..` or `/../..` (note the beginning slash, making the path effectively non-relative) can be reduced to `/`.
+		if strings.Contains(path, "/..") {
+			path = filepath.Clean(path)
+		}
+
 		// cgroup V2
 		// cgroup v2 controllers will always start with this string
 		if strings.HasPrefix(line, "0::/") {
