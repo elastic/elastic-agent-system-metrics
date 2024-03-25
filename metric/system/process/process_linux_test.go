@@ -235,7 +235,7 @@ func TestParseProcStat(t *testing.T) {
 }
 
 func TestCgroupsBadCgroupsConfig(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup(logp.ToObserverOutput())
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
 		EnableNetwork: true,
@@ -251,6 +251,18 @@ func TestCgroupsBadCgroupsConfig(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("got %d procs", len(procs))
 	require.NotEmpty(t, procs)
+
+	gotLogs := logp.ObserverLogs().TakeAll()
+	// check to see if we got the "correct" error message
+	foundLogEntry := false
+
+	message := "metrics are valid but partial: error finding cgroup version"
+	for _, entry := range gotLogs {
+		if strings.Contains(entry.Message, message) {
+			foundLogEntry = true
+		}
+	}
+	require.True(t, foundLogEntry, "log line '%s' was not found", message)
 }
 
 func TestParseIO(t *testing.T) {
