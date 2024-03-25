@@ -30,6 +30,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -37,6 +38,7 @@ import (
 const dockerTestData = "testdata/docker.zip"
 const ubuntuTestData = "testdata/ubuntu1804.zip"
 const amazonLinux2TestData = "testdata/amzn2.zip"
+const dockerNamespaceData = "testdata/docker2.zip"
 
 func TestMain(m *testing.M) {
 	err := extractTestData(dockerTestData)
@@ -50,6 +52,11 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	err = extractTestData(amazonLinux2TestData)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	err = extractTestData(dockerNamespaceData)
 	if err != nil {
 		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
 		os.Exit(1)
@@ -242,6 +249,19 @@ func TestProcessCgroupPathsV2(t *testing.T) {
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/system.slice/docker-1c8fa019edd4b9d4b2856f4932c55929c5c118c808ed5faee9a135ca6e84b039.scope", paths.V2["cpu"].FullPath)
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/system.slice/docker-1c8fa019edd4b9d4b2856f4932c55929c5c118c808ed5faee9a135ca6e84b039.scope", paths.V2["io"].FullPath)
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/system.slice/docker-1c8fa019edd4b9d4b2856f4932c55929c5c118c808ed5faee9a135ca6e84b039.scope", paths.V2["memory"].FullPath)
+}
+
+func TestMountpointsV2(t *testing.T) {
+	reader, err := NewReader(resolve.NewTestResolver("testdata/docker2"), false)
+	if err != nil {
+		t.Fatalf("error in NewReader: %s", err)
+	}
+
+	t.Logf("mounts: %#v", reader.cgroupMountpoints)
+
+	stats, err := reader.GetStatsForPid(2233801)
+	require.NoError(t, err)
+	t.Logf("got stats: %#v", stats)
 }
 
 func assertContains(t testing.TB, m map[string]struct{}, key string) {
