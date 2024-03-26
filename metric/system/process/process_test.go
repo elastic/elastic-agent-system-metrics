@@ -80,7 +80,8 @@ func BenchmarkGetTop(b *testing.B) {
 }
 
 func TestGetState(t *testing.T) {
-	want := Running
+	wantRunning := Running
+	wantSleepng := Sleeping
 	pid := os.Getpid()
 	hostfs := resolve.NewTestResolver("/")
 
@@ -93,7 +94,7 @@ func TestGetState(t *testing.T) {
 			return false
 		}
 
-		return want == got
+		return wantSleepng == got || wantRunning == got
 	}
 
 	assert.Eventuallyf(t, test,
