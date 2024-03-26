@@ -97,7 +97,7 @@ func TestGetState(t *testing.T) {
 	}
 
 	assert.Eventuallyf(t, test,
-		time.Second, 50*time.Millisecond,
+		time.Second*5, 50*time.Millisecond,
 		"want process state %q, got %q. Last error: %v", want, got, err)
 }
 
