@@ -90,7 +90,6 @@ func TestGetState(t *testing.T) {
 	test := func() bool {
 		// Getpid is really the only way to test this in a cross-platform way
 		got, err = GetPIDState(hostfs, pid)
-		t.Logf("got response: %#v / %#v", got, err)
 		if err != nil {
 			return false
 		}
