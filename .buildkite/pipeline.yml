@@ -14,6 +14,15 @@ steps:
       image: "${LINUX_AGENT_IMAGE}"
       cpu: "8"
       memory: "4G"
+  
+  - label: "Container-System tests"
+    key: linux-test
+    command: ".buildkite/scripts/system-container-tests.sh"
+    agents:
+      image: "family/platform-ingest-beats-ubuntu-2204"
+      provider: "gcp"
+      cpu: "8"
+      memory: "4G"
 
   - label: ":linux: Tests on Linux"
     key: linux-test

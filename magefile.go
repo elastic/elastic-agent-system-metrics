@@ -27,6 +27,7 @@ import (
 	// mage:import
 	"github.com/elastic/elastic-agent-libs/dev-tools/mage"
 	"github.com/elastic/elastic-agent-libs/dev-tools/mage/gotool"
+	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/magefile/mage/mg"
 )
 
@@ -82,4 +83,14 @@ func Notice() error {
 		filepath.Join("dev-tools", "templates", "notice", "rules.json"),
 		filepath.Join("dev-tools", "templates", "notice", "NOTICE.txt.tmpl"),
 	)
+}
+
+// RunContainerHostTests runs the unit tests inside a container with a mounted hostfs,
+// and tests monitoring the host from inside a container
+func RunContainerHostTests() error {
+	err := systemtests.RunTestsOnDocker()
+	if err != nil {
+		return fmt.Errorf("error running docker tests: %w", err)
+	}
+	return nil
 }
