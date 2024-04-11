@@ -28,9 +28,10 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/stretchr/testify/require"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
-	"github.com/stretchr/testify/require"
 )
 
 // These tests are designed for the case of monitoring a host system from inside docker via a /hostfs

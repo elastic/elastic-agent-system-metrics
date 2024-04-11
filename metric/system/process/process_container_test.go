@@ -43,7 +43,7 @@ import (
 func TestSystemHostFromContainer(t *testing.T) {
 	_ = logp.DevelopmentSetup()
 	// This is more rigorous version of the unit tests
-	// Because this is meant to run in privilaged mode,
+	// Because this is meant to run in privileged mode,
 	// we know that all data should be in the final event, and we should get no errors
 
 	testStats := Stats{CPUTicks: true,
@@ -87,7 +87,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	_, privilegedMode := os.LookupEnv("PRIVILEGED")
 	user, err := user.Current()
 	require.NoError(t, err)
-	gotUser := result["username"].(string)
+	gotUser, _ := result["username"].(string)
 
 	// if we're root or the same user as the pid, check `exe`
 	if os.Getuid() == 0 || user.Name == gotUser {

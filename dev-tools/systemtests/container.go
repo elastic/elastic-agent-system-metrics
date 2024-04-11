@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -36,7 +37,7 @@ import (
 // In order for this framework to work fully, tests running under this framework must use
 // systemtests.DockerTestResolver() to fetch the hostfs, and also set debug-level logging via `logp`.
 type DockerTestRunner struct {
-	// Privileged is equivelent to the `--privileged` flag passed to `docker run`. Sets elevated permissions.
+	// Privileged is equivalent to the `--privileged` flag passed to `docker run`. Sets elevated permissions.
 	Privileged bool
 	// Sets the filepath passed to `go test`
 	Basepath string
@@ -45,7 +46,7 @@ type DockerTestRunner struct {
 	// Container name passed to `docker run`.
 	Container string
 	// RunAsUser will run the container as a non-root user if set to the given username
-	// equivelent to `--user=USER`
+	// equivalent to `--user=USER`
 	RunAsUser string
 	// CgroupNSMode sets the cgroup namespace for the container. Newer versions of docker
 	// will default to a private namespace. Unexpected namespace values have resulted in bugs.
@@ -64,6 +65,7 @@ type DockerTestRunner struct {
 	CreateHostProcess *exec.Cmd
 }
 
+// RunResult returns the logs and return code from the container
 type RunResult struct {
 	ReturnCode int64
 	Stderr     string
@@ -131,8 +133,8 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
 	}
 
 	if tr.Verbose {
-		fmt.Printf("stderr: %s\n", result.Stderr)
-		fmt.Printf("stdout: %s\n", result.Stdout)
+		fmt.Fprintf(os.Stdout, "stderr: %s\n", result.Stderr)
+		fmt.Fprintf(os.Stdout, "stdout: %s\n", result.Stdout)
 	}
 
 	return nil
@@ -147,7 +149,10 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	}
 	defer reader.Close()
 
-	io.Copy(io.Discard, reader)
+	_, err = io.Copy(io.Discard, reader)
+	if err != nil {
+		return container.CreateResponse{}, fmt.Errorf("error copying container: %w", err)
+	}
 
 	wdCmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	wdPath, err := wdCmd.CombinedOutput()
@@ -217,7 +222,10 @@ func (tr *DockerTestRunner) runContainerTest(ctx context.Context, apiClient *cli
 
 	stdout := bytes.NewBufferString("")
 	stderr := bytes.NewBufferString("")
-	stdcopy.StdCopy(stdout, stderr, out)
+	_, err = stdcopy.StdCopy(stdout, stderr, out)
+	if err != nil {
+		return RunResult{}, fmt.Errorf("error copying logs from container: %w", err)
+	}
 	res.Stderr = stderr.String()
 	res.Stdout = stdout.String()
 
