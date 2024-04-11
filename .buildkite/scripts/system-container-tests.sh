@@ -12,7 +12,7 @@ docker version
 
 DOCKER_VERSION="25.0"
 
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh ./get-docker.sh --version $DOCKER_VERSION
+# curl -fsSL https://get.docker.com -o get-docker.sh
+# sudo sh ./get-docker.sh --version $DOCKER_VERSION
 
 go test ./tests
