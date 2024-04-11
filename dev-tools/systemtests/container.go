@@ -122,8 +122,10 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 
 	tr.Runner.Logf("Running %d tests", len(cases))
 
+	// some odd recursion happens here if we just refer to tr.Runner
+	baseRunner := tr.Runner
 	for _, tc := range cases {
-		tr.Runner.Run(tc.String(), func(t *testing.T) {
+		baseRunner.Run(tc.String(), func(t *testing.T) {
 			runner := tr
 			runner.Runner = t
 			runner.CgroupNSMode = tc.nsmode
@@ -177,7 +179,7 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 
 	// check for failures
 
-	require.Equal(tr.Runner, int64(0), result.ReturnCode, "got bad docker return code")
+	require.Equal(tr.Runner, int64(0), result.ReturnCode, "got bad docker return code. stdout: %s \nstderr: %s", result.Stdout, result.Stderr)
 
 	// iterate by lines to make this easier to read
 	if len(tr.FatalLogMessages) > 0 {

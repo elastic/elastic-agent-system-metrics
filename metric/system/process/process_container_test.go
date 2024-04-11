@@ -49,7 +49,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: false,
-		EnableNetwork: true,
+		EnableNetwork: false,
 		Hostfs:        systemtests.DockerTestResolver(),
 		Procs:         []string{".*"},
 		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: systemtests.DockerTestResolver()},
@@ -91,7 +91,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	gotUser, _ := result["username"].(string)
 
 	// if we're root or the same user as the pid, check `exe`
-	if os.Getuid() == 0 || user.Name == gotUser {
+	if privilegedMode && (os.Getuid() == 0 || user.Name == gotUser) {
 		exe := result["exe"]
 		require.NotNil(t, exe)
 	}

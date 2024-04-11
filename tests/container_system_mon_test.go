@@ -111,10 +111,10 @@ func TestProcessAllSettings(t *testing.T) {
 	baseRunner := systemtests.DockerTestRunner{
 		Runner:            t,
 		Basepath:          "./metric/system/process",
-		Verbose:           true,
+		Verbose:           false,
 		Privileged:        true,
 		Testname:          "TestSystemHostFromContainer",
-		CreateHostProcess: exec.Command("sleep", "240"),
+		CreateHostProcess: exec.Command("sleep", "480"),
 		FatalLogMessages:  []string{"Error fetching PID info for"},
 	}
 
