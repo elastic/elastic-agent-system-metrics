@@ -6,6 +6,8 @@ source .buildkite/scripts/common.sh
 
 install_go_dependencies
 
+docker version
+
 # install docker
 
 DOCKER_VERSION="25.0"

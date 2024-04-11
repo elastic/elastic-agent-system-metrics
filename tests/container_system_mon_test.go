@@ -73,6 +73,7 @@ func TestKernelProc(t *testing.T) {
 	defer cancel()
 
 	runner := systemtests.DockerTestRunner{
+		Runner:           t,
 		MonitorPID:       int(testPid),
 		Basepath:         "./metric/system/process",
 		Verbose:          true,
@@ -91,6 +92,7 @@ func TestPrivilegedAndRoot(t *testing.T) {
 	defer cancel()
 
 	runner := systemtests.DockerTestRunner{
+		Runner:            t,
 		Basepath:          "./metric/system/process",
 		Verbose:           true,
 		Privileged:        true,
@@ -109,6 +111,7 @@ func TestPrivilegedAndRootHostNS(t *testing.T) {
 	defer cancel()
 
 	runner := systemtests.DockerTestRunner{
+		Runner:            t,
 		CgroupNSMode:      container.CgroupnsModeHost,
 		Basepath:          "./metric/system/process",
 		Verbose:           true,
@@ -128,6 +131,7 @@ func TestNonRoot(t *testing.T) {
 	defer cancel()
 
 	runner := systemtests.DockerTestRunner{
+		Runner:            t,
 		Basepath:          "./metric/system/process",
 		Verbose:           true,
 		Privileged:        true,
@@ -148,6 +152,7 @@ func TestRootNonPrivileged(t *testing.T) {
 	defer cancel()
 
 	runner := systemtests.DockerTestRunner{
+		Runner:            t,
 		Basepath:          "./metric/system/process",
 		Verbose:           true,
 		Privileged:        false,

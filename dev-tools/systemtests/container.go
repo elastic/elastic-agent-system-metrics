@@ -25,11 +25,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"testing"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 )
@@ -38,6 +40,7 @@ import (
 // In order for this framework to work fully, tests running under this framework must use
 // systemtests.DockerTestResolver() to fetch the hostfs, and also set debug-level logging via `logp`.
 type DockerTestRunner struct {
+	Runner *testing.T
 	// Privileged is equivalent to the `--privileged` flag passed to `docker run`. Sets elevated permissions.
 	Privileged bool
 	// Sets the filepath passed to `go test`
@@ -91,24 +94,21 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
 	// setup and run
 
 	apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
-	if err != nil {
-		return fmt.Errorf("error creating new docker client: %w", err)
-	}
+	require.NoError(tr.Runner, err)
 	defer apiClient.Close()
+
+	_, err = apiClient.ContainerList(ctx, container.ListOptions{})
+	if err != nil {
+		tr.Runner.Skipf("got error in container list, docker isn't installed or not running: %s", err)
+	}
 
 	// create monitored process, if we need to
 	tr.createMonitoredProcess(ctx)
 
-	resp, err := tr.createTestContainer(ctx, apiClient)
-	if err != nil {
-		return fmt.Errorf("error creating container: %w", err)
-	}
+	resp := tr.createTestContainer(ctx, apiClient)
 
 	log.Infof("running test...")
-	result, err := tr.runContainerTest(ctx, apiClient, resp)
-	if err != nil {
-		return fmt.Errorf("error running container: %w", err)
-	}
+	result := tr.runContainerTest(ctx, apiClient, resp)
 
 	// check for failures
 
@@ -143,23 +143,18 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
 }
 
 // createTestContainer creates a with the given test path and test name
-func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *client.Client) (container.CreateResponse, error) {
+func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *client.Client) container.CreateResponse {
 	reader, err := apiClient.ImagePull(ctx, tr.Container, image.PullOptions{})
-	if err != nil {
-		return container.CreateResponse{}, fmt.Errorf("error pulling image: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error pulling image")
 	defer reader.Close()
 
 	_, err = io.Copy(io.Discard, reader)
-	if err != nil {
-		return container.CreateResponse{}, fmt.Errorf("error copying container: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error copying image")
 
 	wdCmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	wdPath, err := wdCmd.CombinedOutput()
-	if err != nil {
-		return container.CreateResponse{}, fmt.Errorf("error fetching top level dir: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error finding root path")
+
 	cwd := strings.TrimSpace(string(wdPath))
 	logp.L().Infof("using cwd: %s", cwd)
 
@@ -191,46 +186,36 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 		Privileged:   tr.Privileged,
 		Binds:        []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
 	}, nil, nil, "")
-	if err != nil {
-		return container.CreateResponse{}, fmt.Errorf("error creating container: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error creating container")
 
-	return resp, nil
+	return resp
 }
 
-func (tr *DockerTestRunner) runContainerTest(ctx context.Context, apiClient *client.Client, resp container.CreateResponse) (RunResult, error) {
+func (tr *DockerTestRunner) runContainerTest(ctx context.Context, apiClient *client.Client, resp container.CreateResponse) RunResult {
 	err := apiClient.ContainerStart(ctx, resp.ID, container.StartOptions{})
-	if err != nil {
-		return RunResult{}, fmt.Errorf("error starting container: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error starting container")
 
 	res := RunResult{}
 
 	statusCh, errCh := apiClient.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
-		if err != nil {
-			return res, fmt.Errorf("error during container wait: %w", err)
-		}
+		require.NoError(tr.Runner, err, "error in container")
 	case status := <-statusCh:
 		res.ReturnCode = status.StatusCode
 	}
 
 	out, err := apiClient.ContainerLogs(ctx, resp.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
-	if err != nil {
-		return RunResult{}, fmt.Errorf("error fetching container logs: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error fetching logs")
 
 	stdout := bytes.NewBufferString("")
 	stderr := bytes.NewBufferString("")
 	_, err = stdcopy.StdCopy(stdout, stderr, out)
-	if err != nil {
-		return RunResult{}, fmt.Errorf("error copying logs from container: %w", err)
-	}
+	require.NoError(tr.Runner, err, "error copying logs")
 	res.Stderr = stderr.String()
 	res.Stdout = stdout.String()
 
-	return res, nil
+	return res
 }
 
 func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) {
