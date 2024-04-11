@@ -35,6 +35,7 @@ import (
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/opt"
+	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -131,14 +132,42 @@ func TestRunningProcessFromOtherUser(t *testing.T) {
 
 }
 
-func TestFetchProcessFromOtherUser(t *testing.T) {
+func TestFetchOtherProcessCgroup(t *testing.T) {
+	_ = logp.DevelopmentSetup()
 
+	testConfig := Stats{
+		Procs:        []string{".*"},
+		Hostfs:       systemtests.DockerTestResolver(),
+		CPUTicks:     false,
+		CacheCmdLine: true,
+		EnvWhitelist: []string{".*"},
+		IncludeTop: IncludeTopConfig{
+			Enabled:  false,
+			ByCPU:    4,
+			ByMemory: 0,
+		},
+		EnableCgroups: false,
+		CgroupOpts: cgroup.ReaderOptions{
+			RootfsMountpoint:  systemtests.DockerTestResolver(),
+			IgnoreRootCgroups: true,
+		},
+	}
+	err := testConfig.Init()
+	assert.NoError(t, err, "Init")
+
+	evts, _, err := testConfig.Get()
+	require.NoError(t, err)
+	t.Logf("Got %d events", len(evts))
+}
+
+func TestFetchProcessFromOtherUser(t *testing.T) {
+	_ = logp.DevelopmentSetup()
 	// If we just used Get() or FetchPids() to get a list of processes on the system, this would produce a bootstrapping problem
 	// where if the code wasn't working (and we were skipping over PIDs not owned by us) this test would pass.
 	// re-implement part of the core pid-fetch logic
 	// All this does is find a pid that's not owned by us.
-	_ = logp.DevelopmentSetup()
-	dir, err := os.Open("/proc/")
+	rootpath := systemtests.DockerTestResolver()
+	dir, err := os.Open(rootpath.ResolveHostFS("/proc"))
 	require.NoError(t, err, "error opening /proc")
 
 	const readAllDirnames = -1 // see os.File.Readdirnames doc
@@ -157,7 +186,7 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 			t.Logf("Error converting PID name %s", name)
 			continue
 		}
-		pidUser, err := getUser(resolve.NewTestResolver("/"), pid)
+		pidUser, err := getUser(systemtests.DockerTestResolver(), pid)
 		if err == nil {
 			if pidUser != us.Name {
 				testPid = pid
@@ -175,7 +204,7 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 
 	testConfig := Stats{
 		Procs:        []string{".*"},
-		Hostfs:       resolve.NewTestResolver("/"),
+		Hostfs:       systemtests.DockerTestResolver(),
 		CPUTicks:     false,
 		CacheCmdLine: true,
 		EnvWhitelist: []string{".*"},
@@ -186,7 +215,7 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 		},
 		EnableCgroups: false,
 		CgroupOpts: cgroup.ReaderOptions{
-			RootfsMountpoint:  resolve.NewTestResolver("/"),
+			RootfsMountpoint:  systemtests.DockerTestResolver(),
 			IgnoreRootCgroups: true,
 		},
 	}

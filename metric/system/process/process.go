@@ -278,6 +278,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 
 	// network data
 	if procStats.EnableNetwork {
+		// TODO: this can't handle hostfs settings
 		procHandle, err := sysinfo.Process(pid)
 		// treat this as a soft error
 		if err != nil {
