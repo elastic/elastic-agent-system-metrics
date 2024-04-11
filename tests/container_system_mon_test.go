@@ -81,17 +81,15 @@ func TestKernelProc(t *testing.T) {
 		Testname:         "TestSystemHostFromContainer",
 		FatalLogMessages: []string{"Error fetching PID info for", "Non-fatal error fetching"},
 	}
-	err = runner.RunTestsOnDocker(ctx)
-	require.NoError(t, err)
+	runner.RunTestsOnDocker(ctx)
 }
 
-func TestPrivilegedAndRoot(t *testing.T) {
-	// the "best possible" user config. This should yield no permissions errors
+func TestProcessMetricsElevatedPerms(t *testing.T) {
 	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
-
-	runner := systemtests.DockerTestRunner{
+	// runs test cases where we do not expect any kind of permissions errors
+	baseRunner := systemtests.DockerTestRunner{
 		Runner:            t,
 		Basepath:          "./metric/system/process",
 		Verbose:           true,
@@ -100,67 +98,27 @@ func TestPrivilegedAndRoot(t *testing.T) {
 		CreateHostProcess: exec.Command("sleep", "240"),
 		FatalLogMessages:  []string{"Error fetching PID info for", "Non-fatal error fetching"},
 	}
-	err := runner.RunTestsOnDocker(ctx)
-	require.NoError(t, err)
+
+	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
+		[]bool{}, []string{})
 }
 
-func TestPrivilegedAndRootHostNS(t *testing.T) {
-	// Same as above test, but with the namespace set to host mode
+func TestProcessAllSettings(t *testing.T) {
 	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
-
-	runner := systemtests.DockerTestRunner{
-		Runner:            t,
-		CgroupNSMode:      container.CgroupnsModeHost,
-		Basepath:          "./metric/system/process",
-		Verbose:           true,
-		Privileged:        true,
-		Testname:          "TestSystemHostFromContainer",
-		CreateHostProcess: exec.Command("sleep", "240"),
-		FatalLogMessages:  []string{"Error fetching PID info for", "Non-fatal error fetching"},
-	}
-	err := runner.RunTestsOnDocker(ctx)
-	require.NoError(t, err)
-}
-
-func TestNonRoot(t *testing.T) {
-	// This tests running the container as a user other than root.
-	_ = logp.DevelopmentSetup()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
-	defer cancel()
-
-	runner := systemtests.DockerTestRunner{
+	// runs test cases where we do not expect any kind of permissions errors
+	baseRunner := systemtests.DockerTestRunner{
 		Runner:            t,
 		Basepath:          "./metric/system/process",
 		Verbose:           true,
 		Privileged:        true,
 		Testname:          "TestSystemHostFromContainer",
 		CreateHostProcess: exec.Command("sleep", "240"),
-		// is it kinda cursed that we just use the system `mail` user? Yeah, but it works
-		RunAsUser:        "mail",
-		FatalLogMessages: []string{"Error fetching PID info for"},
-	}
-	err := runner.RunTestsOnDocker(ctx)
-	require.NoError(t, err)
-}
-
-func TestRootNonPrivileged(t *testing.T) {
-	// this is the "least optimal" setup. No root, no additional capabilities set
-	_ = logp.DevelopmentSetup()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
-	defer cancel()
-
-	runner := systemtests.DockerTestRunner{
-		Runner:            t,
-		Basepath:          "./metric/system/process",
-		Verbose:           true,
-		Privileged:        false,
-		Testname:          "TestSystemHostFromContainer",
-		CreateHostProcess: exec.Command("sleep", "240"),
-		RunAsUser:         "mail",
 		FatalLogMessages:  []string{"Error fetching PID info for"},
 	}
-	err := runner.RunTestsOnDocker(ctx)
-	require.NoError(t, err)
+
+	// is it kinda cursed that we just use the system `mail` user? Yeah, but it works
+	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
+		[]bool{true, false}, []string{"mail", ""})
 }

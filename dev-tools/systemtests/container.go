@@ -77,12 +77,69 @@ type RunResult struct {
 	Stdout     string
 }
 
+type testCase struct {
+	nsmode container.CgroupnsMode
+	priv   bool
+	user   string
+}
+
+func (tc testCase) String() string {
+	return fmt.Sprintf("%s-priv:%v-user:%s", tc.nsmode, tc.priv, tc.user)
+}
+
+// CreateAndRunPermissionMatrix is a helper that uses the provided settings to run RunTestsOnDocker() across a range of possible
+// docker settings.
+// If a given array value is supplied, it will be used to override the value in DockerTestRunner, and run the test for as many times
+// as there are supplied values. For example, if privilegedValues=[true, false], then RunTestsOnDocker() will be run twice,
+// setting the privileged flag differently for each run.
+// if an array argument is empty, the default value set in the DockerTestRunner instance will be used
+func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
+	cgroupNSValues []container.CgroupnsMode, privilegedValues []bool, runAsUserValues []string) {
+
+	cases := []testCase{}
+
+	if len(cgroupNSValues) == 0 {
+		cgroupNSValues = []container.CgroupnsMode{tr.CgroupNSMode}
+	}
+
+	if len(privilegedValues) == 0 {
+		privilegedValues = []bool{tr.Privileged}
+	}
+
+	if len(runAsUserValues) == 0 {
+		runAsUserValues = []string{tr.RunAsUser}
+	}
+
+	// Create a test matrix of every possible case.
+	// This might seem like overkill, but cgroup and container & docker permissions produces some exciting edge cases. Just run all of them.
+	for _, ns := range cgroupNSValues {
+		for _, user := range runAsUserValues {
+			for _, privSetting := range privilegedValues {
+				cases = append(cases, testCase{nsmode: ns, priv: privSetting, user: user})
+			}
+		}
+	}
+
+	tr.Runner.Logf("Running %d tests", len(cases))
+
+	for _, tc := range cases {
+		tr.Runner.Run(tc.String(), func(t *testing.T) {
+			runner := tr
+			runner.CgroupNSMode = tc.nsmode
+			runner.Privileged = tc.priv
+			runner.RunAsUser = tc.user
+			runner.RunTestsOnDocker(ctx)
+		})
+	}
+
+}
+
 // RunTestsOnDocker runs a provided test, or all the package tests
 // (as in `go test ./...`) inside a docker container with the host's root FS mounted as /hostfs.
 // This framework relies on the tests using DockerTestResolver().
 // If docker returns !0 or if there's a matching string entry from FatalLogMessages in stdout/stderr,
 // this will return an error
-func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
+func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 	// do we want to run on windows? Much of what we're testing, such as host
 	// cgroup monitoring, is invalid.
 	if runtime.GOOS != "linux" {
@@ -119,22 +176,16 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
 
 	// check for failures
 
-	if result.ReturnCode != 0 {
-		return fmt.Errorf("got return code %d; \nstdout: %s\nstderr: %s", result.ReturnCode, result.Stdout, result.Stderr)
-	}
+	require.Equal(tr.Runner, int64(0), result.ReturnCode, "got bad docker return code")
 
 	// iterate by lines to make this easier to read
 	if len(tr.FatalLogMessages) > 0 {
 		for _, badLine := range tr.FatalLogMessages {
 			for _, line := range strings.Split(result.Stdout, "\n") {
-				if strings.Contains(line, badLine) {
-					return fmt.Errorf("got bad line in stdout: %s", line)
-				}
+				require.NotContains(tr.Runner, line, badLine)
 			}
 			for _, line := range strings.Split(result.Stderr, "\n") {
-				if strings.Contains(line, badLine) {
-					return fmt.Errorf("got bad line in stderr: %s", line)
-				}
+				require.NotContains(tr.Runner, line, badLine)
 			}
 		}
 
@@ -144,8 +195,6 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
 		fmt.Fprintf(os.Stdout, "stderr: %s\n", result.Stderr)
 		fmt.Fprintf(os.Stdout, "stdout: %s\n", result.Stdout)
 	}
-
-	return nil
 
 }
 
@@ -228,7 +277,8 @@ func (tr *DockerTestRunner) runContainerTest(ctx context.Context, apiClient *cli
 func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) {
 	log := logp.L()
 	// if user has specified a process to monitor, start it now
-	if tr.CreateHostProcess != nil {
+	// skip if the process has already been created
+	if tr.CreateHostProcess != nil && tr.CreateHostProcess.Process == nil {
 		// We don't need to do this in a channel, but it prevents races between this goroutine
 		// and the rest of test framework
 		startPid := make(chan int)
@@ -236,10 +286,7 @@ func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) {
 		go func() {
 			err := tr.CreateHostProcess.Start()
 			// if the process fails to start up, the resulting tests will fail, so just log it
-			if err != nil {
-				log.Errorf("error starting process %s", err)
-				return
-			}
+			require.NoError(tr.Runner, err, "error starting monitor process")
 			startPid <- tr.CreateHostProcess.Process.Pid
 
 		}()
