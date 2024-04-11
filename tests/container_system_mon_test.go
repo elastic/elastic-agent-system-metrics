@@ -38,7 +38,7 @@ import (
 
 func TestKernelProc(t *testing.T) {
 	t.Skip("This test will fail until https://github.com/elastic/elastic-agent-system-metrics/issues/135 is fixed")
-
+	_ = logp.DevelopmentSetup()
 	//manually fetch a kernel process
 	// kernel processes will have a parent pid of 2
 	dir, err := os.Open("/proc")
@@ -87,7 +87,7 @@ func TestKernelProc(t *testing.T) {
 
 func TestPrivilegedAndRoot(t *testing.T) {
 	// the "best possible" user config. This should yield no permissions errors
-	logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
@@ -105,7 +105,7 @@ func TestPrivilegedAndRoot(t *testing.T) {
 
 func TestPrivilegedAndRootHostNS(t *testing.T) {
 	// Same as above test, but with the namespace set to host mode
-	logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
@@ -124,7 +124,7 @@ func TestPrivilegedAndRootHostNS(t *testing.T) {
 
 func TestNonRoot(t *testing.T) {
 	// This tests running the container as a user other than root.
-	logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
@@ -144,7 +144,7 @@ func TestNonRoot(t *testing.T) {
 
 func TestRootNonPrivileged(t *testing.T) {
 	// this is the "least optimal" setup. No root, no additional capabilities set
-	logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 

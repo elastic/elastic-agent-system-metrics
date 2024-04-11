@@ -23,11 +23,12 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup"
-	"github.com/stretchr/testify/require"
 )
 
 // ======================================== NOTE:
@@ -95,7 +96,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 		require.NotNil(t, exe)
 	}
 
-	// if privilaged or root, look for data from /proc/[pid]/io
+	// if privileged or root, look for data from /proc/[pid]/io
 	if privilegedMode && os.Getuid() == 0 {
 		ioReadBytes := result["io"].(map[string]interface{})["read_char"]
 		require.NotNil(t, ioReadBytes)

@@ -30,6 +30,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 )
 
