@@ -8,7 +8,7 @@ install_go_dependencies
 
 docker info
 
-ls /var/lib/docker
+docker ps -a
 
 # install docker
 
