@@ -24,6 +24,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -82,6 +83,12 @@ type RunResult struct {
 // If docker returns !0 or if there's a matching string entry from FatalLogMessages in stdout/stderr,
 // this will return an error
 func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) error {
+	// do we want to run on windows? Much of what we're testing, such as host
+	// cgroup monitoring, is invalid.
+	if runtime.GOOS != "linux" {
+		tr.Runner.Skip("Tests only supported on Linux.")
+	}
+
 	log := logp.L()
 	if tr.Basepath == "" {
 		tr.Basepath = "./..."
@@ -148,7 +155,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	require.NoError(tr.Runner, err, "error pulling image")
 	defer reader.Close()
 
-	_, err = io.Copy(io.Discard, reader)
+	_, err = io.Copy(os.Stdout, reader)
 	require.NoError(tr.Runner, err, "error copying image")
 
 	wdCmd := exec.Command("git", "rev-parse", "--show-toplevel")
