@@ -16,7 +16,7 @@ steps:
       memory: "4G"
   
   - label: "Container-System tests"
-    key: linux-test
+    key: linux-container-test
     command: ".buildkite/scripts/system-container-tests.sh"
     agents:
       image: "family/platform-ingest-beats-ubuntu-2204"
