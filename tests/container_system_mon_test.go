@@ -69,7 +69,6 @@ func TestKernelProc(t *testing.T) {
 		t.Skip("could not find kernel process")
 	}
 
-	logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
