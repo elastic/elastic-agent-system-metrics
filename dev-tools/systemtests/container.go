@@ -125,6 +125,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 	for _, tc := range cases {
 		tr.Runner.Run(tc.String(), func(t *testing.T) {
 			runner := tr
+			runner.Runner = t
 			runner.CgroupNSMode = tc.nsmode
 			runner.Privileged = tc.priv
 			runner.RunAsUser = tc.user
