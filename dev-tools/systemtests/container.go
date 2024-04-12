@@ -32,6 +32,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
@@ -141,7 +142,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 // (as in `go test ./...`) inside a docker container with the host's root FS mounted as /hostfs.
 // This framework relies on the tests using DockerTestResolver().
 // If docker returns !0 or if there's a matching string entry from FatalLogMessages in stdout/stderr,
-// this will return an error
+// this will fail the test
 func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 	// do we want to run on windows? Much of what we're testing, such as host
 	// cgroup monitoring, is invalid.
@@ -201,7 +202,7 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 
 }
 
-// createTestContainer creates a with the given test path and test name
+// createTestContainer creates a container with the given test path and test name
 func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *client.Client) container.CreateResponse {
 	reader, err := apiClient.ImagePull(ctx, tr.Container, image.PullOptions{})
 	require.NoError(tr.Runner, err, "error pulling image")
@@ -289,7 +290,7 @@ func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) {
 		go func() {
 			err := tr.CreateHostProcess.Start()
 			// if the process fails to start up, the resulting tests will fail, so just log it
-			require.NoError(tr.Runner, err, "error starting monitor process")
+			assert.NoError(tr.Runner, err, "error starting monitor process")
 			startPid <- tr.CreateHostProcess.Process.Pid
 
 		}()

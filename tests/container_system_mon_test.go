@@ -122,3 +122,20 @@ func TestProcessAllSettings(t *testing.T) {
 	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
 		[]bool{true, false}, []string{"mail", ""})
 }
+
+func TestFilesystem(t *testing.T) {
+	_ = logp.DevelopmentSetup()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
+
+	// TODO: once https://github.com/elastic/elastic-agent-system-metrics/issues/141 is fixed, add a FatalLogMessages check for
+	// 'no such file or directory' or other messages
+	baseRunner := systemtests.DockerTestRunner{
+		Runner:     t,
+		Basepath:   "./metric/system/filesystem",
+		Verbose:    true,
+		Privileged: false,
+	}
+
+	baseRunner.RunTestsOnDocker(ctx)
+}
