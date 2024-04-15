@@ -68,6 +68,7 @@ type DockerTestRunner struct {
 	// CreateHostProcess: this will start a process with the following args outside of the container,
 	// and use the integration tests to monitor it.
 	// Useful as "monitor random running processes" as a test heuristic tends to be flaky.
+	// This will overrite MonitorPID, so only set either this or MonitorPID.
 	CreateHostProcess *exec.Cmd
 }
 
@@ -88,12 +89,12 @@ func (tc testCase) String() string {
 	return fmt.Sprintf("%s-priv:%v-user:%s", tc.nsmode, tc.priv, tc.user)
 }
 
-// CreateAndRunPermissionMatrix is a helper that uses the provided settings to run RunTestsOnDocker() across a range of possible
-// docker settings.
-// If a given array value is supplied, it will be used to override the value in DockerTestRunner, and run the test for as many times
-// as there are supplied values. For example, if privilegedValues=[true, false], then RunTestsOnDocker() will be run twice,
+// CreateAndRunPermissionMatrix is a helper that runs RunTestsOnDocker() across a range of possible docker settings.
+// If a given array value is supplied in the method arguments,
+// it will be used to override the value in DockerTestRunner, and run the test for as many times as there are supplied values.
+// For example, if privilegedValues=[true, false], then RunTestsOnDocker() will be run twice,
 // setting the privileged flag differently for each run.
-// if an array argument is empty, the default value set in the DockerTestRunner instance will be used
+// if an array argument is empty, the default value set in the DockerTestRunner instance will be used.
 func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 	cgroupNSValues []container.CgroupnsMode, privilegedValues []bool, runAsUserValues []string) {
 
@@ -112,7 +113,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 	}
 
 	// Create a test matrix of every possible case.
-	// This might seem like overkill, but cgroup and container & docker permissions produces some exciting edge cases. Just run all of them.
+	// This might seem like overkill, but cgroup settings and docker permissions values produce some exciting edge cases. Just run all of them.
 	for _, ns := range cgroupNSValues {
 		for _, user := range runAsUserValues {
 			for _, privSetting := range privilegedValues {
@@ -123,8 +124,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 
 	tr.Runner.Logf("Running %d tests", len(cases))
 
-	// some odd recursion happens here if we just refer to tr.Runner
-	baseRunner := tr.Runner
+	baseRunner := tr.Runner // some odd recursion happens here if we just refer to tr.Runner
 	for _, tc := range cases {
 		baseRunner.Run(tc.String(), func(t *testing.T) {
 			runner := tr
@@ -226,6 +226,8 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	mountPath := "/hostfs"
 
 	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath)}
+	// used by a few vendored libaries
+	containerEnv = append(containerEnv, "HOST_PROC=%s", mountPath)
 	if tr.Privileged {
 		containerEnv = append(containerEnv, "PRIVILEGED=1")
 	}
@@ -289,7 +291,7 @@ func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) {
 		log.Infof("Creating test Process...")
 		go func() {
 			err := tr.CreateHostProcess.Start()
-			// if the process fails to start up, the resulting tests will fail, so just log it
+			// if the process fails to start up, the resulting tests will fail anyway, so just log it
 			assert.NoError(tr.Runner, err, "error starting monitor process")
 			startPid <- tr.CreateHostProcess.Process.Pid
 
