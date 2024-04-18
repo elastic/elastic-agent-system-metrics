@@ -35,12 +35,6 @@ import (
 // The tests here are meant to be run from the containerized framework in ./tests
 // However, they are designed so that `go test` can run them normally as well
 
-// TODO:
-// Right now, cgroups checks are disabled because they're just broken for too many edge cases:
-// https://github.com/elastic/elastic-agent-system-metrics/issues/139
-// https://github.com/elastic/elastic-agent-system-metrics/issues/132
-// After those are fixed, this test needs to have cgroups re-enabled
-
 func TestSystemHostFromContainer(t *testing.T) {
 	_ = logp.DevelopmentSetup()
 
@@ -103,8 +97,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	numThreads := result["num_threads"]
 	require.NotNil(t, numThreads)
 
-	// see comment at top of file
-	// cgroups := result["cgroup"].(map[string]interface{})
-	// require.NotNil(t, cgroups)
+	cgroups := result["cgroup"].(map[string]interface{})
+	require.NotNil(t, cgroups)
 
 }

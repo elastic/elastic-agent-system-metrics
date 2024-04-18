@@ -79,7 +79,7 @@ func TestKernelProc(t *testing.T) {
 		Verbose:          true,
 		Privileged:       true,
 		Testname:         "TestSystemHostFromContainer",
-		FatalLogMessages: []string{"Error fetching PID info for", "Non-fatal error fetching"},
+		FatalLogMessages: []string{"error", "Error"},
 	}
 	runner.RunTestsOnDocker(ctx)
 }
