@@ -27,6 +27,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -46,6 +47,9 @@ func TestMain(m *testing.M) {
 		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
 		os.Exit(1)
 	}
+	defer func() {
+		os.RemoveAll(extractedPathNameFromZipName(dockerTestData))
+	}()
 	err = extractTestData(ubuntuTestData)
 	if err != nil {
 		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
@@ -53,7 +57,7 @@ func TestMain(m *testing.M) {
 	}
 	err = extractTestData(amazonLinux2TestData)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
 		os.Exit(1)
 	}
 	err = extractTestData(dockerNamespaceData)
@@ -62,6 +66,13 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	os.Exit(m.Run())
+
+}
+
+// extractedPathNameFromZipName turns the .zip name into the name of the extracted path.
+// used for cleanup.
+func extractedPathNameFromZipName(path string) string {
+	return strings.Split(filepath.Base(path), ".")[0]
 }
 
 // extractTestData from zip file and write it in the same dir as the zip file.
@@ -87,7 +98,10 @@ func extractTestData(path string) error {
 		}
 
 		if f.FileInfo().IsDir() {
-			_ = os.MkdirAll(path, f.Mode())
+			err = os.MkdirAll(path, f.Mode())
+			if err != nil {
+				return err
+			}
 		} else {
 			destFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.FileMode(0700))
 			if err != nil {
@@ -100,7 +114,10 @@ func extractTestData(path string) error {
 				return err
 			}
 
-			_ = os.Chmod(path, f.Mode())
+			err = os.Chmod(path, f.Mode())
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	}
@@ -253,15 +270,14 @@ func TestProcessCgroupPathsV2(t *testing.T) {
 
 func TestMountpointsV2(t *testing.T) {
 	reader, err := NewReader(resolve.NewTestResolver("testdata/docker2"), false)
-	if err != nil {
-		t.Fatalf("error in NewReader: %s", err)
-	}
-
-	t.Logf("mounts: %#v", reader.cgroupMountpoints)
+	require.NoError(t, err)
 
 	stats, err := reader.GetStatsForPid(2233801)
 	require.NoError(t, err)
-	t.Logf("got stats: %#v", stats)
+	// unpack the interface so we can test this a little better
+	rawObject := stats.(*StatsV2)
+	require.Equal(t, rawObject.ID, "session-520.scope")
+	require.Equal(t, rawObject.Path, "/user.slice/user-1000.slice/session-520.scope")
 }
 
 func assertContains(t testing.TB, m map[string]struct{}, key string) {
