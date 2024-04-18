@@ -36,43 +36,42 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
-const dockerTestData = "testdata/docker.zip"
-const ubuntuTestData = "testdata/ubuntu1804.zip"
-const amazonLinux2TestData = "testdata/amzn2.zip"
-const dockerNamespaceData = "testdata/docker2.zip"
+var testFileList = []string{
+	"testdata/docker.zip",
+	"testdata/ubuntu1804.zip",
+	"testdata/amzn2.zip",
+	"testdata/docker2.zip",
+}
 
 func TestMain(m *testing.M) {
-	err := extractTestData(dockerTestData)
-	if err != nil {
-		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
-		os.Exit(1)
-	}
-	defer func() {
-		os.RemoveAll(extractedPathNameFromZipName(dockerTestData))
-	}()
-	err = extractTestData(ubuntuTestData)
-	if err != nil {
-		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
-		os.Exit(1)
-	}
-	err = extractTestData(amazonLinux2TestData)
-	if err != nil {
-		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
-		os.Exit(1)
-	}
-	err = extractTestData(dockerNamespaceData)
-	if err != nil {
-		fmt.Println(err) //nolint:forbidigo //this is test startup code that might fail
-		os.Exit(1)
-	}
-	os.Exit(m.Run())
+	os.Exit(mainTestWrapper(m))
+}
 
+// allows us to use `defer` from TestMain, since the TestMain ideom is to use
+// os.Exit, which does not respect `defer`
+func mainTestWrapper(m *testing.M) int {
+	for _, testCase := range testFileList {
+		err := extractTestData(testCase)
+		defer generateTestdataCleanup(testCase)()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error extracting %s: %s", testCase, err)
+			return 1
+		}
+	}
+	return m.Run()
+}
+
+func generateTestdataCleanup(path string) func() {
+	return func() {
+		_ = os.RemoveAll(extractedPathNameFromZipName(path))
+	}
 }
 
 // extractedPathNameFromZipName turns the .zip name into the name of the extracted path.
 // used for cleanup.
 func extractedPathNameFromZipName(path string) string {
-	return strings.Split(filepath.Base(path), ".")[0]
+	baseName := strings.Split(filepath.Base(path), ".")[0]
+	return filepath.Join("testdata", baseName)
 }
 
 // extractTestData from zip file and write it in the same dir as the zip file.
@@ -85,20 +84,20 @@ func extractTestData(path string) error {
 
 	dest := filepath.Dir(path)
 
-	extractAndWriteFile := func(f *zip.File) error {
-		rc, err := f.Open()
+	extractAndWriteFile := func(zipFile *zip.File) error {
+		rc, err := zipFile.Open()
 		if err != nil {
 			return err
 		}
 		defer rc.Close()
 
-		path := filepath.Join(dest, f.Name) //nolint: gosec // test with controlled input
+		path := filepath.Join(dest, zipFile.Name) //nolint: gosec // test with controlled input
 		if found, err := exists(path); err != nil || found {
 			return err
 		}
 
-		if f.FileInfo().IsDir() {
-			err = os.MkdirAll(path, f.Mode())
+		if zipFile.FileInfo().IsDir() {
+			err = os.MkdirAll(path, zipFile.Mode())
 			if err != nil {
 				return err
 			}
@@ -114,7 +113,7 @@ func extractTestData(path string) error {
 				return err
 			}
 
-			err = os.Chmod(path, f.Mode())
+			err = os.Chmod(path, zipFile.Mode())
 			if err != nil {
 				return err
 			}
