@@ -178,6 +178,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	mounts := map[string]string{}
 	mountInfo := Mountpoints{}
 	sc := bufio.NewScanner(mountinfo)
+	possibleV2Paths := []string{}
 	for sc.Scan() {
 		// https://www.kernel.org/doc/Documentation/filesystems/proc.txt
 		// Example:
@@ -218,14 +219,69 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 
 		// V2 option
 		if mount.filesystemType == "cgroup2" {
-			mountInfo.V2Loc = mount.mountpoint
+			possibleV2Paths = append(possibleV2Paths, mount.mountpoint)
 		}
 
 	}
 
+	mountInfo.V2Loc = getProperV2Paths(rootfs, possibleV2Paths)
 	mountInfo.V1Mounts = mounts
 
 	return mountInfo, sc.Err()
+}
+
+// when we're reading from a host mountinfo path from inside a container
+// (i.e) `/hostfs/proc/self/mountinfo`, we can get a set of cgroup2 mountpoints like this:
+// 1718 1686 0:26 / /hostfs/sys/fs/cgroup rw,nosuid,nodev,noexec,relatime master:4 - cgroup2 cgroup2 rw,seclabel
+// 1771 1770 0:26 / /hostfs/var/lib/docker/overlay2/1b570230fa3ec3679e354b0c219757c739f91d774ebc02174106488606549da0/merged/sys/fs/cgroup ro,nosuid,nodev,noexec,relatime - cgroup2 cgroup rw,seclabel
+// That latter mountpoint, just a link to the overlayfs, is almost guarenteed to throw a permissions error
+// try to sort out the mountpoints, and use the correct one
+func getProperV2Paths(rootfs resolve.Resolver, possibleV2Paths []string) string {
+	if len(possibleV2Paths) > 1 {
+		// try to sort out anything that looks like a docker fs
+		filteredPaths := []string{}
+		for _, path := range possibleV2Paths {
+			if strings.Contains(path, "overlay2") {
+				continue
+			}
+			filteredPaths = append(filteredPaths, path)
+		}
+		// if we have no correct paths, give up and use the last one
+		// the "last one" ideom preserves behavior before we got more clever with looking for the V2 paths
+		if len(filteredPaths) == 0 {
+			usePath := possibleV2Paths[len(possibleV2Paths)-1]
+			logp.L().Debugf("could not find correct cgroupv2 path, reverting to path that may produce errors: %s", usePath)
+			return usePath
+		}
+
+		// if we're using an alternate hostfs, assume we want to monitor the host system, from inside a container
+		// and use that path
+		if rootfs.IsSet() {
+			root := rootfs.ResolveHostFS("")
+			hostFSPaths := []string{}
+			for _, path := range filteredPaths {
+				if strings.Contains(path, root) {
+					hostFSPaths = append(hostFSPaths, path)
+				}
+			}
+			// return the last path
+			if len(hostFSPaths) > 0 {
+				return hostFSPaths[len(hostFSPaths)-1]
+			} else {
+				usePath := filteredPaths[len(filteredPaths)-1]
+				logp.L().Debugf("An alternate hostfs was specified, but could not find any cgroup mountpoints that contain a hostfs. Using: %s", usePath)
+				return usePath
+			}
+		} else {
+			// if no hosfs is set, just use the last element
+			return filteredPaths[len(filteredPaths)-1]
+		}
+
+	} else if len(possibleV2Paths) == 1 {
+		return possibleV2Paths[0]
+	}
+
+	return ""
 }
 
 // ProcessCgroupPaths returns the cgroups to which a process belongs and the

@@ -274,7 +274,8 @@ func TestMountpointsV2(t *testing.T) {
 	stats, err := reader.GetStatsForPid(2233801)
 	require.NoError(t, err)
 	// unpack the interface so we can test this a little better
-	rawObject := stats.(*StatsV2)
+	rawObject, ok := stats.(*StatsV2)
+	require.True(t, ok)
 	require.Equal(t, rawObject.ID, "session-520.scope")
 	require.Equal(t, rawObject.Path, "/user.slice/user-1000.slice/session-520.scope")
 }
@@ -303,5 +304,68 @@ func TestParseMountinfoLine(t *testing.T) {
 		assert.Equal(t, "/sys/fs/cgroup/blkio", mount.mountpoint)
 		assert.Equal(t, "cgroup", mount.filesystemType)
 		assert.Len(t, mount.superOptions, 2)
+	}
+}
+
+func TestFetchV2Paths(t *testing.T) {
+	cases := []struct {
+		name         string
+		lines        []string
+		rootfs       resolve.Resolver
+		expectedPath string
+	}{
+		{
+			name:   "hostfspaths-with-hostfs",
+			rootfs: resolve.NewTestResolver("/hostfs"),
+			lines: []string{
+				"/sys/fs/cgroup",
+				"/hostfs/sys/fs/cgroup",
+				"/hostfs/var/lib/docker/overlay2/1b570230fa3ec3679e354b0c219757c739f91d774ebc02174106488606549da0/merged/sys/fs/cgroup",
+			},
+			expectedPath: "/hostfs/sys/fs/cgroup",
+		},
+		{
+			name:   "hostfspaths-without-hostfs",
+			rootfs: resolve.NewTestResolver(""),
+			lines: []string{
+				"/sys/fs/cgroup",
+				"/hostfs/sys/fs/cgroup",
+				"/hostfs/var/lib/docker/overlay2/1b570230fa3ec3679e354b0c219757c739f91d774ebc02174106488606549da0/merged/sys/fs/cgroup",
+			},
+			expectedPath: "/hostfs/sys/fs/cgroup",
+		},
+		{
+			name:   "hostfspaths-with-hostfs-werid-order",
+			rootfs: resolve.NewTestResolver("/hostfs"),
+			lines: []string{
+				"/sys/fs/cgroup",
+				"/hostfs/var/lib/docker/overlay2/1b570230fa3ec3679e354b0c219757c739f91d774ebc02174106488606549da0/merged/sys/fs/cgroup",
+				"/hostfs/sys/fs/cgroup",
+			},
+			expectedPath: "/hostfs/sys/fs/cgroup",
+		},
+		{
+			name:   "hostfspaths-with-hostfs-werider-order",
+			rootfs: resolve.NewTestResolver("/hostfs"),
+			lines: []string{
+				"/sys/fs/cgroup",
+				"/hostfs/sys/fs/cgroup",
+				"/hostfs/var/lib/docker/overlay2/1b570230fa3ec3679e354b0c219757c739f91d774ebc02174106488606549da0/merged/sys/fs/cgroup",
+			},
+			expectedPath: "/hostfs/sys/fs/cgroup",
+		},
+		{
+			name:         "no-hostfs-normalv2",
+			rootfs:       resolve.NewTestResolver(""),
+			lines:        []string{"/sys/fs/cgroup"},
+			expectedPath: "/sys/fs/cgroup",
+		},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := getProperV2Paths(testCase.rootfs, testCase.lines)
+			assert.Equal(t, testCase.expectedPath, got)
+		})
 	}
 }

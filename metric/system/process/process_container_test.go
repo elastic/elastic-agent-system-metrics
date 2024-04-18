@@ -43,12 +43,9 @@ import (
 
 func TestSystemHostFromContainer(t *testing.T) {
 	_ = logp.DevelopmentSetup()
-	// This is more rigorous version of the unit tests
-	// Because this is meant to run in privileged mode,
-	// we know that all data should be in the final event, and we should get no errors
 
 	testStats := Stats{CPUTicks: true,
-		EnableCgroups: false,
+		EnableCgroups: true,
 		EnableNetwork: false,
 		Hostfs:        systemtests.DockerTestResolver(),
 		Procs:         []string{".*"},
