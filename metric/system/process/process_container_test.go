@@ -97,7 +97,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	numThreads := result["num_threads"]
 	require.NotNil(t, numThreads)
 
-	cgroups := result["cgroup"].(map[string]interface{})
+	cgroups := result["cgroup"]
 	require.NotNil(t, cgroups)
 
 }
