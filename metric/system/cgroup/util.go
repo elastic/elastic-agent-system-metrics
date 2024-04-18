@@ -234,7 +234,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 // (i.e) `/hostfs/proc/self/mountinfo`, we can get a set of cgroup2 mountpoints like this:
 // 1718 1686 0:26 / /hostfs/sys/fs/cgroup rw,nosuid,nodev,noexec,relatime master:4 - cgroup2 cgroup2 rw,seclabel
 // 1771 1770 0:26 / /hostfs/var/lib/docker/overlay2/1b570230fa3ec3679e354b0c219757c739f91d774ebc02174106488606549da0/merged/sys/fs/cgroup ro,nosuid,nodev,noexec,relatime - cgroup2 cgroup rw,seclabel
-// That latter mountpoint, just a link to the overlayfs, is almost guarenteed to throw a permissions error
+// That latter mountpoint, just a link to the overlayfs, is almost guaranteed to throw a permissions error
 // try to sort out the mountpoints, and use the correct one
 func getProperV2Paths(rootfs resolve.Resolver, possibleV2Paths []string) string {
 	if len(possibleV2Paths) > 1 {
