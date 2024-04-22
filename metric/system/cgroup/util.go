@@ -286,7 +286,7 @@ func guessContainerCgroupPath(rootfs resolve.Resolver) (string, error) {
 			return nil
 		}
 		if strings.Contains(d.Name(), "procs") {
-			pidfile, err := os.ReadFile(path)
+			pidfile, err := os.ReadFile(path) //nolint: nilerr // we can get lots of weird permissions errors here, so don't fail on an error
 			if err != nil {
 				return nil
 			}
