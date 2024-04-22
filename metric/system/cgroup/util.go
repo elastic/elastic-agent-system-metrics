@@ -288,7 +288,7 @@ func guessContainerCgroupPath(rootfs resolve.Resolver) (string, error) {
 		if strings.Contains(d.Name(), "procs") {
 			pidfile, err := os.ReadFile(path) //nolint: nilerr // we can get lots of weird permissions errors here, so don't fail on an error
 			if err != nil {
-				return nil
+				return nil //nolint: nilerr // we can get lots of weird permissions errors here, so don't fail on an error
 			}
 			for _, rawPid := range strings.Split(string(pidfile), "\n") {
 				if len(rawPid) == 0 {
