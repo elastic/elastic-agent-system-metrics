@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	os.Exit(testhelpers.MainTestWrapper(m, testFileList))
 }
 func TestFindCgroup(t *testing.T) {
-	path, err := guessContainerCgroupPath(resolve.NewTestResolver(""))
+	path, err := guessContainerCgroupPath(resolve.NewTestResolver(""), "/sys/fs/cgroup")
 	require.NoError(t, err)
 	t.Logf("got path: %s", path)
 }

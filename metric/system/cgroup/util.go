@@ -237,7 +237,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	// This logic helps us proper fetch the cgroup path when we're running inside a container
 	// with a private namespace
 	if mountInfo.V2Loc != "" && rootfs.IsSet() && cgroupNSStateFetch() {
-		mountInfo.ContainerizedRootMount, err = guessContainerCgroupPath(rootfs)
+		mountInfo.ContainerizedRootMount, err = guessContainerCgroupPath(rootfs, mountInfo.V2Loc)
 		// treat this as a non-fatal error. If we end up needing this value, the lookups will fail down the line
 		if err != nil {
 			logp.L().Debugf("could not fetch cgroup path inside container: %w", err)
@@ -273,7 +273,7 @@ func isCgroupNSPrivate() bool {
 // for the cgroup of a pid, see https://github.com/elastic/elastic-agent-system-metrics/issues/139
 // This will only work on v2 cgroups, I haven't run into this on a system with cgroups v1 yet;
 // not sure if docker namespacing behaves the same.
-func guessContainerCgroupPath(rootfs resolve.Resolver) (string, error) {
+func guessContainerCgroupPath(rootfs resolve.Resolver, v2Loc string) (string, error) {
 	// pattern:
 	// if in a private cgroup namespace,
 	// traverse over the root cgroup path, look for *.procs files
@@ -281,7 +281,7 @@ func guessContainerCgroupPath(rootfs resolve.Resolver) (string, error) {
 	// that path is our cgroup
 	OurPid := os.Getpid()
 	foundCgroupPath := ""
-	err := filepath.WalkDir(rootfs.ResolveHostFS("/sys/fs/cgroup"), func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(v2Loc, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() {
 			return nil
 		}
@@ -315,7 +315,7 @@ func guessContainerCgroupPath(rootfs resolve.Resolver) (string, error) {
 	}
 	// strip to cgroup path
 	cgroupDir := filepath.Dir(foundCgroupPath)
-	relativePath := strings.TrimPrefix(cgroupDir, rootfs.ResolveHostFS("/sys/fs/cgroup"))
+	relativePath := strings.TrimPrefix(cgroupDir, v2Loc)
 	return relativePath, nil
 }
 
