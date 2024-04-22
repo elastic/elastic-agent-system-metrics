@@ -237,7 +237,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	// This logic helps us proper fetch the cgroup path when we're running inside a container
 	// with a private namespace
 	if mountInfo.V2Loc != "" && rootfs.IsSet() && cgroupNSStateFetch() {
-		mountInfo.ContainerizedRootMount, err = guessContainerCgroupPath(rootfs, mountInfo.V2Loc)
+		mountInfo.ContainerizedRootMount, err = guessContainerCgroupPath(mountInfo.V2Loc)
 		// treat this as a non-fatal error. If we end up needing this value, the lookups will fail down the line
 		if err != nil {
 			logp.L().Debugf("could not fetch cgroup path inside container: %w", err)
@@ -273,7 +273,7 @@ func isCgroupNSPrivate() bool {
 // for the cgroup of a pid, see https://github.com/elastic/elastic-agent-system-metrics/issues/139
 // This will only work on v2 cgroups, I haven't run into this on a system with cgroups v1 yet;
 // not sure if docker namespacing behaves the same.
-func guessContainerCgroupPath(rootfs resolve.Resolver, v2Loc string) (string, error) {
+func guessContainerCgroupPath(v2Loc string) (string, error) {
 	// pattern:
 	// if in a private cgroup namespace,
 	// traverse over the root cgroup path, look for *.procs files
@@ -417,11 +417,7 @@ func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		//
 		// However, when we try to append something like `/../..` to another path, we obviously blow things up.
 		// we need to use the absolute path of the container cgroup
-		if strings.Contains(path, "/..") {
-			// TODO: for a private namespace inside the container, this may not be correct, depending on
-			// what we do with this path. even if we get a path of `/` that's still *relative to the cgroup we're under*
-			// not the absolute path in /sys/fs/cgroup. The logic here might have to be "check for private NS in container"
-			// and not "contains /.."
+		if isCgroupNSPrivate() && r.rootfsMountpoint.IsSet() {
 			if r.cgroupMountpoints.ContainerizedRootMount == "" {
 				logp.L().Debugf("cgroup for process %d contains a relative cgroup path (%s), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete",
 					pid, path)
