@@ -417,7 +417,7 @@ func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		//
 		// However, when we try to append something like `/../..` to another path, we obviously blow things up.
 		// we need to use the absolute path of the container cgroup
-		if isCgroupNSPrivate() && r.rootfsMountpoint.IsSet() {
+		if cgroupNSStateFetch() && r.rootfsMountpoint.IsSet() {
 			if r.cgroupMountpoints.ContainerizedRootMount == "" {
 				logp.L().Debugf("cgroup for process %d contains a relative cgroup path (%s), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete",
 					pid, path)

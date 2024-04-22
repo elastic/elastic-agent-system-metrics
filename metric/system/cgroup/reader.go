@@ -371,7 +371,7 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 		return []string{}, nil
 	}
 	cgFilePath := filepath.Join(r.cgroupMountpoints.V2Loc, cgpath, "cgroup.controllers")
-	if isCgroupNSPrivate() && r.rootfsMountpoint.IsSet() {
+	if cgroupNSStateFetch() && r.rootfsMountpoint.IsSet() {
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
 	}
 
