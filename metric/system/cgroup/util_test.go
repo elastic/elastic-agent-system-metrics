@@ -22,12 +22,14 @@ package cgroup
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/testhelpers"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -41,6 +43,11 @@ var testFileList = []string{
 
 func TestMain(m *testing.M) {
 	os.Exit(testhelpers.MainTestWrapper(m, testFileList))
+}
+func TestFindCgroup(t *testing.T) {
+	path, err := guessContainerCgroupPath(resolve.NewTestResolver(""))
+	require.NoError(t, err)
+	t.Logf("got path: %s", path)
 }
 
 func TestSupportedSubsystems(t *testing.T) {
@@ -168,6 +175,18 @@ func TestProcessCgroupPathsV2(t *testing.T) {
 }
 
 func TestMountpointsV2(t *testing.T) {
+	// emulate running in a private namespace docker container
+	cgroupNSStateFetch = func() bool { return true }
+	// inject our PID into the cgroup.procs file to so ProcessCgroupPaths()
+	// can find our root cgroup
+	pid := os.Getpid()
+	pidFmt := fmt.Sprintf("%d\n", pid)
+	err := os.WriteFile("testdata/docker2/sys/fs/cgroup/user.slice/user-1000.slice/session-520.scope/cgroup.procs",
+		[]byte(pidFmt), 0o744)
+	require.NoError(t, err)
+
+	_ = logp.DevelopmentSetup()
+
 	reader, err := NewReader(resolve.NewTestResolver("testdata/docker2"), false)
 	require.NoError(t, err)
 
