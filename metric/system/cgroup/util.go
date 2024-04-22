@@ -420,7 +420,8 @@ func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		if strings.Contains(path, "/..") {
 			// TODO: for a private namespace inside the container, this may not be correct, depending on
 			// what we do with this path. even if we get a path of `/` that's still *relative to the cgroup we're under*
-			// not the absolute path in /sys/fs/cgroup
+			// not the absolute path in /sys/fs/cgroup. The logic here might have to be "check for private NS in container"
+			// and not "contains /.."
 			if r.cgroupMountpoints.ContainerizedRootMount == "" {
 				logp.L().Debugf("cgroup for process %d contains a relative cgroup path (%s), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete",
 					pid, path)
