@@ -373,7 +373,7 @@ func readControllerList(cgroupsFile string, v2path string) ([]string, error) {
 	file := filepath.Join(v2path, cgpath, "cgroup.controllers")
 	controllersRaw, err := os.ReadFile(file)
 	if err != nil {
-		return nil, fmt.Errorf("error reading %s: %w", file, err)
+		return nil, fmt.Errorf("error reading cgroup %s and file %s: %w", cgpath, file, err)
 	}
 
 	if len(controllersRaw) == 0 {
