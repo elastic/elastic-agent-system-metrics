@@ -52,9 +52,12 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 
 	stats, err := testStats.GetSelf()
 	require.NoError(t, err)
-	cgstats, err := stats.Cgroup.Format()
-	require.NoError(t, err)
-	require.NotEmpty(t, cgstats)
+	if runtime.GOOS == "linux" {
+		cgstats, err := stats.Cgroup.Format()
+		require.NoError(t, err)
+		require.NotEmpty(t, cgstats)
+	}
+
 	require.NotEmpty(t, stats.Cmdline)
 	require.NotEmpty(t, stats.Username)
 }
