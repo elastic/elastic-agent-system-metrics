@@ -20,6 +20,7 @@ package process
 import (
 	"os"
 	"os/user"
+	"runtime"
 	"strconv"
 	"testing"
 
@@ -115,7 +116,9 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	numThreads := result["num_threads"]
 	require.NotNil(t, numThreads)
 
-	cgroups := result["cgroup"]
-	require.NotNil(t, cgroups)
+	if runtime.GOOS == "linux" {
+		cgroups := result["cgroup"]
+		require.NotNil(t, cgroups)
+	}
 
 }
