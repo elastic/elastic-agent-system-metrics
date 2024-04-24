@@ -35,6 +35,24 @@ import (
 // The tests here are meant to be run from the containerized framework in ./tests
 // However, they are designed so that `go test` can run them normally as well
 
+func TestContainerMonitoringFromInsideContainer(t *testing.T) {
+	_ = logp.DevelopmentSetup()
+
+	testStats := Stats{CPUTicks: true,
+		EnableCgroups: true,
+		EnableNetwork: false,
+		Hostfs:        systemtests.DockerTestResolver(),
+		Procs:         []string{".*"},
+		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: systemtests.DockerTestResolver()},
+	}
+	err := testStats.Init()
+	require.NoError(t, err)
+
+	result, err := testStats.GetOne(os.Getpid())
+	require.NoError(t, err)
+	validateProcResult(t, result)
+}
+
 func TestSystemHostFromContainer(t *testing.T) {
 	_ = logp.DevelopmentSetup()
 

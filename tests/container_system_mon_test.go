@@ -123,6 +123,26 @@ func TestProcessAllSettings(t *testing.T) {
 		[]bool{true, false}, []string{"mail", ""})
 }
 
+func TestContainerProcess(t *testing.T) {
+	_ = logp.DevelopmentSetup()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
+	// Make sure that monitoring container procs from within the container still works
+	baseRunner := systemtests.DockerTestRunner{
+		Runner:            t,
+		Basepath:          "./metric/system/process",
+		Verbose:           false,
+		Privileged:        true,
+		Testname:          "TestContainerMonitoringFromInsideContainer",
+		CreateHostProcess: exec.Command("sleep", "480"),
+		FatalLogMessages:  []string{"error", "Error"},
+	}
+
+	// is it kinda cursed that we just use the system `mail` user? Yeah, but it works
+	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
+		[]bool{true, false}, []string{"mail", ""})
+}
+
 func TestFilesystem(t *testing.T) {
 	_ = logp.DevelopmentSetup()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
