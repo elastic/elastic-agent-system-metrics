@@ -50,8 +50,13 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 	err := testStats.Init()
 	require.NoError(t, err)
 
-	_, err = testStats.GetSelf()
+	stats, err := testStats.GetSelf()
 	require.NoError(t, err)
+	cgstats, err := stats.Cgroup.Format()
+	require.NoError(t, err)
+	require.NotEmpty(t, cgstats)
+	require.NotEmpty(t, stats.Cmdline)
+	require.NotEmpty(t, stats.Username)
 }
 
 func TestSystemHostFromContainer(t *testing.T) {
