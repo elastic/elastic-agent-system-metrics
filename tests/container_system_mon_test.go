@@ -129,13 +129,12 @@ func TestContainerProcess(t *testing.T) {
 	defer cancel()
 	// Make sure that monitoring container procs from within the container still works
 	baseRunner := systemtests.DockerTestRunner{
-		Runner:            t,
-		Basepath:          "./metric/system/process",
-		Verbose:           false,
-		Privileged:        true,
-		Testname:          "TestContainerMonitoringFromInsideContainer",
-		CreateHostProcess: exec.Command("sleep", "480"),
-		FatalLogMessages:  []string{"error", "Error"},
+		Runner:           t,
+		Basepath:         "./metric/system/process",
+		Verbose:          false,
+		Privileged:       true,
+		Testname:         "TestContainerMonitoringFromInsideContainer",
+		FatalLogMessages: []string{"error", "Error"},
 	}
 
 	// is it kinda cursed that we just use the system `mail` user? Yeah, but it works

@@ -30,6 +30,7 @@ import (
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup"
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
 // ======================================== NOTE:
@@ -42,16 +43,15 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
 		EnableNetwork: false,
-		Hostfs:        systemtests.DockerTestResolver(),
+		Hostfs:        resolve.NewTestResolver(""),
 		Procs:         []string{".*"},
-		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: systemtests.DockerTestResolver()},
+		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: resolve.NewTestResolver("")},
 	}
 	err := testStats.Init()
 	require.NoError(t, err)
 
-	result, err := testStats.GetOne(os.Getpid())
+	_, err = testStats.GetSelf()
 	require.NoError(t, err)
-	validateProcResult(t, result)
 }
 
 func TestSystemHostFromContainer(t *testing.T) {

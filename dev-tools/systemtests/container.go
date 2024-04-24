@@ -194,7 +194,11 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 				require.NotContains(tr.Runner, line, badLine)
 			}
 			for _, line := range strings.Split(result.Stderr, "\n") {
-				require.NotContains(tr.Runner, line, badLine)
+				// filter our the go mod package download messages
+				if !strings.Contains(line, "go: downloading") {
+					require.NotContains(tr.Runner, line, badLine)
+				}
+
 			}
 		}
 
