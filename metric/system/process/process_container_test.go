@@ -43,9 +43,11 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
 		EnableNetwork: false,
-		Hostfs:        resolve.NewTestResolver(""),
-		Procs:         []string{".*"},
-		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: resolve.NewTestResolver("")},
+		// TODO: These should use DockerTestResolver,
+		// once https://github.com/elastic/elastic-agent-system-metrics/issues/147 is merged
+		Hostfs:     resolve.NewTestResolver(""),
+		Procs:      []string{".*"},
+		CgroupOpts: cgroup.ReaderOptions{RootfsMountpoint: resolve.NewTestResolver("")},
 	}
 	err := testStats.Init()
 	require.NoError(t, err)
