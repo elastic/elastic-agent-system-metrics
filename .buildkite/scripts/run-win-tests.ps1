@@ -7,6 +7,9 @@ function fixCRLF {
     git rm --quiet --cached -r .
     git reset --quiet --hard
 }
+
+# Note we explicitly set GOBIN to GOROOT\bin as GOROOT\bin is a part of env:PATH
+# and the default go install location when GOBIN is not set is GOPATH\bin which may not be in env:PATH
 function withGolang($version) {
     Write-Host "-- Install golang --"
     [Net.ServicePointManager]::SecurityProtocol = "tls12"
@@ -15,8 +18,6 @@ function withGolang($version) {
     go version
     go env -w GOBIN="$(go env GOROOT)\bin"
     go env
-    Write-Host "-- ENV VARS --"
-    dir env:
 }
 function installGoDependencies {
     $installPackages = @(
