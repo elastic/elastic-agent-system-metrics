@@ -14,6 +14,8 @@ function withGolang($version) {
     gvm --format=powershell $version | Invoke-Expression
     go version
     go env
+    Write-Host "-- ENV VARS --"
+    dir env:
 }
 function installGoDependencies {
     $installPackages = @(
