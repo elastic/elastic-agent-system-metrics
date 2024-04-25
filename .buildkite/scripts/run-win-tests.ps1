@@ -13,6 +13,7 @@ function withGolang($version) {
     Invoke-WebRequest -URI https://github.com/andrewkroh/gvm/releases/download/v0.5.2/gvm-windows-amd64.exe -Outfile C:\Windows\System32\gvm.exe
     gvm --format=powershell $version | Invoke-Expression
     go version
+    go env -w GOBIN="$(go env GOROOT)\bin"
     go env
     Write-Host "-- ENV VARS --"
     dir env:
