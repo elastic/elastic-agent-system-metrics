@@ -37,7 +37,6 @@ import (
 // These tests are designed for the case of monitoring a host system from inside docker via a /hostfs
 
 func TestKernelProc(t *testing.T) {
-	t.Skip("This test will fail until https://github.com/elastic/elastic-agent-system-metrics/issues/135 is fixed")
 	_ = logp.DevelopmentSetup()
 	//manually fetch a kernel process
 	// kernel processes will have a parent pid of 2
@@ -59,7 +58,7 @@ func TestKernelProc(t *testing.T) {
 		statPart := strings.Split(string(statRaw), " ")
 		ppid := statPart[3]
 		if ppid == "2" {
-			testPid, err = strconv.ParseInt(ppid, 10, 64)
+			testPid, err = strconv.ParseInt(statPart[0], 10, 64)
 			require.NoError(t, err)
 			break
 		}
@@ -69,6 +68,7 @@ func TestKernelProc(t *testing.T) {
 		t.Skip("could not find kernel process")
 	}
 
+	t.Logf("monitoring kernel proc %d", testPid)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
