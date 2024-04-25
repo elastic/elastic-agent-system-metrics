@@ -9,10 +9,9 @@ function fixCRLF {
 }
 function withGolang($version) {
     Write-Host "-- Install golang --"
-    choco install -y golang --version $version
-    $env:ChocolateyInstall = Convert-Path "$((Get-Command choco).Path)\..\.."
-    Import-Module "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-    refreshenv
+    [Net.ServicePointManager]::SecurityProtocol = "tls12"
+    Invoke-WebRequest -URI https://github.com/andrewkroh/gvm/releases/download/v0.5.2/gvm-windows-amd64.exe -Outfile C:\Windows\System32\gvm.exe
+    gvm --format=powershell $version | Invoke-Expression
     go version
     go env
 }
@@ -30,7 +29,7 @@ function installGoDependencies {
 }
 
 fixCRLF
-withGolang $env:GO_VERSION_CHOCO
+withGolang $env:GO_VERSION
 installGoDependencies
 
 $ErrorActionPreference = "Continue" # set +e

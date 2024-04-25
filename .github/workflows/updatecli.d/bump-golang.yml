@@ -115,12 +115,3 @@ targets:
       content: 'go {{ source "gomod" }}'
       file: go.mod
       matchpattern: 'go \d+.\d+'
-  update-choco-go:
-    name: "Update .buildkite/pipeline.yml"
-    sourceid: latestGoVersion
-    scmid: githubConfig
-    kind: file
-    spec:
-      content: 'GO_VERSION_CHOCO: {{ source "latestGoVersion" }}'
-      file: .buildkite/pipeline.yml
-      matchpattern: 'GO_VERSION_CHOCO: \d+.\d+.\d+'
