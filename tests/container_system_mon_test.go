@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -37,6 +38,9 @@ import (
 // These tests are designed for the case of monitoring a host system from inside docker via a /hostfs
 
 func TestKernelProc(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("test is linux-only")
+	}
 	_ = logp.DevelopmentSetup()
 	//manually fetch a kernel process
 	// kernel processes will have a parent pid of 2
