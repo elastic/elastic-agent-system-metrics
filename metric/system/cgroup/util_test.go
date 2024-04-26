@@ -44,10 +44,57 @@ var testFileList = []string{
 func TestMain(m *testing.M) {
 	os.Exit(testhelpers.MainTestWrapper(m, testFileList))
 }
+
+func TestFindMatchingPid(t *testing.T) {
+	testFile := `
+12
+13
+14
+1585724
+1585725
+1586244
+1586245
+`
+	got := foundMatchingPidInProcsFile(14, testFile)
+	assert.True(t, got)
+
+	gotFalse := foundMatchingPidInProcsFile(15, testFile)
+
+	assert.False(t, gotFalse)
+}
+
 func TestFindCgroup(t *testing.T) {
-	path, err := guessContainerCgroupPath("/sys/fs/cgroup")
+	path, err := guessContainerCgroupPath("/sys/fs/cgroup", os.Getpid())
 	require.NoError(t, err)
 	t.Logf("got path: %s", path)
+}
+
+func TestFindCgroupCache(t *testing.T) {
+	testPid := 2233801
+	path, err := guessContainerCgroupPath("testdata/docker2/sys/fs/cgroup", testPid)
+	goodPath := "/user.slice/user-1000.slice/session-520.scope"
+	require.NoError(t, err)
+	t.Logf("got path: %s", path)
+	require.Equal(t, goodPath, path)
+
+	cached := cgroupContainerPath.get()
+	t.Logf("got cached path: %s", cached)
+	require.Equal(t, goodPath, cached)
+
+	// run again with cached path
+	path, err = guessContainerCgroupPath("testdata/docker2/sys/fs/cgroup", testPid)
+	require.NoError(t, err)
+	require.Equal(t, goodPath, path)
+
+	// set outdated cache path
+	cgroupContainerPath.set("/user.slice/user-1000.slice/session-521.scope")
+
+	// should still get a good path
+	path, err = guessContainerCgroupPath("testdata/docker2/sys/fs/cgroup", testPid)
+	require.NoError(t, err)
+	require.Equal(t, goodPath, path)
+	cached = cgroupContainerPath.get()
+	require.Equal(t, goodPath, cached)
 }
 
 func TestSupportedSubsystems(t *testing.T) {

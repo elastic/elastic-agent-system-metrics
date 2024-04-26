@@ -26,11 +26,41 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
+
+// cgroupCntainerCache is a performance helper used for
+// cases where we're in a container and we need to fetch our cgroup
+// path from the host system. We want to cache these results, since traversing
+// /hostfs/sys/fs/cgroup is a bit intensive.
+// This value is also unlikely to change more than once.
+// see guessContainerCgroupPath() below for more context
+type cgroupContainerCache struct {
+	mut    sync.Mutex
+	cgPath string
+}
+
+func (cgc *cgroupContainerCache) get() string {
+	cgc.mut.Lock()
+	defer cgc.mut.Unlock()
+	return cgc.cgPath
+}
+
+func (cgc *cgroupContainerCache) set(update string) {
+	cgc.mut.Lock()
+	defer cgc.mut.Unlock()
+	cgc.cgPath = update
+}
+
+var cgroupContainerPath *cgroupContainerCache
+
+func init() {
+	cgroupContainerPath = &cgroupContainerCache{cgPath: ""}
+}
 
 var (
 	// ErrCgroupsMissing indicates the /proc/cgroups was not found. This means
@@ -237,7 +267,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	// This logic helps us proper fetch the cgroup path when we're running inside a container
 	// with a private namespace
 	if mountInfo.V2Loc != "" && rootfs.IsSet() && cgroupNSStateFetch() {
-		mountInfo.ContainerizedRootMount, err = guessContainerCgroupPath(mountInfo.V2Loc)
+		mountInfo.ContainerizedRootMount, err = guessContainerCgroupPath(mountInfo.V2Loc, os.Getpid())
 		// treat this as a non-fatal error. If we end up needing this value, the lookups will fail down the line
 		if err != nil {
 			logp.L().Debugf("could not fetch cgroup path inside container: %w", err)
@@ -273,15 +303,29 @@ func isCgroupNSPrivate() bool {
 // for the cgroup of a pid, see https://github.com/elastic/elastic-agent-system-metrics/issues/139
 // This will only work on v2 cgroups, I haven't run into this on a system with cgroups v1 yet;
 // not sure if docker namespacing behaves the same.
-func guessContainerCgroupPath(v2Loc string) (string, error) {
+func guessContainerCgroupPath(v2Loc string, OurPid int) (string, error) {
+	// check the cache first
+	if cachePath := cgroupContainerPath.get(); cachePath != "" {
+		// check the validity of the cache
+		rawFile, err := os.ReadFile(filepath.Join(v2Loc, cachePath, "cgroup.procs"))
+		// if we get a read error, assume the cache is invalid, move on
+		if err == nil {
+			if foundMatchingPidInProcsFile(OurPid, string(rawFile)) {
+				return cachePath, nil
+			}
+		}
+	}
 	// pattern:
 	// if in a private cgroup namespace,
 	// traverse over the root cgroup path, look for *.procs files
 	// go through all of the *.procs files until we have one that contains our pid
 	// that path is our cgroup
-	OurPid := os.Getpid()
+
 	foundCgroupPath := ""
 	err := filepath.WalkDir(v2Loc, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 		if d.IsDir() {
 			return nil
 		}
@@ -290,18 +334,9 @@ func guessContainerCgroupPath(v2Loc string) (string, error) {
 			if err != nil {
 				return nil //nolint: nilerr // we can get lots of weird permissions errors here, so don't fail on an error
 			}
-			for _, rawPid := range strings.Split(string(pidfile), "\n") {
-				if len(rawPid) == 0 {
-					continue
-				}
-				pidInt, err := strconv.ParseInt(rawPid, 10, 64)
-				if err != nil {
-					return fmt.Errorf("error parsing int '%s': %w", rawPid, err)
-				}
-				if pidInt == int64(OurPid) {
-					foundCgroupPath = path
-					return nil
-				}
+			if foundMatchingPidInProcsFile(OurPid, string(pidfile)) {
+				foundCgroupPath = path
+				return nil
 			}
 		}
 		return nil
@@ -316,7 +351,27 @@ func guessContainerCgroupPath(v2Loc string) (string, error) {
 	// strip to cgroup path
 	cgroupDir := filepath.Dir(foundCgroupPath)
 	relativePath := strings.TrimPrefix(cgroupDir, v2Loc)
+	cgroupContainerPath.set(relativePath)
 	return relativePath, nil
+}
+
+// foundMatchingPidInProcsFile is a helper for guessContainerCgroupPath
+// that tells us if we have a matching process in a cgroup.procs file
+func foundMatchingPidInProcsFile(ourPid int, fileData string) bool {
+	for _, rawPid := range strings.Split(string(fileData), "\n") {
+		if len(rawPid) == 0 {
+			continue
+		}
+		pidInt, err := strconv.ParseInt(strings.TrimSpace(rawPid), 10, 64)
+		if err != nil {
+			return false
+		}
+		if pidInt == int64(ourPid) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // when we're reading from a host mountinfo path from inside a container
