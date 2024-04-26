@@ -358,7 +358,7 @@ func guessContainerCgroupPath(v2Loc string, OurPid int) (string, error) {
 // foundMatchingPidInProcsFile is a helper for guessContainerCgroupPath
 // that tells us if we have a matching process in a cgroup.procs file
 func foundMatchingPidInProcsFile(ourPid int, fileData string) bool {
-	for _, rawPid := range strings.Split(string(fileData), "\n") {
+	for _, rawPid := range strings.Split(fileData, "\n") {
 		if len(rawPid) == 0 {
 			continue
 		}
