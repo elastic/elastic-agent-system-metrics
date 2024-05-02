@@ -94,7 +94,9 @@ func FetchNumThreads(pid int) (int, error) {
 	if err != nil {
 		return 0, fmt.Errorf("OpenProcess failed for PID %d: %w", pid, err)
 	}
-	defer syscall.CloseHandle(targetProcessHandle)
+	defer func() {
+		_ = syscall.CloseHandle(targetProcessHandle)
+	}()
 
 	currentProcessHandle, err := syscall.GetCurrentProcess()
 	if err != nil {
@@ -103,7 +105,9 @@ func FetchNumThreads(pid int) (int, error) {
 	// The pseudo handle need not be closed when it is no longer
 	// needed, calling CloseHandle has no effect.  Adding here to
 	// remind us to close any handles we open.
-	defer syscall.CloseHandle(currentProcessHandle)
+	defer func() {
+		syscall.CloseHandle(currentProcessHandle)
+	}()
 
 	var snapshotHandle syscall.Handle
 	err = PssCaptureSnapshot(targetProcessHandle, PSSCaptureThreads, 0, &snapshotHandle)
