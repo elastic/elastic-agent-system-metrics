@@ -106,7 +106,7 @@ func FetchNumThreads(pid int) (int, error) {
 	// needed, calling CloseHandle has no effect.  Adding here to
 	// remind us to close any handles we open.
 	defer func() {
-		syscall.CloseHandle(currentProcessHandle)
+		_ = syscall.CloseHandle(currentProcessHandle)
 	}()
 
 	var snapshotHandle syscall.Handle
