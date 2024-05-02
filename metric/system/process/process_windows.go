@@ -20,6 +20,7 @@ package process
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"syscall"
 	"unsafe"
@@ -48,6 +49,12 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	}
 
 	return procMap, plist, nil
+}
+
+// GetSelfPid is the darwin implementation; see the linux version in
+// process_linux_common.go for more context.
+func GetSelfPid(hostfs resolve.Resolver) (int, error) {
+	return os.Getpid(), nil
 }
 
 // GetInfoForPid returns basic info for the process
