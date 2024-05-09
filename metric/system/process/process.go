@@ -123,9 +123,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		// Add the RSS pct memory first
 		process.Memory.Rss.Pct = GetProcMemPercentage(process, totalPhyMem)
 		// Create the root event
-		root := process.FormatForRoot()
-		rootMap := mapstr.M{}
-		_ = typeconv.Convert(&rootMap, root)
+		rootMap := processRootEvent(process)
 
 		proc, err := procStats.getProcessEvent(&process)
 		if err != nil {
@@ -149,6 +147,26 @@ func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 	procStats.ProcsMap.SetPid(pid, pidStat)
 
 	return procStats.getProcessEvent(&pidStat)
+}
+
+// GetOneRootEvent is the same as `GetOne()` but it returns an
+// event formatted as expected by ECS
+func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
+	pidStat, _, err := procStats.pidFill(pid, false)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
+	}
+
+	procStats.ProcsMap.SetPid(pid, pidStat)
+
+	procMap, err := procStats.getProcessEvent(&pidStat)
+	if err != nil {
+		return nil, nil, fmt.Errorf("error formatting process %d: %w", pid, err)
+	}
+
+	rootMap := processRootEvent(pidStat)
+
+	return procMap, rootMap, err
 }
 
 // GetSelf gets process info for the beat itself
