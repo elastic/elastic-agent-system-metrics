@@ -63,7 +63,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 }
 
 // GetPIDState returns the state of a given PID
-// It will return ProcNotExist if the process was not found.
+// It will return ErrProcNotExist if the process was not found.
 func GetPIDState(hostfs resolve.Resolver, pid int) (PidState, error) {
 	// This library still doesn't have a good cross-platform way to distinguish between "does not eixst" and other process errors.
 	// This is a fairly difficult problem to solve in a cross-platform way
@@ -72,7 +72,7 @@ func GetPIDState(hostfs resolve.Resolver, pid int) (PidState, error) {
 		return "", fmt.Errorf("Error trying to find process: %d: %w", pid, err)
 	}
 	if !exists {
-		return "", ProcNotExist
+		return "", ErrProcNotExist
 	}
 	// GetInfoForPid will return the smallest possible dataset for a PID
 	procState, err := GetInfoForPid(hostfs, pid)

@@ -35,8 +35,8 @@ import (
 	"github.com/elastic/go-sysinfo"
 )
 
-// ProcNotExist indicates that a process was not found.
-var ProcNotExist = errors.New("process does not exist")
+// ErrProcNotExist indicates that a process was not found.
+var ErrProcNotExist = errors.New("process does not exist")
 
 // ProcsMap is a convenience wrapper for the oft-used idiom of map[int]ProcState
 type ProcsMap map[int]ProcState
