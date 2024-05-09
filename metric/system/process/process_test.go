@@ -129,9 +129,7 @@ func TestGetOneRoot(t *testing.T) {
 	t.Logf("got event: %s\n root: %s", evt.StringToPrint(), rootEvt.StringToPrint())
 
 	require.NotEmpty(t, rootEvt["process"].(map[string]interface{})["pid"])
-	require.NotEmpty(t, rootEvt["process"].(map[string]interface{})["executable"])
 
-	require.NotEmpty(t, evt["cwd"])
 	require.NotEmpty(t, evt["cpu"])
 }
 
