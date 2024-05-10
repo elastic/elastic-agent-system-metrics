@@ -126,8 +126,6 @@ func TestGetOneRoot(t *testing.T) {
 	evt, rootEvt, err := testConfig.GetOneRootEvent(os.Getpid())
 	require.NoError(t, err)
 
-	t.Logf("got event: %s\n root: %s", evt.StringToPrint(), rootEvt.StringToPrint())
-
 	require.NotEmpty(t, rootEvt["process"].(map[string]interface{})["pid"])
 
 	require.NotEmpty(t, evt["cpu"])
