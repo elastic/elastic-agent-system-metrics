@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/docker/docker v24.0.9+incompatible
-	github.com/elastic/elastic-agent-libs v0.9.3
+	github.com/elastic/elastic-agent-libs v0.9.12
 	github.com/elastic/go-licenser v0.4.2
 	github.com/elastic/go-structform v0.0.9
 	github.com/elastic/go-sysinfo v1.14.0
@@ -55,6 +55,7 @@ require (
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
