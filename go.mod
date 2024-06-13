@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/docker/docker v24.0.9+incompatible
 	github.com/elastic/elastic-agent-libs v0.9.3
-	github.com/elastic/go-licenser v0.4.0
+	github.com/elastic/go-licenser v0.4.2
 	github.com/elastic/go-structform v0.0.9
 	github.com/elastic/go-sysinfo v1.14.0
 	github.com/elastic/go-windows v1.0.1
