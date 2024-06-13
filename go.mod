@@ -14,7 +14,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/shirou/gopsutil/v3 v3.21.12
 	github.com/stretchr/testify v1.9.0
-	go.elastic.co/go-licence-detector v0.5.0
+	go.elastic.co/go-licence-detector v0.6.0
 	golang.org/x/sys v0.19.0
 )
 
