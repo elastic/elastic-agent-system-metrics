@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/docker/docker v24.0.9+incompatible
-	github.com/elastic/elastic-agent-libs v0.9.12
+	github.com/elastic/elastic-agent-libs v0.9.13
 	github.com/elastic/go-licenser v0.4.2
 	github.com/elastic/go-structform v0.0.9
 	github.com/elastic/go-sysinfo v1.14.0
@@ -15,7 +15,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.21.12
 	github.com/stretchr/testify v1.9.0
 	go.elastic.co/go-licence-detector v0.6.1
-	golang.org/x/sys v0.19.0
+	golang.org/x/sys v0.21.0
 )
 
 require (
@@ -49,15 +49,15 @@ require (
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	go.elastic.co/ecszap v1.0.1 // indirect
+	go.elastic.co/ecszap v1.0.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
