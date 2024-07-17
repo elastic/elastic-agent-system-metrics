@@ -31,6 +31,7 @@ import (
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	"github.com/joeshaw/multierror"
 )
 
 /*
@@ -46,6 +47,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	pid := C.pid_t(0)
 
 	procMap := make(ProcsMap, 0)
+	var err multierror.Errors
 	var plist []ProcState
 	for {
 		// getprocs first argument is a void*
@@ -53,13 +55,13 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("error fetching PIDs: %w", err)
 		}
-		procMap, plist = procStats.pidIter(int(info.pi_pid), procMap, plist)
+		procMap, plist, err = procStats.pidIter(int(info.pi_pid), procMap, plist, err)
 
 		if num == 0 {
 			break
 		}
 	}
-	return procMap, plist, nil
+	return procMap, plist, err.Err()
 }
 
 // GetInfoForPid returns basic info for the process

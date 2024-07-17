@@ -30,6 +30,7 @@ import (
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	"github.com/elastic/gosigar/sys/windows"
+	"github.com/joeshaw/multierror"
 )
 
 // FetchPids returns a map and array of pids
@@ -41,14 +42,15 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 
 	procMap := make(ProcsMap, len(pids))
 	plist := make([]ProcState, 0, len(pids))
+	var multiError multierror.Errors
 	// This is probably the only implementation that doesn't benefit from our
 	// little fillPid callback system. We'll need to iterate over everything
 	// manually.
 	for _, pid := range pids {
-		procMap, plist = procStats.pidIter(int(pid), procMap, plist)
+		procMap, plist, multiError = procStats.pidIter(int(pid), procMap, plist, multiError)
 	}
 
-	return procMap, plist, nil
+	return procMap, plist, multiError.Err()
 }
 
 // GetSelfPid is the darwin implementation; see the linux version in

@@ -46,6 +46,7 @@ import (
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	"github.com/joeshaw/multierror"
 )
 
 // GetSelfPid is the darwin implementation; see the linux version in
@@ -73,6 +74,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 
 	procMap := make(ProcsMap, num)
 	plist := make([]ProcState, 0, num)
+	var err multierror.Errors
 
 	for i := 0; i < num; i++ {
 		if err := binary.Read(bbuf, binary.LittleEndian, &pid); err != nil {
@@ -82,10 +84,10 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		if pid == 0 {
 			continue
 		}
-		procMap, plist = procStats.pidIter(int(pid), procMap, plist)
+		procMap, plist, err = procStats.pidIter(int(pid), procMap, plist, err)
 	}
 
-	return procMap, plist, nil
+	return procMap, plist, err.Err()
 }
 
 // GetInfoForPid returns basic info for the process

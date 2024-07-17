@@ -34,6 +34,7 @@ import (
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	"github.com/joeshaw/multierror"
 )
 
 // Indulging in one non-const global variable for the sake of storing boot time
@@ -85,6 +86,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 
 	procMap := make(ProcsMap, len(names))
 	plist := make([]ProcState, 0, len(names))
+	var multiError multierror.Errors
 
 	// Iterate over the directory, fetch just enough info so we can filter based on user input.
 	logger := logp.L()
@@ -99,10 +101,10 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 			logger.Debugf("Error converting PID name %s", name)
 			continue
 		}
-		procMap, plist = procStats.pidIter(pid, procMap, plist)
+		procMap, plist, multiError = procStats.pidIter(pid, procMap, plist, multiError)
 	}
 
-	return procMap, plist, nil
+	return procMap, plist, multiError.Err()
 }
 
 func FillPidMetrics(hostfs resolve.Resolver, pid int, state ProcState, filter func(string) bool) (ProcState, error) {
