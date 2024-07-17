@@ -18,6 +18,7 @@
 package process
 
 import (
+	"errors"
 	"os"
 	"os/user"
 	"runtime"
@@ -112,7 +113,11 @@ func TestSystemHostFromContainer(t *testing.T) {
 		validateProcResult(t, result)
 	} else {
 		_, roots, err := testStats.Get()
-		require.NoError(t, err)
+		// There shouldn't be any fatal errors.
+		// multiErrors are non-fatal
+		if !errors.As(err, &typeMultiError) {
+			require.NoError(t, err)
+		}
 
 		for _, proc := range roots {
 			t.Logf("proc: %d: %s", proc["process"].(map[string]interface{})["pid"],
