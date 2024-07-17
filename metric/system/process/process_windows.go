@@ -27,10 +27,11 @@ import (
 
 	xsyswindows "golang.org/x/sys/windows"
 
+	"github.com/joeshaw/multierror"
+
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	"github.com/elastic/gosigar/sys/windows"
-	"github.com/joeshaw/multierror"
 )
 
 // FetchPids returns a map and array of pids

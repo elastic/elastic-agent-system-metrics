@@ -28,10 +28,11 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/joeshaw/multierror"
+
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
-	"github.com/joeshaw/multierror"
 )
 
 /*

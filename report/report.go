@@ -25,6 +25,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/joeshaw/multierror"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/monitoring"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup"
@@ -32,8 +34,9 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/numcpu"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/process"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
-	"github.com/joeshaw/multierror"
 )
+
+var typeMultiError *multierror.MultiError
 
 func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(monitoring.Mode, monitoring.Visitor) {
 	return func(m monitoring.Mode, V monitoring.Visitor) {
@@ -51,7 +54,7 @@ func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(mon
 		}
 
 		state, err := processStats.GetSelf()
-		if _, ok := err.(*multierror.MultiError); !ok && err != nil {
+		if errors.As(err, &typeMultiError) && err != nil {
 			logger.Errorf("Error while getting memory usage: %v", err)
 			return
 		}
@@ -67,7 +70,7 @@ func InstanceCPUReporter(logger *logp.Logger, processStats *process.Stats) func(
 		defer V.OnRegistryFinished()
 
 		state, err := processStats.GetSelf()
-		if _, ok := err.(*multierror.MultiError); !ok && err != nil {
+		if errors.As(err, &typeMultiError) && err != nil {
 			logger.Errorf("Error retrieving CPU percentages: %v", err)
 			return
 		}

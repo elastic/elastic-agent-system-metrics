@@ -30,11 +30,12 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/joeshaw/multierror"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
-	"github.com/joeshaw/multierror"
 )
 
 // Indulging in one non-const global variable for the sake of storing boot time

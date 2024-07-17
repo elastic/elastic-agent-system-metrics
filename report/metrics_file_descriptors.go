@@ -21,10 +21,11 @@
 package report
 
 import (
+	"errors"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/monitoring"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/process"
-	"github.com/joeshaw/multierror"
 )
 
 func SetupLinuxBSDFDMetrics(logger *logp.Logger, reg *monitoring.Registry, processStats *process.Stats) {
@@ -52,7 +53,7 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 
 func getFDUsage(processStats *process.Stats) (open, hardLimit, softLimit uint64, err error) {
 	state, err := processStats.GetSelf()
-	if _, ok := err.(*multierror.MultiError); !ok && err != nil {
+	if errors.As(err, &typeMultiError) && err != nil {
 		return 0, 0, 0, err
 	}
 

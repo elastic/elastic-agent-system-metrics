@@ -40,6 +40,8 @@ import (
 	sysinfotypes "github.com/elastic/go-sysinfo/types"
 )
 
+var typeMultiError *multierror.MultiError
+
 // ListStates is a wrapper that returns a list of processess with only the basic PID info filled out.
 func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 	init := Stats{
@@ -55,7 +57,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 
 	// actually fetch the PIDs from the OS-specific code
 	_, plist, err := init.FetchPids()
-	if _, ok := err.(*multierror.MultiError); err != nil && !ok {
+	if errors.As(err, &typeMultiError) && err != nil {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 
@@ -93,7 +95,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	// actually fetch the PIDs from the OS-specific code
 	pidMap, plist, err := procStats.FetchPids()
 
-	if _, ok := err.(*multierror.MultiError); err != nil && !ok {
+	if errors.As(err, &typeMultiError) && err != nil {
 		return nil, nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 	// We use this to track processes over time.
@@ -140,7 +142,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
 func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if _, ok := err.(*multierror.MultiError); !ok && err != nil {
+	if errors.As(err, &typeMultiError) && err != nil {
 		return nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -153,7 +155,7 @@ func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 // event formatted as expected by ECS
 func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if _, ok := err.(*multierror.MultiError); !ok && err != nil {
+	if errors.As(err, &typeMultiError) && err != nil {
 		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -181,7 +183,7 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 	}
 
 	pidStat, _, err := procStats.pidFill(self, false)
-	if _, ok := err.(*multierror.MultiError); !ok && err != nil {
+	if errors.As(err, &typeMultiError) && err != nil {
 		return ProcState{}, fmt.Errorf("error fetching PID %d: %w", self, err)
 	}
 
@@ -196,11 +198,11 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState,
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
 		if !errors.Is(err, NonFatalErr{}) {
-			multiErr = append(multiErr, fmt.Errorf("error fetching PID info for %d, skipping: %s", pid, err))
+			multiErr = append(multiErr, fmt.Errorf("error fetching PID info for %d, skipping: %w", pid, err))
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
 			return procMap, proclist, multiErr
 		}
-		multiErr = append(multiErr, fmt.Errorf("error fetching PID info for %d, skipping: %s", pid, err))
+		multiErr = append(multiErr, fmt.Errorf("error fetching PID info for %d, skipping: %w", pid, err))
 		procStats.logger.Debugf("Non fatal error fetching PID some info for %d, metrics are valid, but partial: %s", pid, err)
 	}
 	if !saved {
