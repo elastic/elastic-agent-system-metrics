@@ -10,15 +10,12 @@ require (
 	github.com/elastic/go-sysinfo v1.14.0
 	github.com/elastic/go-windows v1.0.1
 	github.com/elastic/gosigar v0.14.2
-	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/hashicorp/go-multierror v1.1.1
-	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901
 	github.com/gofrs/uuid/v5 v5.2.0
+	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901
 	github.com/magefile/mage v1.15.0
 	github.com/shirou/gopsutil/v3 v3.21.12
 	github.com/stretchr/testify v1.9.0
 	go.elastic.co/go-licence-detector v0.6.1
-	go.uber.org/multierr v1.11.0
 	golang.org/x/sys v0.21.0
 )
 
@@ -35,7 +32,6 @@ require (
 	github.com/gobuffalo/here v0.6.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/licenseclassifier v0.0.0-20200402202327-879cb1424de0 // indirect
-	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/karrick/godirwalk v1.15.8 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
@@ -55,6 +51,7 @@ require (
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.elastic.co/ecszap v1.0.2 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/mod v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
