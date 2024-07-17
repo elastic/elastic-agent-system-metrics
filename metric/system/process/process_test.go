@@ -21,6 +21,7 @@ package process
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -169,12 +170,16 @@ func TestGetOne(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	_, _, err = testConfig.Get()
-	assert.NoError(t, err, "GetOne")
+	if !errors.As(err, &typeMultiError) {
+		assert.NoError(t, err, "GetOne")
+	}
 
 	time.Sleep(time.Second * 2)
 
 	procData, _, err := testConfig.Get()
-	assert.NoError(t, err, "GetOne")
+	if !errors.As(err, &typeMultiError) {
+		assert.NoError(t, err, "GetOne")
+	}
 
 	t.Logf("Proc: %s", procData[0].StringToPrint())
 }
@@ -633,7 +638,7 @@ func TestIncludeTopProcesses(t *testing.T) {
 func runThreads(t *testing.T) *exec.Cmd { //nolint: deadcode,structcheck,unused // needed by other platforms
 	t.Helper()
 
-	supportedPlatforms := []string{"linux/amd64", "darwin/amd64", "windows/amd64"}
+	supportedPlatforms := []string{"linux/amd64", "darwin/amd64", "darwin/arm64", "windows/amd64"}
 
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 	if !sliceContains(supportedPlatforms, platform) {

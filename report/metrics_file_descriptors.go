@@ -53,7 +53,7 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 
 func getFDUsage(processStats *process.Stats) (open, hardLimit, softLimit uint64, err error) {
 	state, err := processStats.GetSelf()
-	if errors.As(err, &typeMultiError) && err != nil {
+	if err != nil && !errors.As(err, &typeMultiError) {
 		return 0, 0, 0, err
 	}
 

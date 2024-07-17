@@ -54,7 +54,7 @@ func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(mon
 		}
 
 		state, err := processStats.GetSelf()
-		if errors.As(err, &typeMultiError) && err != nil {
+		if err != nil && !errors.As(err, &typeMultiError) {
 			logger.Errorf("Error while getting memory usage: %v", err)
 			return
 		}
@@ -70,7 +70,7 @@ func InstanceCPUReporter(logger *logp.Logger, processStats *process.Stats) func(
 		defer V.OnRegistryFinished()
 
 		state, err := processStats.GetSelf()
-		if errors.As(err, &typeMultiError) && err != nil {
+		if err != nil && !errors.As(err, &typeMultiError) {
 			logger.Errorf("Error retrieving CPU percentages: %v", err)
 			return
 		}
