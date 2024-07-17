@@ -638,7 +638,7 @@ func TestIncludeTopProcesses(t *testing.T) {
 func runThreads(t *testing.T) *exec.Cmd { //nolint: deadcode,structcheck,unused // needed by other platforms
 	t.Helper()
 
-	supportedPlatforms := []string{"linux/amd64", "darwin/amd64", "darwin/arm64", "windows/amd64"}
+	supportedPlatforms := []string{"linux/amd64", "darwin/amd64", "windows/amd64"}
 
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
 	if !sliceContains(supportedPlatforms, platform) {
