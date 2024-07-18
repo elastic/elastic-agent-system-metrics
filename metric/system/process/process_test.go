@@ -267,7 +267,7 @@ func TestFilter(t *testing.T) {
 
 func TestProcessList(t *testing.T) {
 	plist, err := ListStates(resolve.NewTestResolver("/"))
-	assert.True(t, IsDegradable(err), "ListStates")
+	assert.True(t, IsDegradable(err), fmt.Sprintf("Fatal Error: %s", err))
 
 	for _, proc := range plist {
 		assert.NotEmpty(t, proc.State)

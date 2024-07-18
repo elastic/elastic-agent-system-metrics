@@ -139,7 +139,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
 func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil {
+	if err != nil && !IsDegradable(err) {
 		return nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -152,7 +152,7 @@ func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 // event formatted as expected by ECS
 func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil {
+	if err != nil && !IsDegradable(err) {
 		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -180,7 +180,7 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 	}
 
 	pidStat, _, err := procStats.pidFill(self, false)
-	if err != nil {
+	if err != nil && !IsDegradable(err) {
 		return ProcState{}, fmt.Errorf("error fetching PID %d: %w", self, err)
 	}
 
