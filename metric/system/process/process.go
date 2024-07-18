@@ -54,11 +54,11 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 
 	// actually fetch the PIDs from the OS-specific code
 	_, plist, err := init.FetchPids()
-	if err != nil {
+	if err != nil && !IsDegradable(err) {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 
-	return plist, nil
+	return plist, err
 }
 
 // GetPIDState returns the state of a given PID
