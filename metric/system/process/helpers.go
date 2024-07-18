@@ -18,9 +18,7 @@
 package process
 
 import (
-	"errors"
 	"math"
-	"syscall"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/opt"
@@ -99,15 +97,4 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 
 	return s1
 
-}
-
-type Unwrap interface {
-	Unwrap() error
-}
-
-func IsDegradable(err error) bool {
-	if err == nil {
-		return true
-	}
-	return errors.Is(err, syscall.EACCES) || errors.Is(err, syscall.EPERM) || errors.Is(err, NonFatalErr{})
 }
