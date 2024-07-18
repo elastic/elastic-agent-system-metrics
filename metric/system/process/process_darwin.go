@@ -34,6 +34,7 @@ import "C"
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -73,6 +74,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 
 	procMap := make(ProcsMap, num)
 	plist := make([]ProcState, 0, num)
+	var wrappedErr error
 	var err error
 
 	for i := 0; i < num; i++ {
@@ -83,10 +85,11 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		if pid == 0 {
 			continue
 		}
-		procMap, plist, err = procStats.pidIter(int(pid), procMap, plist, err)
+		procMap, plist, err = procStats.pidIter(int(pid), procMap, plist)
+		wrappedErr = errors.Join(wrappedErr, err)
 	}
 
-	return procMap, plist, err
+	return procMap, plist, wrappedErr
 }
 
 // GetInfoForPid returns basic info for the process

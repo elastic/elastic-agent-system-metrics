@@ -102,10 +102,16 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 }
 
 type Unwrap interface {
-	Unwrap() []error
+	Unwrap() error
 }
 
 func IsDegradable(err error) bool {
-	_, ok := err.(Unwrap)
-	return ok && (errors.Is(err, syscall.EACCES) || errors.Is(err, NonFatalErr{}))
+	switch err.(type) {
+	case interface{ Unwrap() error }:
+	case interface{ Unwrap() []error }:
+	default:
+		return false
+	}
+
+	return (errors.Is(err, syscall.EACCES) || errors.Is(err, NonFatalErr{}))
 }

@@ -100,7 +100,8 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 			logger.Debugf("Error converting PID name %s", name)
 			continue
 		}
-		procMap, plist, wrappedErr = procStats.pidIter(pid, procMap, plist, wrappedErr)
+		procMap, plist, err = procStats.pidIter(pid, procMap, plist)
+		wrappedErr = errors.Join(wrappedErr, err)
 	}
 
 	return procMap, plist, wrappedErr

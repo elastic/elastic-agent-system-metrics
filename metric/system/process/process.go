@@ -191,24 +191,25 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 
 // pidIter wraps a few lines of generic code that all OS-specific FetchPids() functions must call.
 // this also handles the process of adding to the maps/lists in order to limit the code duplication in all the OS implementations
-func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState, wrappedErr error) (ProcsMap, []ProcState, error) {
+func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState) (ProcsMap, []ProcState, error) {
 	status, saved, err := procStats.pidFill(pid, true)
+	var nonFatalErr error
 	if err != nil {
 		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-			return procMap, proclist, wrappedErr
+			return procMap, proclist, err
 		}
-		wrappedErr = errors.Join(wrappedErr, fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err))
+		nonFatalErr = fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err)
 		procStats.logger.Debugf("Non fatal error fetching PID some info for %d, metrics are valid, but partial: %s", pid, err)
 	}
 	if !saved {
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
-		return procMap, proclist, wrappedErr
+		return procMap, proclist, nonFatalErr
 	}
 	procMap[pid] = status
 	proclist = append(proclist, status)
 
-	return procMap, proclist, wrappedErr
+	return procMap, proclist, nonFatalErr
 }
 
 // NonFatalErr is returned when there was an error

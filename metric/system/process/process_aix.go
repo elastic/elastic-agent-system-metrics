@@ -54,13 +54,14 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("error fetching PIDs: %w", err)
 		}
-		procMap, plist, wrappedErr = procStats.pidIter(int(info.pi_pid), procMap, plist, wrappedErr)
+		procMap, plist, err = procStats.pidIter(int(pid), procMap, plist)
+		wrappedErr = errors.Join(wrappedErr, err)
 
 		if num == 0 {
 			break
 		}
 	}
-	return procMap, plist, nil
+	return procMap, plist, wrappedErr
 }
 
 // GetInfoForPid returns basic info for the process
