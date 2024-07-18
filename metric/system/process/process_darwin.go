@@ -73,6 +73,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 
 	procMap := make(ProcsMap, num)
 	plist := make([]ProcState, 0, num)
+	var err error
 
 	for i := 0; i < num; i++ {
 		if err := binary.Read(bbuf, binary.LittleEndian, &pid); err != nil {
@@ -82,10 +83,10 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		if pid == 0 {
 			continue
 		}
-		procMap, plist = procStats.pidIter(int(pid), procMap, plist)
+		procMap, plist, err = procStats.pidIter(int(pid), procMap, plist, err)
 	}
 
-	return procMap, plist, nil
+	return procMap, plist, err
 }
 
 // GetInfoForPid returns basic info for the process

@@ -45,7 +45,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	// little fillPid callback system. We'll need to iterate over everything
 	// manually.
 	for _, pid := range pids {
-		procMap, plist = procStats.pidIter(int(pid), procMap, plist)
+		procMap, plist, err = procStats.pidIter(int(pid), procMap, plist, err)
 	}
 
 	return procMap, plist, nil

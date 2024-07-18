@@ -191,23 +191,24 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 
 // pidIter wraps a few lines of generic code that all OS-specific FetchPids() functions must call.
 // this also handles the process of adding to the maps/lists in order to limit the code duplication in all the OS implementations
-func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState) (ProcsMap, []ProcState) {
+func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState, wrappedErr error) (ProcsMap, []ProcState, error) {
 	status, saved, err := procStats.pidFill(pid, true)
 	if err != nil {
 		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-			return procMap, proclist
+			return procMap, proclist, wrappedErr
 		}
+		wrappedErr = errors.Join(wrappedErr, fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err))
 		procStats.logger.Debugf("Non fatal error fetching PID some info for %d, metrics are valid, but partial: %s", pid, err)
 	}
 	if !saved {
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
-		return procMap, proclist
+		return procMap, proclist, wrappedErr
 	}
 	procMap[pid] = status
 	proclist = append(proclist, status)
 
-	return procMap, proclist
+	return procMap, proclist, wrappedErr
 }
 
 // NonFatalErr is returned when there was an error
@@ -238,7 +239,7 @@ func (c NonFatalErr) Is(other error) bool {
 // The second return value will only be false if an event has been filtered out.
 func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 	// Fetch proc state so we can get the name for filtering based on user's filter.
-
+	var wrappedErr error
 	// OS-specific entrypoint, get basic info so we can at least run matchProcess
 	status, err := GetInfoForPid(procStats.Hostfs, pid)
 	if err != nil {
@@ -265,6 +266,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		if !errors.Is(err, NonFatalErr{}) {
 			return status, true, fmt.Errorf("FillPidMetrics: %w", err)
 		}
+		wrappedErr = errors.Join(wrappedErr, fmt.Errorf("non-fatal error fetching PID metrics for %d, metrics are valid, but partial: %w", pid, err))
 		procStats.logger.Debugf("Non-fatal error fetching PID metrics for %d, metrics are valid, but partial: %s", pid, err)
 	}
 
@@ -320,7 +322,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		}
 	}
 
-	return status, true, nil
+	return status, true, wrappedErr
 }
 
 // cacheCmdLine fills out Env and arg metrics from any stored previous metrics for the pid

@@ -85,6 +85,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 
 	procMap := make(ProcsMap, len(names))
 	plist := make([]ProcState, 0, len(names))
+	var wrappedErr error
 
 	// Iterate over the directory, fetch just enough info so we can filter based on user input.
 	logger := logp.L()
@@ -99,10 +100,10 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 			logger.Debugf("Error converting PID name %s", name)
 			continue
 		}
-		procMap, plist = procStats.pidIter(pid, procMap, plist)
+		procMap, plist, wrappedErr = procStats.pidIter(pid, procMap, plist, wrappedErr)
 	}
 
-	return procMap, plist, nil
+	return procMap, plist, wrappedErr
 }
 
 func FillPidMetrics(hostfs resolve.Resolver, pid int, state ProcState, filter func(string) bool) (ProcState, error) {
