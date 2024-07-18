@@ -106,12 +106,5 @@ type Unwrap interface {
 }
 
 func IsDegradable(err error) bool {
-	switch err.(type) {
-	case interface{ Unwrap() error }:
-	case interface{ Unwrap() []error }:
-	default:
-		return false
-	}
-
-	return (errors.Is(err, syscall.EACCES) || errors.Is(err, NonFatalErr{}))
+	return errors.Is(err, syscall.EACCES) || errors.Is(err, NonFatalErr{})
 }
