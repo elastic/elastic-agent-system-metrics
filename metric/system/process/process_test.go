@@ -169,12 +169,12 @@ func TestGetOne(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	_, _, err = testConfig.Get()
-	assert.True(t, IsDegradable(err), "GetOne")
+	assert.True(t, IsDegradable(err), err.Error())
 
 	time.Sleep(time.Second * 2)
 
 	procData, _, err := testConfig.Get()
-	assert.True(t, IsDegradable(err), "GetOne")
+	assert.True(t, IsDegradable(err), err.Error())
 
 	t.Logf("Proc: %s", procData[0].StringToPrint())
 }
