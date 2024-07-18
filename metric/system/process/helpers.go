@@ -18,7 +18,9 @@
 package process
 
 import (
+	"errors"
 	"math"
+	"syscall"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/opt"
@@ -97,4 +99,8 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 
 	return s1
 
+}
+
+func CanIgnore(err error) bool {
+	return errors.Is(err, syscall.ESRCH)
 }
