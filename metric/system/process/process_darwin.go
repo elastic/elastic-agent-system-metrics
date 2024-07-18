@@ -102,9 +102,9 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 	// For docs, see the link below. Check the `proc_taskallinfo` struct, which
 	// is a composition of `proc_bsdinfo` and `proc_taskinfo`.
 	// https://opensource.apple.com/source/xnu/xnu-1504.3.12/bsd/sys/proc_info.h.auto.html
-	n := C.proc_pidinfo(C.int(pid), C.PROC_PIDTASKALLINFO, 0, ptr, size)
+	n, err := C.proc_pidinfo(C.int(pid), C.PROC_PIDTASKALLINFO, 0, ptr, size)
 	if n != size {
-		return ProcState{}, fmt.Errorf("could not read process info for pid %d: proc_pidinfo returned %d", int(n), pid)
+		return ProcState{}, fmt.Errorf("could not read process info for pid %d: proc_pidinfo returned %d, err: %w", int(n), pid, err)
 	}
 
 	status := ProcState{}
