@@ -90,10 +90,10 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	}
 
 	// actually fetch the PIDs from the OS-specific code
-	pidMap, plist, err := procStats.FetchPids()
+	pidMap, plist, wrappedErr := procStats.FetchPids()
 
-	if err != nil {
-		return nil, nil, fmt.Errorf("error gathering PIDs: %w", err)
+	if wrappedErr != nil && !IsDegradable(wrappedErr) {
+		return nil, nil, fmt.Errorf("error gathering PIDs: %w", wrappedErr)
 	}
 	// We use this to track processes over time.
 	procStats.ProcsMap.SetMap(pidMap)
@@ -133,7 +133,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		rootEvents = append(rootEvents, rootMap)
 	}
 
-	return procs, rootEvents, nil
+	return procs, rootEvents, wrappedErr
 }
 
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
