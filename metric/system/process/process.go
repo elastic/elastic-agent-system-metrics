@@ -197,7 +197,6 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	if err != nil {
 		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-			// "process not found" is an ignorable error, so no need to pass it the caller
 			if CanIgnore(err) {
 				return procMap, proclist, nil
 			}
