@@ -24,7 +24,7 @@ import (
 	"syscall"
 )
 
-func IsDegradable(err error) bool {
+func CanDegrade(err error) bool {
 	if err == nil {
 		return true
 	}

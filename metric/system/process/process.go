@@ -54,7 +54,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 
 	// actually fetch the PIDs from the OS-specific code
 	_, plist, err := init.FetchPids()
-	if err != nil && !IsDegradable(err) {
+	if err != nil && !CanDegrade(err) {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 
@@ -92,7 +92,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	// actually fetch the PIDs from the OS-specific code
 	pidMap, plist, wrappedErr := procStats.FetchPids()
 
-	if wrappedErr != nil && !IsDegradable(wrappedErr) {
+	if wrappedErr != nil && !CanDegrade(wrappedErr) {
 		return nil, nil, fmt.Errorf("error gathering PIDs: %w", wrappedErr)
 	}
 	// We use this to track processes over time.
@@ -139,7 +139,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
 func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil && !IsDegradable(err) {
+	if err != nil && !CanDegrade(err) {
 		return nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -152,7 +152,7 @@ func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 // event formatted as expected by ECS
 func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil && !IsDegradable(err) {
+	if err != nil && !CanDegrade(err) {
 		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -180,7 +180,7 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 	}
 
 	pidStat, _, err := procStats.pidFill(self, false)
-	if err != nil && !IsDegradable(err) {
+	if err != nil && !CanDegrade(err) {
 		return ProcState{}, fmt.Errorf("error fetching PID %d: %w", self, err)
 	}
 

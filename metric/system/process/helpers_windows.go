@@ -26,7 +26,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func IsDegradable(err error) bool {
+func CanDegrade(err error) bool {
 	if err == nil {
 		return true
 	}
