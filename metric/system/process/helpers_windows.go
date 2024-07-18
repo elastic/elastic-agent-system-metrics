@@ -27,6 +27,7 @@ import (
 )
 
 func CanDegrade(err error) bool {
+	// Check for errors which aren't fatal in nature and would be only used to change status to DEGRADED by metricbeat
 	if err == nil {
 		return true
 	}
