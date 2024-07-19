@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//go:build darwin || freebsd || linux || aix || netbsd || openbsd
+//go:build !windows
 
 package process
 
