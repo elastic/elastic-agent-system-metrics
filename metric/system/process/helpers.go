@@ -101,7 +101,7 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 
 }
 
-func CanIgnore(err error) bool {
+func canIgnore(err error) bool {
 	// While monitoring a set of processes, some processes might get killed after we get all the PIDs
 	// So, there's no need to capture "process not found" error.
 
