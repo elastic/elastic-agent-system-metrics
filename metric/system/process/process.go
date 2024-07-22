@@ -59,7 +59,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 
-	return plist, err
+	return plist, NonFatalErr{Err: err}
 }
 
 // GetPIDState returns the state of a given PID
@@ -134,7 +134,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		rootEvents = append(rootEvents, rootMap)
 	}
 
-	return procs, rootEvents, wrappedErr
+	return procs, rootEvents, NonFatalErr{Err: wrappedErr}
 }
 
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
@@ -152,9 +152,9 @@ func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 // GetOneRootEvent is the same as `GetOne()` but it returns an
 // event formatted as expected by ECS
 func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
-	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil && !isNonFatal(err) {
-		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
+	pidStat, _, wrappedErr := procStats.pidFill(pid, false)
+	if wrappedErr != nil && !isNonFatal(wrappedErr) {
+		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, wrappedErr)
 	}
 
 	procStats.ProcsMap.SetPid(pid, pidStat)
@@ -166,7 +166,7 @@ func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 
 	rootMap := processRootEvent(&pidStat)
 
-	return procMap, rootMap, NonFatalErr{Err: err}
+	return procMap, rootMap, NonFatalErr{Err: wrappedErr}
 }
 
 // GetSelf gets process info for the beat itself
@@ -238,6 +238,10 @@ func (c NonFatalErr) Error() string {
 func (c NonFatalErr) Is(other error) bool {
 	_, is := other.(NonFatalErr)
 	return is
+}
+
+func (c NonFatalErr) Unwrap() error {
+	return c.Err
 }
 
 // pidFill is an entrypoint used by OS-specific code to fill out a pid.
