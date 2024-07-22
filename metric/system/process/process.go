@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	psutil "github.com/shirou/gopsutil/v3/process"
@@ -54,7 +55,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 
 	// actually fetch the PIDs from the OS-specific code
 	_, plist, err := init.FetchPids()
-	if err != nil && !CanDegrade(err) {
+	if err != nil && !isNonFatal(err) {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 
@@ -92,7 +93,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	// actually fetch the PIDs from the OS-specific code
 	pidMap, plist, wrappedErr := procStats.FetchPids()
 
-	if wrappedErr != nil && !CanDegrade(wrappedErr) {
+	if wrappedErr != nil && !isNonFatal(wrappedErr) {
 		return nil, nil, fmt.Errorf("error gathering PIDs: %w", wrappedErr)
 	}
 	// We use this to track processes over time.
@@ -139,7 +140,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
 func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil && !CanDegrade(err) {
+	if err != nil && !isNonFatal(err) {
 		return nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -152,7 +153,7 @@ func (procStats *Stats) GetOne(pid int) (mapstr.M, error) {
 // event formatted as expected by ECS
 func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 	pidStat, _, err := procStats.pidFill(pid, false)
-	if err != nil && !CanDegrade(err) {
+	if err != nil && !isNonFatal(err) {
 		return nil, nil, fmt.Errorf("error fetching PID %d: %w", pid, err)
 	}
 
@@ -165,7 +166,7 @@ func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 
 	rootMap := processRootEvent(&pidStat)
 
-	return procMap, rootMap, err
+	return procMap, rootMap, NonFatalErr{Err: err}
 }
 
 // GetSelf gets process info for the beat itself
@@ -180,13 +181,13 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 	}
 
 	pidStat, _, err := procStats.pidFill(self, false)
-	if err != nil && !CanDegrade(err) {
+	if err != nil && !isNonFatal(err) {
 		return ProcState{}, fmt.Errorf("error fetching PID %d: %w", self, err)
 	}
 
 	procStats.ProcsMap.SetPid(self, pidStat)
 
-	return pidStat, nil
+	return pidStat, NonFatalErr{Err: err}
 }
 
 // pidIter wraps a few lines of generic code that all OS-specific FetchPids() functions must call.
@@ -197,8 +198,8 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	if err != nil {
 		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-	        // While monitoring a set of processes, some processes might get killed after we get all the PIDs
-	        // So, there's no need to capture "process not found" error.
+			// While monitoring a set of processes, some processes might get killed after we get all the PIDs
+			// So, there's no need to capture "process not found" error.
 			if errors.Is(err, syscall.ESRCH) {
 				return procMap, proclist, nil
 			}

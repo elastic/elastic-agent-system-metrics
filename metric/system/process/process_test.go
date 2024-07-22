@@ -169,12 +169,12 @@ func TestGetOne(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	_, _, err = testConfig.Get()
-	assert.True(t, CanDegrade(err), fmt.Sprintf("Fatal Error: %s", err))
+	assert.True(t, isNonFatal(err), fmt.Sprintf("Fatal Error: %s", err))
 
 	time.Sleep(time.Second * 2)
 
 	procData, _, err := testConfig.Get()
-	assert.True(t, CanDegrade(err), fmt.Sprintf("Fatal Error: %s", err))
+	assert.True(t, isNonFatal(err), fmt.Sprintf("Fatal Error: %s", err))
 
 	t.Logf("Proc: %s", procData[0].StringToPrint())
 }
@@ -267,7 +267,7 @@ func TestFilter(t *testing.T) {
 
 func TestProcessList(t *testing.T) {
 	plist, err := ListStates(resolve.NewTestResolver("/"))
-	assert.True(t, CanDegrade(err), fmt.Sprintf("Fatal Error: %s", err))
+	assert.True(t, isNonFatal(err), fmt.Sprintf("Fatal Error: %s", err))
 
 	for _, proc := range plist {
 		assert.NotEmpty(t, proc.State)

@@ -50,7 +50,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		wrappedErr = errors.Join(wrappedErr, err)
 	}
 
-	return procMap, plist, wrappedErr
+	return procMap, plist, NonFatalErr{Err: wrappedErr}
 }
 
 // GetSelfPid is the darwin implementation; see the linux version in

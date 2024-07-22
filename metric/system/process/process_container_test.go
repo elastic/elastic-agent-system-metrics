@@ -113,7 +113,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 		validateProcResult(t, result)
 	} else {
 		_, roots, err := testStats.Get()
-		require.True(t, CanDegrade(err), fmt.Sprintf("Fatal error: %s", err))
+		require.True(t, isNonFatal(err), fmt.Sprintf("Fatal error: %s", err))
 
 		for _, proc := range roots {
 			t.Logf("proc: %d: %s", proc["process"].(map[string]interface{})["pid"],

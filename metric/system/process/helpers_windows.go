@@ -26,14 +26,12 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func CanDegrade(err error) bool {
-	// Check for errors which aren't fatal in nature and would be only used to change status to DEGRADED by metricbeat
+func isNonFatal(err error) bool {
 	if err == nil {
 		return true
 	}
-	return (errors.Is(err, windows.ERROR_ACCESS_DENIED) ||
+	return errors.Is(err, windows.ERROR_ACCESS_DENIED) ||
 		errors.Is(err, syscall.EPERM) ||
 		errors.Is(err, syscall.EINVAL) ||
-		errors.Is(err, windows.ERROR_INVALID_PARAMETER) ||
-		errors.Is(err, NonFatalErr{}))
+		errors.Is(err, windows.ERROR_INVALID_PARAMETER) || errors.Is(err, NonFatalErr{})
 }

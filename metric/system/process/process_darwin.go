@@ -89,7 +89,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		wrappedErr = errors.Join(wrappedErr, err)
 	}
 
-	return procMap, plist, wrappedErr
+	return procMap, plist, NonFatalErr{Err: wrappedErr}
 }
 
 // GetInfoForPid returns basic info for the process

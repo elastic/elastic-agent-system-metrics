@@ -18,9 +18,7 @@
 package process
 
 import (
-	"errors"
 	"math"
-	"syscall"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/opt"
@@ -99,11 +97,4 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 
 	return s1
 
-}
-
-func canIgnore(err error) bool {
-	// While monitoring a set of processes, some processes might get killed after we get all the PIDs
-	// So, there's no need to capture "process not found" error.
-
-	return errors.Is(err, syscall.ESRCH)
 }
