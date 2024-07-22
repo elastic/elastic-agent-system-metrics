@@ -104,7 +104,7 @@ func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 		wrappedErr = errors.Join(wrappedErr, err)
 	}
 
-	return procMap, plist, NonFatalErr{Err: wrappedErr}
+	return procMap, plist, toNonFatal(wrappedErr)
 }
 
 func FillPidMetrics(hostfs resolve.Resolver, pid int, state ProcState, filter func(string) bool) (ProcState, error) {
