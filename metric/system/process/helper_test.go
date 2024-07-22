@@ -57,6 +57,7 @@ func TestErrors(t *testing.T) {
 			name: "fatal error",
 			check: func(t *testing.T) {
 				err := fmt.Errorf("Faced fatal error: %w", errors.New("FATAL"))
+				err = toNonFatal(err) // shouldn't have any effect as it's a fatal error
 				require.Falsef(t, isNonFatal(err), "Should be a fatal error")
 			},
 		},
