@@ -197,7 +197,9 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	if err != nil {
 		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
-			if canIgnore(err) {
+	        // While monitoring a set of processes, some processes might get killed after we get all the PIDs
+	        // So, there's no need to capture "process not found" error.
+			if errors.Is(err, syscall.ESRCH) {
 				return procMap, proclist, nil
 			}
 			return procMap, proclist, err
