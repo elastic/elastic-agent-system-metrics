@@ -103,5 +103,8 @@ func toNonFatal(err error) error {
 	if err == nil {
 		return nil
 	}
+	if !isNonFatal(err) {
+		return err
+	}
 	return NonFatalErr{Err: err}
 }

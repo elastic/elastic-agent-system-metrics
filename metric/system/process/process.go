@@ -179,13 +179,11 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 	if err != nil {
 		return ProcState{}, fmt.Errorf("error finding PID: %w", err)
 	}
-	fmt.Println("OK", err, self)
 
 	pidStat, _, err := procStats.pidFill(self, false)
 	if err != nil && !isNonFatal(err) {
 		return ProcState{}, fmt.Errorf("error fetching PID %d: %w", self, err)
 	}
-	fmt.Println("OK2", err, pidStat)
 
 	procStats.ProcsMap.SetPid(self, pidStat)
 
@@ -208,7 +206,7 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 			return procMap, proclist, err
 		}
 		nonFatalErr = fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err)
-		procStats.logger.Debugf("Non fatal error fetching PID some info for %d, metrics are valid, but partial: %s", pid, err)
+		procStats.logger.Debugf(err.Error())
 	}
 	if !saved {
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
@@ -280,7 +278,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 			return status, true, fmt.Errorf("FillPidMetrics: %w", err)
 		}
 		wrappedErr = errors.Join(wrappedErr, fmt.Errorf("non-fatal error fetching PID metrics for %d, metrics are valid, but partial: %w", pid, err))
-		procStats.logger.Debugf("Non-fatal error fetching PID metrics for %d, metrics are valid, but partial: %s", pid, err)
+		procStats.logger.Debugf(wrappedErr.Error())
 	}
 
 	if status.CPU.Total.Ticks.Exists() {
