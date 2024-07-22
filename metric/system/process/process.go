@@ -59,7 +59,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
 
-	return plist, NonFatalErr{Err: err}
+	return plist, toNonFatal(err)
 }
 
 // GetPIDState returns the state of a given PID
@@ -134,7 +134,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		rootEvents = append(rootEvents, rootMap)
 	}
 
-	return procs, rootEvents, NonFatalErr{Err: wrappedErr}
+	return procs, rootEvents, toNonFatal(wrappedErr)
 }
 
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
@@ -166,7 +166,7 @@ func (procStats *Stats) GetOneRootEvent(pid int) (mapstr.M, mapstr.M, error) {
 
 	rootMap := processRootEvent(&pidStat)
 
-	return procMap, rootMap, NonFatalErr{Err: wrappedErr}
+	return procMap, rootMap, toNonFatal(wrappedErr)
 }
 
 // GetSelf gets process info for the beat itself
@@ -179,15 +179,17 @@ func (procStats *Stats) GetSelf() (ProcState, error) {
 	if err != nil {
 		return ProcState{}, fmt.Errorf("error finding PID: %w", err)
 	}
+	fmt.Println("OK", err, self)
 
 	pidStat, _, err := procStats.pidFill(self, false)
 	if err != nil && !isNonFatal(err) {
 		return ProcState{}, fmt.Errorf("error fetching PID %d: %w", self, err)
 	}
+	fmt.Println("OK2", err, pidStat)
 
 	procStats.ProcsMap.SetPid(self, pidStat)
 
-	return pidStat, NonFatalErr{Err: err}
+	return pidStat, toNonFatal(err)
 }
 
 // pidIter wraps a few lines of generic code that all OS-specific FetchPids() functions must call.

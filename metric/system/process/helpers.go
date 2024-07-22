@@ -98,3 +98,10 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 	return s1
 
 }
+
+func toNonFatal(err error) error {
+	if err == nil {
+		return nil
+	}
+	return NonFatalErr{Err: err}
+}
