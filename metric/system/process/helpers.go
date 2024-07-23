@@ -99,8 +99,8 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 
 }
 
-// NonFatalErr is returned when there was an error
-// collecting metrics, however the metrics already
+// NonFatalErr indicates an error occurred during metrics
+// collection, however the metrics already
 // gathered and returned are still valid.
 // This error can be safely ignored, this will result
 // in having partial metrics for a process rather than
