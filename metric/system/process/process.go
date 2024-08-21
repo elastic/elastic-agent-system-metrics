@@ -205,7 +205,7 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 			}
 			return procMap, proclist, err
 		}
-		nonFatalErr = fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err)
+		nonFatalErr = NonFatalErr{Err: fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err)}
 		procStats.logger.Debugf(err.Error())
 	}
 	if !saved {

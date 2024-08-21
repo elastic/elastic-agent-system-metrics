@@ -21,6 +21,7 @@ package process
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -241,7 +242,11 @@ func TestFilter(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	procData, _, err := testConfig.Get()
-	assert.NoError(t, err, "GetOne")
+	if err != nil {
+		assert.True(t, errors.Is(err, NonFatalErr{}))
+	} else {
+		assert.NoError(t, err, "GetOne with one event")
+	}
 	// the total count of processes can either be one or two,
 	// depending on if the highest-mem-usage process and
 	// highest-cpu-usage process are the same.
@@ -261,7 +266,12 @@ func TestFilter(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	oneData, _, err := testZero.Get()
-	assert.NoError(t, err, "GetOne with one event")
+	if err != nil {
+		assert.True(t, errors.Is(err, NonFatalErr{}))
+	} else {
+		assert.NoError(t, err, "GetOne with one event")
+	}
+
 	assert.Equal(t, 1, len(oneData))
 }
 

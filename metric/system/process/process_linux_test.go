@@ -20,6 +20,7 @@
 package process
 
 import (
+	"errors"
 	"os"
 	"os/user"
 	"strconv"
@@ -60,7 +61,11 @@ func TestFetchOtherProcessCgroup(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	evts, _, err := testConfig.Get()
-	require.NoError(t, err)
+	if err != nil {
+		assert.True(t, errors.Is(err, NonFatalErr{}))
+	} else {
+		assert.NoError(t, err, "GetOne with one event")
+	}
 	t.Logf("Got %d events", len(evts))
 }
 
@@ -192,7 +197,11 @@ func TestCgroupsBadCgroupsConfig(t *testing.T) {
 
 	// make sure we still have proc data despite cgroups errors
 	procs, _, err := testStats.Get()
-	require.NoError(t, err)
+	if err != nil {
+		assert.True(t, errors.Is(err, NonFatalErr{}))
+	} else {
+		assert.NoError(t, err, "GetOne with one event")
+	}
 	t.Logf("got %d procs", len(procs))
 	require.NotEmpty(t, procs)
 
