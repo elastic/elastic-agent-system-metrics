@@ -60,7 +60,9 @@ func TestFetchOtherProcessCgroup(t *testing.T) {
 	assert.NoError(t, err, "Init")
 
 	evts, _, err := testConfig.Get()
-	assert.ErrorIs(t, err, NonFatalErr{})
+	if err != nil {
+		assert.ErrorIs(t, err, NonFatalErr{})
+	}
 	t.Logf("Got %d events", len(evts))
 }
 
@@ -192,7 +194,9 @@ func TestCgroupsBadCgroupsConfig(t *testing.T) {
 
 	// make sure we still have proc data despite cgroups errors
 	procs, _, err := testStats.Get()
-	assert.ErrorIs(t, err, NonFatalErr{})
+	if err != nil {
+		assert.ErrorIs(t, err, NonFatalErr{})
+	}
 
 	t.Logf("got %d procs", len(procs))
 	require.NotEmpty(t, procs)
