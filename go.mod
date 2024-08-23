@@ -74,3 +74,5 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	howett.net/plist v1.0.1 // indirect
 )
+
+replace github.com/elastic/go-sysinfo => github.com/AndersonQ/go-sysinfo v0.0.0-20240822101111-6ed87cafa243
