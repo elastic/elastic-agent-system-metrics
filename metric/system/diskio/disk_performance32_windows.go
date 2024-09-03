@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//go:build 386 || arm
+//go:build windows && (386 || arm)
 
 package diskio
 
