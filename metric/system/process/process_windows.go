@@ -29,6 +29,7 @@ import (
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	gowindows "github.com/elastic/go-windows"
 	"github.com/elastic/gosigar/sys/windows"
 )
 
@@ -350,4 +351,38 @@ func getProcCredName(pid int) (string, error) {
 	}
 
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
+}
+
+func getIdleTime() (*ProcCPUInfo, error) {
+	idle, kernel, user, err := gowindows.GetSystemTimes()
+	if err != nil {
+		return nil, fmt.Errorf("getIdleTime failed: %w", err)
+	}
+
+	ticks, err := gowindows.GetTickCount64()
+	if err != nil {
+		return nil, fmt.Errorf("GetTickCount64 failed: %w", err)
+	}
+	// Calculate total CPU time
+	total := kernel + user + idle
+
+	// Calculate idle percentage
+	idlePercentage := float64(idle) / float64(total) * 100
+	return &ProcCPUInfo{
+		Total: CPUTotal{
+			Value: opt.FloatWith(float64(idle)),
+			Ticks: opt.UintWith(ticks),
+			Pct:   opt.FloatWith(idlePercentage),
+		},
+	}, nil
+}
+
+func getIdleMemory() (*ProcMemInfo, error) {
+	memoryStatus, err := gowindows.GlobalMemoryStatusEx()
+	if err != nil {
+		return nil, fmt.Errorf("getIdleMemory failed: %w", err)
+	}
+	return &ProcMemInfo{
+		Size: opt.UintWith(memoryStatus.TotalPhys - memoryStatus.AvailPhys),
+	}, nil
 }
