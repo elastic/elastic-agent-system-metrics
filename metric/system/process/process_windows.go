@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"syscall"
 	"unsafe"
+	"runtime"
 
 	xsyswindows "golang.org/x/sys/windows"
 
@@ -316,6 +317,40 @@ func getParentPid(pid int) (int, error) {
 	return int(procInfo.InheritedFromUniqueProcessID), nil
 }
 
+type unicode struct {
+    Length        uint16
+    MaximumLength uint16
+    Buffer        *uint16
+}
+
+type systemProcessInformation struct {
+    NextEntryOffset         uint32
+    NumberOfThreads         uint32
+    Reserved1               [48]byte
+    ImageName               unicode
+    BasePriority            int32
+    UniqueProcessId         windows.Handle
+    Reserved2               uintptr
+    HandleCount             uint32
+    SessionId               uint32
+    Reserved3               uintptr
+    PeakVirtualSize         uint64
+    VirtualSize             uint64
+    Reserved4               uint32
+    PeakWorkingSetSize      uint64
+    WorkingSetSize          uint64
+    Reserved5               uintptr
+    QuotaPagedPoolUsage     uint64
+    Reserved6               uintptr
+    QuotaNonPagedPoolUsage  uint64
+    PagefileUsage           uint64
+    PeakPagefileUsage       uint64
+    PrivatePageCount        uint64
+    Reserved7               [6]int64
+}
+
+
+
 func getProcCredName(pid int) (string, error) {
 	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err != nil {
@@ -353,36 +388,46 @@ func getProcCredName(pid int) (string, error) {
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
 }
 
-func getIdleTime() (*ProcCPUInfo, error) {
+func getIdleProcessTime() (float64,float64) {
 	idle, kernel, user, err := gowindows.GetSystemTimes()
-	if err != nil {
-		return nil, fmt.Errorf("getIdleTime failed: %w", err)
-	}
+	num_cpus := float64(runtime.NumCPU())
+	idleTime := float64(idle) / num_cpus
+	kernelTime := float64(kernel) / num_cpus
+	userTime := float64(user) / num_cpus
 
-	ticks, err := gowindows.GetTickCount64()
 	if err != nil {
-		return nil, fmt.Errorf("GetTickCount64 failed: %w", err)
+		return 0, 0
 	}
-	// Calculate total CPU time
-	total := kernel + user + idle
-
-	// Calculate idle percentage
-	idlePercentage := float64(idle) / float64(total) * 100
-	return &ProcCPUInfo{
-		Total: CPUTotal{
-			Value: opt.FloatWith(float64(idle)),
-			Ticks: opt.UintWith(ticks),
-			Pct:   opt.FloatWith(idlePercentage),
-		},
-	}, nil
+	// Calculate total CPU time, averaged by cpu
+	totalTime := idleTime + kernelTime + userTime
+	return totalTime, idleTime
+	
 }
 
-func getIdleMemory() (*ProcMemInfo, error) {
-	memoryStatus, err := gowindows.GlobalMemoryStatusEx()
-	if err != nil {
-		return nil, fmt.Errorf("getIdleMemory failed: %w", err)
-	}
-	return &ProcMemInfo{
-		Size: opt.UintWith(memoryStatus.TotalPhys - memoryStatus.AvailPhys),
-	}, nil
+func getIdleProcessMemory(state ProcState) ProcState {
+	systemInfo := make([]byte, 1024*1024)
+    var returnLength uint32
+
+	ntQuerySystemInformation := ntdll.NewProc("NtQuerySystemInformation")
+    ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
+    if xsyswindows.GetLastError() != nil {
+        fmt.Println("Error querying system information:", xsyswindows.GetLastError())
+        return state
+    }
+
+    // Process the returned data
+    for offset := uintptr(0); offset < uintptr(returnLength); {
+        processInfo := (*systemProcessInformation)(unsafe.Pointer(&systemInfo[offset]))
+        if processInfo.UniqueProcessId == 0 { // PID 0 is System Idle Process
+			state.Memory.Rss.Bytes = opt.UintWith(processInfo.WorkingSetSize)
+			state.Memory.Size = opt.UintWith(processInfo.PrivatePageCount)
+			state.NumThreads = opt.IntWith(int(processInfo.NumberOfThreads))
+            break
+        }
+        offset += uintptr(processInfo.NextEntryOffset)
+		if (processInfo.NextEntryOffset == 0) { 
+			break
+		}
+    }
+	return state
 }
