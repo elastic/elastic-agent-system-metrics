@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"unsafe"
-	"runtime"
 
 	xsyswindows "golang.org/x/sys/windows"
 
@@ -318,38 +318,36 @@ func getParentPid(pid int) (int, error) {
 }
 
 type unicode struct {
-    Length        uint16
-    MaximumLength uint16
-    Buffer        *uint16
+	Length        uint16
+	MaximumLength uint16
+	Buffer        *uint16
 }
 
 type systemProcessInformation struct {
-    NextEntryOffset         uint32
-    NumberOfThreads         uint32
-    Reserved1               [48]byte
-    ImageName               unicode
-    BasePriority            int32
-    UniqueProcessId         windows.Handle
-    Reserved2               uintptr
-    HandleCount             uint32
-    SessionId               uint32
-    Reserved3               uintptr
-    PeakVirtualSize         uint64
-    VirtualSize             uint64
-    Reserved4               uint32
-    PeakWorkingSetSize      uint64
-    WorkingSetSize          uint64
-    Reserved5               uintptr
-    QuotaPagedPoolUsage     uint64
-    Reserved6               uintptr
-    QuotaNonPagedPoolUsage  uint64
-    PagefileUsage           uint64
-    PeakPagefileUsage       uint64
-    PrivatePageCount        uint64
-    Reserved7               [6]int64
+	NextEntryOffset        uint32
+	NumberOfThreads        uint32
+	Reserved1              [48]byte
+	ImageName              unicode
+	BasePriority           int32
+	UniqueProcessId        xsyswindows.Handle
+	Reserved2              uintptr
+	HandleCount            uint32
+	SessionId              uint32
+	Reserved3              uintptr
+	PeakVirtualSize        uint64
+	VirtualSize            uint64
+	Reserved4              uint32
+	PeakWorkingSetSize     uint64
+	WorkingSetSize         uint64
+	Reserved5              uintptr
+	QuotaPagedPoolUsage    uint64
+	Reserved6              uintptr
+	QuotaNonPagedPoolUsage uint64
+	PagefileUsage          uint64
+	PeakPagefileUsage      uint64
+	PrivatePageCount       uint64
+	Reserved7              [6]int64
 }
-
-
 
 func getProcCredName(pid int) (string, error) {
 	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
@@ -388,8 +386,10 @@ func getProcCredName(pid int) (string, error) {
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
 }
 
-func getIdleProcessTime() (float64,float64) {
+func getIdleProcessTime() (float64, float64) {
 	idle, kernel, user, err := gowindows.GetSystemTimes()
+
+	// Average by cpu because GetSystemTimes returns summation of across all cpus
 	num_cpus := float64(runtime.NumCPU())
 	idleTime := float64(idle) / num_cpus
 	kernelTime := float64(kernel) / num_cpus
@@ -401,33 +401,33 @@ func getIdleProcessTime() (float64,float64) {
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
 	return totalTime, idleTime
-	
+
 }
 
 func getIdleProcessMemory(state ProcState) ProcState {
 	systemInfo := make([]byte, 1024*1024)
-    var returnLength uint32
+	var returnLength uint32
 
 	ntQuerySystemInformation := ntdll.NewProc("NtQuerySystemInformation")
-    ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
-    if xsyswindows.GetLastError() != nil {
-        fmt.Println("Error querying system information:", xsyswindows.GetLastError())
-        return state
-    }
+	ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
+	if xsyswindows.GetLastError() != nil {
+		fmt.Println("Error querying system information:", xsyswindows.GetLastError())
+		return state
+	}
 
-    // Process the returned data
-    for offset := uintptr(0); offset < uintptr(returnLength); {
-        processInfo := (*systemProcessInformation)(unsafe.Pointer(&systemInfo[offset]))
-        if processInfo.UniqueProcessId == 0 { // PID 0 is System Idle Process
+	// Process the returned data
+	for offset := uintptr(0); offset < uintptr(returnLength); {
+		processInfo := (*systemProcessInformation)(unsafe.Pointer(&systemInfo[offset]))
+		if processInfo.UniqueProcessId == 0 { // PID 0 is System Idle Process
 			state.Memory.Rss.Bytes = opt.UintWith(processInfo.WorkingSetSize)
 			state.Memory.Size = opt.UintWith(processInfo.PrivatePageCount)
 			state.NumThreads = opt.IntWith(int(processInfo.NumberOfThreads))
-            break
-        }
-        offset += uintptr(processInfo.NextEntryOffset)
-		if (processInfo.NextEntryOffset == 0) { 
 			break
 		}
-    }
+		offset += uintptr(processInfo.NextEntryOffset)
+		if processInfo.NextEntryOffset == 0 {
+			break
+		}
+	}
 	return state
 }
