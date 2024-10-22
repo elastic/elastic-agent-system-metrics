@@ -317,22 +317,21 @@ func getParentPid(pid int) (int, error) {
 	return int(procInfo.InheritedFromUniqueProcessID), nil
 }
 
-type unicode struct {
-	Length        uint16
-	MaximumLength uint16
-	Buffer        *uint16
-}
-
+//nolint:unused // this is actually used while dereferencing the pointer, but results in lint failure.
 type systemProcessInformation struct {
-	NextEntryOffset        uint32
-	NumberOfThreads        uint32
-	Reserved1              [48]byte
-	ImageName              unicode
+	NextEntryOffset uint32
+	NumberOfThreads uint32
+	Reserved1       [48]byte
+	ImageName       struct {
+		Length        uint16
+		MaximumLength uint16
+		Buffer        *uint16
+	}
 	BasePriority           int32
-	UniqueProcessId        xsyswindows.Handle
+	UniqueProcessID        xsyswindows.Handle
 	Reserved2              uintptr
 	HandleCount            uint32
-	SessionId              uint32
+	SessionID              uint32
 	Reserved3              uintptr
 	PeakVirtualSize        uint64
 	VirtualSize            uint64
@@ -386,39 +385,40 @@ func getProcCredName(pid int) (string, error) {
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
 }
 
-func getIdleProcessTime() (float64, float64) {
+//nolint:unused // this function will be used eventually
+func getIdleProcessTime() (float64, float64, error) {
 	idle, kernel, user, err := gowindows.GetSystemTimes()
 
 	// Average by cpu because GetSystemTimes returns summation of across all cpus
-	num_cpus := float64(runtime.NumCPU())
-	idleTime := float64(idle) / num_cpus
-	kernelTime := float64(kernel) / num_cpus
-	userTime := float64(user) / num_cpus
+	numCpus := float64(runtime.NumCPU())
+	idleTime := float64(idle) / numCpus
+	kernelTime := float64(kernel) / numCpus
+	userTime := float64(user) / numCpus
 
 	if err != nil {
-		return 0, 0
+		return 0, 0, err
 	}
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
-	return totalTime, idleTime
+	return totalTime, idleTime, nil
 
 }
 
-func getIdleProcessMemory(state ProcState) ProcState {
+//nolint:unused // this function will be used eventually
+func getIdleProcessMemory(state ProcState) (ProcState, error) {
 	systemInfo := make([]byte, 1024*1024)
 	var returnLength uint32
 
 	ntQuerySystemInformation := ntdll.NewProc("NtQuerySystemInformation")
-	ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
-	if xsyswindows.GetLastError() != nil {
-		fmt.Println("Error querying system information:", xsyswindows.GetLastError())
-		return state
+	_, _, err := ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
+	if err != nil {
+		return state, err
 	}
 
 	// Process the returned data
 	for offset := uintptr(0); offset < uintptr(returnLength); {
 		processInfo := (*systemProcessInformation)(unsafe.Pointer(&systemInfo[offset]))
-		if processInfo.UniqueProcessId == 0 { // PID 0 is System Idle Process
+		if processInfo.UniqueProcessID == 0 { // PID 0 is System Idle Process
 			state.Memory.Rss.Bytes = opt.UintWith(processInfo.WorkingSetSize)
 			state.Memory.Size = opt.UintWith(processInfo.PrivatePageCount)
 			state.NumThreads = opt.IntWith(int(processInfo.NumberOfThreads))
@@ -429,5 +429,5 @@ func getIdleProcessMemory(state ProcState) ProcState {
 			break
 		}
 	}
-	return state
+	return state, nil
 }
