@@ -133,11 +133,8 @@ func FetchNumThreads(pid int) (int, error) {
 
 // FillPidMetrics is the windows implementation
 func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string) bool) (ProcState, error) {
-	user, err := getProcCredName(pid)
-	if err != nil {
-		return state, fmt.Errorf("error fetching username: %w", err)
-	}
-	state.Username = user
+	user, _ := getProcCredName(pid)
+	state.Username = user // we cannot access process token for system-owned protected processes
 
 	ppid, _ := getParentPid(pid)
 	state.Ppid = opt.IntWith(ppid)
@@ -269,7 +266,9 @@ func getProcName(pid int) (string, error) {
 
 	filename, err := windows.GetProcessImageFileName(handle)
 	if err != nil {
-		return "", fmt.Errorf("GetProcessImageFileName failed for pid=%v: %w", pid, err)
+		// if we're able to open the handle but GetProcessImageFileName fails then it most probably means
+		// that the process doesn't have any executable associated with it.
+		return "", nil
 	}
 
 	return filepath.Base(filename), nil
