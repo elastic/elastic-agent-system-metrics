@@ -265,6 +265,8 @@ func getProcName(pid int) (string, error) {
 	}()
 
 	filename, err := windows.GetProcessImageFileName(handle)
+
+	//nolint:nilerr // safe to ignore this error
 	if err != nil {
 		// if we're able to open the handle but GetProcessImageFileName fails then it most probably means
 		// that the process doesn't have any executable associated with it.
