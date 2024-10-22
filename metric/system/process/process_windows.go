@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -29,6 +30,7 @@ import (
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	gowindows "github.com/elastic/go-windows"
 	"github.com/elastic/gosigar/sys/windows"
 )
 
@@ -315,6 +317,37 @@ func getParentPid(pid int) (int, error) {
 	return int(procInfo.InheritedFromUniqueProcessID), nil
 }
 
+//nolint:unused // this is actually used while dereferencing the pointer, but results in lint failure.
+type systemProcessInformation struct {
+	NextEntryOffset uint32
+	NumberOfThreads uint32
+	Reserved1       [48]byte
+	ImageName       struct {
+		Length        uint16
+		MaximumLength uint16
+		Buffer        *uint16
+	}
+	BasePriority           int32
+	UniqueProcessID        xsyswindows.Handle
+	Reserved2              uintptr
+	HandleCount            uint32
+	SessionID              uint32
+	Reserved3              uintptr
+	PeakVirtualSize        uint64
+	VirtualSize            uint64
+	Reserved4              uint32
+	PeakWorkingSetSize     uint64
+	WorkingSetSize         uint64
+	Reserved5              uintptr
+	QuotaPagedPoolUsage    uint64
+	Reserved6              uintptr
+	QuotaNonPagedPoolUsage uint64
+	PagefileUsage          uint64
+	PeakPagefileUsage      uint64
+	PrivatePageCount       uint64
+	Reserved7              [6]int64
+}
+
 func getProcCredName(pid int) (string, error) {
 	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err != nil {
@@ -350,4 +383,51 @@ func getProcCredName(pid int) (string, error) {
 	}
 
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
+}
+
+//nolint:unused // this function will be used eventually
+func getIdleProcessTime() (float64, float64, error) {
+	idle, kernel, user, err := gowindows.GetSystemTimes()
+
+	// Average by cpu because GetSystemTimes returns summation of across all cpus
+	numCpus := float64(runtime.NumCPU())
+	idleTime := float64(idle) / numCpus
+	kernelTime := float64(kernel) / numCpus
+	userTime := float64(user) / numCpus
+
+	if err != nil {
+		return 0, 0, err
+	}
+	// Calculate total CPU time, averaged by cpu
+	totalTime := idleTime + kernelTime + userTime
+	return totalTime, idleTime, nil
+
+}
+
+//nolint:unused // this function will be used eventually
+func getIdleProcessMemory(state ProcState) (ProcState, error) {
+	systemInfo := make([]byte, 1024*1024)
+	var returnLength uint32
+
+	ntQuerySystemInformation := ntdll.NewProc("NtQuerySystemInformation")
+	_, _, err := ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
+	if err != nil {
+		return state, err
+	}
+
+	// Process the returned data
+	for offset := uintptr(0); offset < uintptr(returnLength); {
+		processInfo := (*systemProcessInformation)(unsafe.Pointer(&systemInfo[offset]))
+		if processInfo.UniqueProcessID == 0 { // PID 0 is System Idle Process
+			state.Memory.Rss.Bytes = opt.UintWith(processInfo.WorkingSetSize)
+			state.Memory.Size = opt.UintWith(processInfo.PrivatePageCount)
+			state.NumThreads = opt.IntWith(int(processInfo.NumberOfThreads))
+			break
+		}
+		offset += uintptr(processInfo.NextEntryOffset)
+		if processInfo.NextEntryOffset == 0 {
+			break
+		}
+	}
+	return state, nil
 }
