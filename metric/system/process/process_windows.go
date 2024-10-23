@@ -268,9 +268,12 @@ func getProcName(pid int) (string, error) {
 
 	//nolint:nilerr // safe to ignore this error
 	if err != nil {
-		// if we're able to open the handle but GetProcessImageFileName fails then it most probably means
-		// that the process doesn't have any executable associated with it.
-		return "", nil
+		if isNonFatal(err) {
+			// if we're able to open the handle but GetProcessImageFileName fails with access denied error
+			// that the process doesn't have any executable associated with it.
+			return "", nil
+		}
+		return "", err
 	}
 
 	return filepath.Base(filename), nil
