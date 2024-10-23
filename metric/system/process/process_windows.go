@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"time"
 	"unsafe"
 
 	xsyswindows "golang.org/x/sys/windows"
@@ -66,6 +67,11 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 	var err error
 	var errs []error
 	state := ProcState{Pid: opt.IntWith(pid)}
+	if pid == 0 {
+		// we cannot open pid 0. Skip it and move forward.
+		// we will call getIdleMemory and getIdleProcessTime in FillPidMetrics()
+		return state, nil
+	}
 
 	name, err := getProcName(pid)
 	if err != nil {
@@ -135,6 +141,12 @@ func FetchNumThreads(pid int) (int, error) {
 
 // FillPidMetrics is the windows implementation
 func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string) bool) (ProcState, error) {
+	if pid == 0 {
+		state.Username = "SYSTEM"
+		state.Name = "System Idle Process"
+		// get metrics for idle process
+		return fillIdleProcess(state)
+	}
 	user, err := getProcCredName(pid)
 	if err != nil {
 		return state, fmt.Errorf("error fetching username: %w", err)
@@ -429,5 +441,25 @@ func getIdleProcessMemory(state ProcState) (ProcState, error) {
 			break
 		}
 	}
+	return state, nil
+}
+
+func fillIdleProcess(state ProcState) (ProcState, error) {
+	state, err := getIdleProcessMemory(state)
+	if err != nil {
+		return state, err
+	}
+	total0, idle0, err := getIdleProcessTime()
+	if err != nil {
+		return state, err
+	}
+	time.Sleep(500 * time.Millisecond)
+	total1, idle1, err := getIdleProcessTime()
+	if err != nil {
+		return state, err
+	}
+	state.CPU.Total.Pct = opt.FloatWith((idle1 - idle0) / (total1 - total0))
+	state.CPU.Total.Ticks = opt.UintWith(uint64(idle1 / 1e6))
+	state.CPU.Total.Value = opt.FloatWith(idle1)
 	return state, nil
 }
