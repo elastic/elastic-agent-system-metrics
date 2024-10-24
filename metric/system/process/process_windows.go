@@ -136,8 +136,9 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 	user, _ := getProcCredName(pid)
 	state.Username = user // we cannot access process token for system-owned protected processes
 
-	ppid, _ := getParentPid(pid)
-	state.Ppid = opt.IntWith(ppid)
+	if ppid, err := getParentPid(pid); err == nil {
+		state.Ppid = opt.IntWith(ppid)
+	}
 
 	wss, size, err := procMem(pid)
 	if err != nil {
