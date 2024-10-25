@@ -35,6 +35,10 @@ import (
 	"github.com/elastic/gosigar/sys/windows"
 )
 
+var (
+	ntQuerySystemInformation = ntdll.NewProc("NtQuerySystemInformation")
+)
+
 // FetchPids returns a map and array of pids
 func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
 	pids, err := windows.EnumProcesses()
@@ -142,7 +146,7 @@ func FetchNumThreads(pid int) (int, error) {
 // FillPidMetrics is the windows implementation
 func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string) bool) (ProcState, error) {
 	if pid == 0 {
-		state.Username = "SYSTEM"
+		state.Username = "NT AUTHORITY\\SYSTEM"
 		state.Name = "System Idle Process"
 		// get metrics for idle process
 		return fillIdleProcess(state)
@@ -413,7 +417,7 @@ func getIdleProcessTime() (float64, float64, error) {
 	userTime := float64(user) / numCpus
 
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, toNonFatal(err)
 	}
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
@@ -426,10 +430,10 @@ func getIdleProcessMemory(state ProcState) (ProcState, error) {
 	systemInfo := make([]byte, 1024*1024)
 	var returnLength uint32
 
-	ntQuerySystemInformation := ntdll.NewProc("NtQuerySystemInformation")
 	_, _, err := ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
-	if err != nil {
-		return state, err
+	// NtQuerySystemInformation return "operation permitted sucessfully" i.e. errorno 0. We can ignore this error.
+	if err != nil && err != syscall.Errno(0) {
+		return state, toNonFatal(err)
 	}
 
 	// Process the returned data
