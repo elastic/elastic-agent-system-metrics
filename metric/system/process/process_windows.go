@@ -147,14 +147,12 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 		// get metrics for idle process
 		return fillIdleProcess(state)
 	}
-	user, err := getProcCredName(pid)
-	if err != nil {
-		return state, fmt.Errorf("error fetching username: %w", err)
-	}
-	state.Username = user
+	user, _ := getProcCredName(pid)
+	state.Username = user // we cannot access process token for system-owned protected processes
 
-	ppid, _ := getParentPid(pid)
-	state.Ppid = opt.IntWith(ppid)
+	if ppid, err := getParentPid(pid); err == nil {
+		state.Ppid = opt.IntWith(ppid)
+	}
 
 	wss, size, err := procMem(pid)
 	if err != nil {
@@ -282,8 +280,15 @@ func getProcName(pid int) (string, error) {
 	}()
 
 	filename, err := windows.GetProcessImageFileName(handle)
+
+	//nolint:nilerr // safe to ignore this error
 	if err != nil {
-		return "", fmt.Errorf("GetProcessImageFileName failed for pid=%v: %w", pid, err)
+		if isNonFatal(err) {
+			// if we're able to open the handle but GetProcessImageFileName fails with access denied error
+			// that the process doesn't have any executable associated with it.
+			return "", nil
+		}
+		return "", err
 	}
 
 	return filepath.Base(filename), nil
