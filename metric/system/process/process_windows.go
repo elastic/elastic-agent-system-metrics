@@ -431,8 +431,9 @@ func getIdleProcessMemory(state ProcState) (ProcState, error) {
 	var returnLength uint32
 
 	_, _, err := ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
-	// NtQuerySystemInformation return "operation permitted sucessfully" i.e. errorno 0. We can ignore this error.
-	if err != nil && err != syscall.Errno(0) {
+	// NtQuerySystemInformation returns "operation permitted successfully"(i.e. errorno 0) on success.
+	// Hence, we can ignore syscall.Errno(0).
+	if err != nil && !errors.Is(err, syscall.Errno(0)) {
 		return state, toNonFatal(err)
 	}
 
