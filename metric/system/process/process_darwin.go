@@ -44,6 +44,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -230,7 +231,10 @@ func getProcArgs(pid int, filter func(string) bool) ([]string, string, mapstr.M,
 		pair := bytes.SplitN(stripNullByteRaw(line), delim, 2)
 
 		if len(pair) != 2 {
-			return argv, exeName, nil, fmt.Errorf("error reading process information from KERN_PROCARGS2: %w", err)
+			// log the invalid key-value pair
+			logger := logp.L()
+			logger.Debugf("error reading process information from KERN_PROCARGS2: encountered invalid env pair: %s", pair)
+			continue
 		}
 		eKey := string(pair[0])
 		if filter == nil || filter(eKey) {
