@@ -232,7 +232,7 @@ func getProcArgs(pid int, filter func(string) bool) ([]string, string, mapstr.M,
 
 		if len(pair) != 2 {
 			// invalid k-v pair encountered, return non-fatal error so that we can continue
-			err := fmt.Errorf("error reading process information from KERN_PROCARGS2: encountered invalid env pair for pid %d: %s", pid, pair)
+			err := fmt.Errorf("error reading process information from KERN_PROCARGS2: encountered invalid env pair for pid %d", pid)
 			envErr = errors.Join(envErr, NonFatalErr{Err: err})
 		}
 		eKey := string(pair[0])
