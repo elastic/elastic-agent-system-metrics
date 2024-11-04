@@ -463,12 +463,16 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	if err != nil {
 		return state, err
 	}
-	time.Sleep(500 * time.Millisecond)
+	// sleep is cruical to calculate the idle percentage
+	time.Sleep(50 * time.Millisecond)
 	total1, idle1, err := getIdleProcessTime()
 	if err != nil {
 		return state, err
 	}
-	state.CPU.Total.Pct = opt.FloatWith((idle1 - idle0) / (total1 - total0))
+	// Check if denominator is non-zero, to avoid "invalid operation: division by zero"
+	if total1-total0 != 0 {
+		state.CPU.Total.Pct = opt.FloatWith((idle1 - idle0) / (total1 - total0))
+	}
 	state.CPU.Total.Ticks = opt.UintWith(uint64(idle1 / 1e6))
 	state.CPU.Total.Value = opt.FloatWith(idle1)
 	return state, nil
