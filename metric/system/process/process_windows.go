@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+	"time"
 	"unsafe"
 
 	xsyswindows "golang.org/x/sys/windows"
@@ -32,6 +33,10 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	gowindows "github.com/elastic/go-windows"
 	"github.com/elastic/gosigar/sys/windows"
+)
+
+var (
+	ntQuerySystemInformation = ntdll.NewProc("NtQuerySystemInformation")
 )
 
 // FetchPids returns a map and array of pids
@@ -66,6 +71,11 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 	var err error
 	var errs []error
 	state := ProcState{Pid: opt.IntWith(pid)}
+	if pid == 0 {
+		// we cannot open pid 0. Skip it and move forward.
+		// we will call getIdleMemory and getIdleProcessTime in FillPidMetrics()
+		return state, nil
+	}
 
 	name, err := getProcName(pid)
 	if err != nil {
@@ -135,6 +145,12 @@ func FetchNumThreads(pid int) (int, error) {
 
 // FillPidMetrics is the windows implementation
 func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string) bool) (ProcState, error) {
+	if pid == 0 {
+		state.Username = "NT AUTHORITY\\SYSTEM"
+		state.Name = "System Idle Process"
+		// get metrics for idle process
+		return fillIdleProcess(state)
+	}
 	user, _ := getProcCredName(pid)
 	state.Username = user // we cannot access process token for system-owned protected processes
 
@@ -401,7 +417,7 @@ func getIdleProcessTime() (float64, float64, error) {
 	userTime := float64(user) / numCpus
 
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, toNonFatal(err)
 	}
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
@@ -414,10 +430,11 @@ func getIdleProcessMemory(state ProcState) (ProcState, error) {
 	systemInfo := make([]byte, 1024*1024)
 	var returnLength uint32
 
-	ntQuerySystemInformation := ntdll.NewProc("NtQuerySystemInformation")
 	_, _, err := ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
-	if err != nil {
-		return state, err
+	// NtQuerySystemInformation returns "operation permitted successfully"(i.e. errorno 0) on success.
+	// Hence, we can ignore syscall.Errno(0).
+	if err != nil && !errors.Is(err, syscall.Errno(0)) {
+		return state, toNonFatal(err)
 	}
 
 	// Process the returned data
@@ -434,5 +451,29 @@ func getIdleProcessMemory(state ProcState) (ProcState, error) {
 			break
 		}
 	}
+	return state, nil
+}
+
+func fillIdleProcess(state ProcState) (ProcState, error) {
+	state, err := getIdleProcessMemory(state)
+	if err != nil {
+		return state, err
+	}
+	total0, idle0, err := getIdleProcessTime()
+	if err != nil {
+		return state, err
+	}
+	// sleep is cruical to calculate the idle percentage
+	time.Sleep(50 * time.Millisecond)
+	total1, idle1, err := getIdleProcessTime()
+	if err != nil {
+		return state, err
+	}
+	// Check if denominator is non-zero, to avoid "invalid operation: division by zero"
+	if total1-total0 != 0 {
+		state.CPU.Total.Pct = opt.FloatWith((idle1 - idle0) / (total1 - total0))
+	}
+	state.CPU.Total.Ticks = opt.UintWith(uint64(idle1 / 1e6))
+	state.CPU.Total.Value = opt.FloatWith(idle1)
 	return state, nil
 }
