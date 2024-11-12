@@ -1,30 +1,11 @@
-// Licensed to Elasticsearch B.V. under one or more contributor
-// license agreements. See the NOTICE file distributed with
-// this work for additional information regarding copyright
-// ownership. Elasticsearch B.V. licenses this file to you under
-// the Apache License, Version 2.0 (the "License"); you may
-// not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
 package cpu
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric"
-	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
 // CPU manages the CPU metrics from /proc/stat
@@ -77,70 +58,6 @@ func (cpu CPU) Total() uint64 {
 	// it's generally safe to blindly sum these up,
 	// As we're just trying to get a total of all CPU time.
 	return opt.SumOptUint(cpu.User, cpu.Nice, cpu.Sys, cpu.Idle, cpu.Wait, cpu.Irq, cpu.SoftIrq, cpu.Stolen)
-}
-
-/*
-The below code implements a "metrics tracker" that gives us the ability to
-calculate CPU percentages, as we average usage across a time period.
-*/
-
-// Monitor is used to monitor the overall CPU usage of the system over time.
-type Monitor struct {
-	lastSample CPUMetrics
-	Hostfs     resolve.Resolver
-}
-
-// New returns a new CPU metrics monitor
-// Hostfs is only relevant on linux and freebsd.
-func New(hostfs resolve.Resolver) *Monitor {
-	return &Monitor{Hostfs: hostfs}
-}
-
-// Fetch collects a new sample of the CPU usage metrics.
-// This will overwrite the currently stored samples.
-func (m *Monitor) Fetch() (Metrics, error) {
-	metric, err := Get(m.Hostfs)
-	if err != nil {
-		return Metrics{}, fmt.Errorf("error fetching CPU metrics: %w", err)
-	}
-
-	oldLastSample := m.lastSample
-	m.lastSample = metric
-
-	return Metrics{previousSample: oldLastSample.totals, currentSample: metric.totals, count: len(metric.list), isTotals: true}, nil
-}
-
-// FetchCores collects a new sample of CPU usage metrics per-core
-// This will overwrite the currently stored samples.
-func (m *Monitor) FetchCores() ([]Metrics, error) {
-
-	metric, err := Get(m.Hostfs)
-	if err != nil {
-		return nil, fmt.Errorf("error fetching CPU metrics: %w", err)
-	}
-
-	coreMetrics := make([]Metrics, len(metric.list))
-	for i := 0; i < len(metric.list); i++ {
-		lastMetric := CPU{}
-		// Count of CPUs can change
-		if len(m.lastSample.list) > i {
-			lastMetric = m.lastSample.list[i]
-		}
-		coreMetrics[i] = Metrics{
-			currentSample:  metric.list[i],
-			previousSample: lastMetric,
-			isTotals:       false,
-		}
-
-		// Only add CPUInfo metric if it's available
-		// Remove this if statement once CPUInfo is supported
-		// by all systems
-		if len(metric.CPUInfo) != 0 {
-			coreMetrics[i].cpuInfo = metric.CPUInfo[i]
-		}
-	}
-	m.lastSample = metric
-	return coreMetrics, nil
 }
 
 // Metrics stores the current and the last sample collected by a Beat.
