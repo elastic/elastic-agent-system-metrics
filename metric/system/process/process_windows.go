@@ -288,8 +288,8 @@ func getProcName(pid int) (string, error) {
 	//nolint:nilerr // safe to ignore this error
 	if err != nil {
 		if isNonFatal(err) {
-			// if we're able to open the handle but GetProcessImageFileName fails with access denied error
-			// that the process doesn't have any executable associated with it.
+			// if we're able to open the handle but GetProcessImageFileName fails with access denied error,
+			// then the process doesn't have any executable associated with it.
 			return "", nil
 		}
 		return "", err
@@ -406,7 +406,6 @@ func getProcCredName(pid int) (string, error) {
 	return fmt.Sprintf(`%s\%s`, domain, account), nil
 }
 
-//nolint:unused // this function will be used eventually
 func getIdleProcessTime() (float64, float64, error) {
 	idle, kernel, user, err := gowindows.GetSystemTimes()
 
@@ -425,7 +424,6 @@ func getIdleProcessTime() (float64, float64, error) {
 
 }
 
-//nolint:unused // this function will be used eventually
 func getIdleProcessMemory(state ProcState) (ProcState, error) {
 	systemInfo := make([]byte, 1024*1024)
 	var returnLength uint32
@@ -463,7 +461,7 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	if err != nil {
 		return state, err
 	}
-	// sleep is cruical to calculate the idle percentage
+	// sleep is crucial to calculate the idle percentage
 	time.Sleep(50 * time.Millisecond)
 	total1, idle1, err := getIdleProcessTime()
 	if err != nil {
