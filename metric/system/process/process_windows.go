@@ -74,6 +74,9 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 	if pid == 0 {
 		// we cannot open pid 0. Skip it and move forward.
 		// we will call getIdleMemory and getIdleProcessTime in FillPidMetrics()
+		state.Username = "NT AUTHORITY\\SYSTEM"
+		state.Name = "System Idle Process"
+		state.State = Running
 		return state, nil
 	}
 
@@ -146,8 +149,6 @@ func FetchNumThreads(pid int) (int, error) {
 // FillPidMetrics is the windows implementation
 func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string) bool) (ProcState, error) {
 	if pid == 0 {
-		state.Username = "NT AUTHORITY\\SYSTEM"
-		state.Name = "System Idle Process"
 		// get metrics for idle process
 		return fillIdleProcess(state)
 	}
