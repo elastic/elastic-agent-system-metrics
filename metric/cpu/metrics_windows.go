@@ -46,12 +46,12 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	var q pdh.Query
 	var kernel, user, idle time.Duration
 	var combinedErr, err error
+
 	globalMetrics := CPUMetrics{}
 
 	if err := q.Open(); err != nil {
 		combinedErr = errors.Join(combinedErr, err)
 		goto fallback
-		// return CPUMetrics{}, fmt.Errorf("call to PdhOpenQuery failed: %w", err)
 	}
 
 	// get per-cpu data
@@ -62,23 +62,21 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 		goto fallback
 	}
 
-	kernel, user, idle, err = populateGlobalCpuMetrics(&q)
+	kernel, user, idle, err = populateGlobalCpuMetrics(&q, int64(len(globalMetrics.list)))
 	if err != nil {
 		combinedErr = errors.Join(combinedErr, err)
 		goto fallback
 	}
 
-	// _Total values returned by PerfCounters are averaged by number of cpus i.e. average time for system as a whole
-	// Previously, we used to return sum of times for all CPUs.
-	// To be backward compatible with previous version, multiply the average time by number of CPUs.
-	globalMetrics.totals.Idle = opt.UintWith(uint64(idle/time.Millisecond) * uint64(len(globalMetrics.list)))
-	globalMetrics.totals.Sys = opt.UintWith(uint64(kernel/time.Millisecond) * uint64(len(globalMetrics.list)))
-	globalMetrics.totals.User = opt.UintWith(uint64(user/time.Millisecond) * uint64(len(globalMetrics.list)))
+	globalMetrics.totals.Idle = opt.UintWith(uint64(idle / time.Millisecond))
+	globalMetrics.totals.Sys = opt.UintWith(uint64(kernel / time.Millisecond))
+	globalMetrics.totals.User = opt.UintWith(uint64(user / time.Millisecond))
 
 	return globalMetrics, nil
 
 fallback:
-	// fallback to GetSystemTimes()
+	// fallback to GetSystemTimes() and _NtQuerySystemInformation() if data collection via perf counter fails
+
 	// GetSystemTimes() return global data for current processor group i.e. upto 64 cores
 	kernel, user, idle, err = populateGlobalCpuMetricsFallback()
 	if err != nil {
@@ -91,7 +89,6 @@ fallback:
 	globalMetrics.totals.Sys = opt.UintWith(uint64(kernel / time.Millisecond))
 	globalMetrics.totals.User = opt.UintWith(uint64(user / time.Millisecond))
 
-	// fallback to _NtQuerySystemInformation
 	// _NtQuerySystemInformation return per-cpu data for current processor group i.e. upto 64 cores
 	globalMetrics.list, err = populatePerCpuMetricsFallback()
 	if err != nil {
@@ -100,7 +97,7 @@ fallback:
 	return globalMetrics, &PerfError{err: combinedErr}
 }
 
-func populateGlobalCpuMetrics(q *pdh.Query) (time.Duration, time.Duration, time.Duration, error) {
+func populateGlobalCpuMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.Duration, time.Duration, error) {
 	kernel, err := q.GetRawCounterValue(fmt.Sprintf(kernelTimeCounter, "_Total"))
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Privileged Time counter: %w", err)
@@ -113,7 +110,10 @@ func populateGlobalCpuMetrics(q *pdh.Query) (time.Duration, time.Duration, time.
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Privileged User counter: %w", err)
 	}
-	return time.Duration(kernel.FirstValue * 100), time.Duration(idle.FirstValue * 100), time.Duration(user.FirstValue * 100), nil
+	// _Total values returned by PerfCounters are averaged by number of cpus i.e. average time for system as a whole
+	// Previously, we used to return sum of times for all CPUs.
+	// To be backward compatible with previous version, multiply the average time by number of CPUs.
+	return time.Duration(kernel.FirstValue * 100 * numCpus), time.Duration(idle.FirstValue * 100 * numCpus), time.Duration(user.FirstValue * 100 * numCpus), nil
 }
 
 func populatePerCpuMetrics(q *pdh.Query) ([]CPU, error) {
