@@ -2,10 +2,12 @@ package cpu
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric"
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
 // CPU manages the CPU metrics from /proc/stat
@@ -58,6 +60,70 @@ func (cpu CPU) Total() uint64 {
 	// it's generally safe to blindly sum these up,
 	// As we're just trying to get a total of all CPU time.
 	return opt.SumOptUint(cpu.User, cpu.Nice, cpu.Sys, cpu.Idle, cpu.Wait, cpu.Irq, cpu.SoftIrq, cpu.Stolen)
+}
+
+/*
+The below code implements a "metrics tracker" that gives us the ability to
+calculate CPU percentages, as we average usage across a time period.
+*/
+
+// Monitor is used to monitor the overall CPU usage of the system over time.
+type Monitor struct {
+	lastSample CPUMetrics
+	Hostfs     resolve.Resolver
+}
+
+// New returns a new CPU metrics monitor
+// Hostfs is only relevant on linux and freebsd.
+func New(hostfs resolve.Resolver) *Monitor {
+	return &Monitor{Hostfs: hostfs}
+}
+
+// Fetch collects a new sample of the CPU usage metrics.
+// This will overwrite the currently stored samples.
+func (m *Monitor) Fetch() (Metrics, error) {
+	metric, err := Get(m.Hostfs)
+	if err != nil && !errors.Is(err, &PerfError{}) {
+		return Metrics{}, fmt.Errorf("error fetching CPU metrics: %w", err)
+	}
+
+	oldLastSample := m.lastSample
+	m.lastSample = metric
+
+	return Metrics{previousSample: oldLastSample.totals, currentSample: metric.totals, count: len(metric.list), isTotals: true}, err
+}
+
+// FetchCores collects a new sample of CPU usage metrics per-core
+// This will overwrite the currently stored samples.
+func (m *Monitor) FetchCores() ([]Metrics, error) {
+
+	metric, err := Get(m.Hostfs)
+	if err != nil && !errors.Is(err, &PerfError{}) {
+		return nil, fmt.Errorf("error fetching CPU metrics: %w", err)
+	}
+
+	coreMetrics := make([]Metrics, len(metric.list))
+	for i := 0; i < len(metric.list); i++ {
+		lastMetric := CPU{}
+		// Count of CPUs can change
+		if len(m.lastSample.list) > i {
+			lastMetric = m.lastSample.list[i]
+		}
+		coreMetrics[i] = Metrics{
+			currentSample:  metric.list[i],
+			previousSample: lastMetric,
+			isTotals:       false,
+		}
+
+		// Only add CPUInfo metric if it's available
+		// Remove this if statement once CPUInfo is supported
+		// by all systems
+		if len(metric.CPUInfo) != 0 {
+			coreMetrics[i].cpuInfo = metric.CPUInfo[i]
+		}
+	}
+	m.lastSample = metric
+	return coreMetrics, err
 }
 
 // Metrics stores the current and the last sample collected by a Beat.
@@ -160,4 +226,19 @@ func cpuMetricTimeDelta(prev, current opt.Uint, timeDelta uint64, numCPU int) fl
 	cpuDelta := int64(current.ValueOr(0) - prev.ValueOr(0))
 	pct := float64(cpuDelta) / float64(timeDelta)
 	return metric.Round(pct * float64(numCPU))
+}
+
+type PerfError struct {
+	err error
+}
+
+func (p *PerfError) Error() string {
+	if p.err == nil {
+		return ""
+	}
+	return fmt.Sprintf("Error while reading performance counter data: %s", p.err.Error())
+}
+
+func (p *PerfError) Unwrap() error {
+	return p.err
 }
