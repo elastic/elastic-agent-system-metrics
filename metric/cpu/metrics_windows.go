@@ -26,7 +26,9 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/helpers/windows/pdh"
@@ -41,28 +43,40 @@ var (
 	idleTimeCounter   = "\\Processor Information(%s)\\% Idle Time"
 )
 
+var (
+	// a call to getAllCouterPaths is idempodent i.e. it returns same set of counters every time you call it.
+	// we can save some cruicial cycles by converting it to a sync.Once
+	getAllCouterPathsOnce = sync.OnceValues(getAllCouterPaths)
+
+	getQueryOnce = sync.OnceValues(getQuery)
+)
+
 // Get fetches Windows CPU system times
 func Get(_ resolve.Resolver) (CPUMetrics, error) {
-	var q pdh.Query
 	var kernel, user, idle time.Duration
 	var combinedErr, err error
 
 	globalMetrics := CPUMetrics{}
-
-	if err := q.Open(); err != nil {
-		combinedErr = errors.Join(combinedErr, err)
-		goto fallback
-	}
-
-	// get per-cpu data
-	// try getting data via performance counters
-	globalMetrics.list, err = populatePerCpuMetrics(&q)
+	q, err := getQueryOnce()
 	if err != nil {
 		combinedErr = errors.Join(combinedErr, err)
 		goto fallback
 	}
 
-	kernel, user, idle, err = populateGlobalCpuMetrics(&q, int64(len(globalMetrics.list)))
+	if err := q.CollectData(); err != nil {
+		combinedErr = errors.Join(combinedErr, fmt.Errorf("error collecting counter data: %w", err))
+		goto fallback
+	}
+
+	// get per-cpu data
+	// try getting data via performance counters
+	globalMetrics.list, err = populatePerCpuMetrics(q)
+	if err != nil {
+		combinedErr = errors.Join(combinedErr, err)
+		goto fallback
+	}
+
+	kernel, user, idle, err = populateGlobalCpuMetrics(q, int64(len(globalMetrics.list)))
 	if err != nil {
 		combinedErr = errors.Join(combinedErr, err)
 		goto fallback
@@ -118,27 +132,25 @@ func populateGlobalCpuMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.
 
 func populatePerCpuMetrics(q *pdh.Query) ([]CPU, error) {
 	cpuMap := make(map[string]*CPU, runtime.NumCPU())
-	counters, err := getAllCouterPaths(q)
+	counters, err := getAllCouterPathsOnce()
 	if err != nil {
 		return nil, fmt.Errorf("call to getAllCouterPaths failed: %w", err)
 	}
 	for _, counter := range counters {
-		instance, err := pdh.MatchInstanceName(counter)
-		if err != nil {
-			// invalid counter name - ignore the error
-			// shouldn't really happen, but just in case
-			continue
-		}
+		name := counter.name
+		instance := counter.instance
+
 		if strings.Contains(strings.ToLower(instance), "_total") {
 			// we're only interested in per-cpu performance counters
 			// counters containing "_TOTAL" are global counters i.e. average of all CPUs
 			// hence, ignore such counteres
 			continue
 		}
+
 		if _, ok := cpuMap[instance]; !ok {
-			cpuMap[instance] = &CPU{}
+			cpuMap[counter.instance] = &CPU{}
 		}
-		val, err := q.GetRawCounterValue(counter)
+		val, err := q.GetRawCounterValue(name)
 		if err != nil {
 			return nil, fmt.Errorf("call to GetRawCounterValue failed for %s: %w", counter, err)
 		}
@@ -146,11 +158,11 @@ func populatePerCpuMetrics(q *pdh.Query) ([]CPU, error) {
 		// convert it to nanoseconds
 		valUint := uint64(time.Duration(val.FirstValue*100) / time.Millisecond)
 
-		if strings.Contains(strings.ToLower(counter), "% idle time") {
+		if strings.Contains(strings.ToLower(name), "% idle time") {
 			cpuMap[instance].Idle = opt.UintWith(valUint)
-		} else if strings.Contains(strings.ToLower(counter), "% privileged time") {
+		} else if strings.Contains(strings.ToLower(name), "% privileged time") {
 			cpuMap[instance].Sys = opt.UintWith(valUint)
-		} else if strings.Contains(strings.ToLower(counter), "% user time") {
+		} else if strings.Contains(strings.ToLower(name), "% user time") {
 			cpuMap[instance].User = opt.UintWith(valUint)
 		}
 	}
@@ -189,7 +201,39 @@ func populateGlobalCpuMetricsFallback() (idle, kernel, user time.Duration, err e
 	return
 }
 
-func getAllCouterPaths(q *pdh.Query) ([]string, error) {
+type counter struct {
+	name     string
+	instance string
+}
+
+func getAllCouterPaths() ([]*counter, error) {
+	// getAllCouterPaths returns needed counter paths to fetch per CPU data
+	// For eg.
+	//		In a system with 64 cores, getAllCounterPaths() will return:
+	//			 \\Processor Information(0,0)\\% Privileged Time,
+	//			 \\Processor Information(0,1)\\% Privileged Time,
+	//			 \\Processor Information(0,2)\\% Privileged Time,
+	//			 ...
+	//			 \\Processor Information(0,63)\\% Privileged Time
+	//			 \\Processor Information(0,0)\\% Idle Time,
+	//			 \\Processor Information(0,1)\\% Idle Time,
+	//			 \\Processor Information(0,2)\\% Idle Time,
+	//			 ...
+	//			 \\Processor Information(0,63)\\% Idle Time
+	//			 \\Processor Information(0,0)\\% Idle Time,
+	//			 \\Processor Information(0,1)\\% Idle Time,
+	//			 \\Processor Information(0,2)\\% Idle Time,
+	//			 ...
+	//			 \\Processor Information(0,63)\\% Idle Time
+	//			 \\Processor Information(0,0)\\% Privileged Time,
+	//			 \\Processor Information(0,1)\\% Privileged Time,
+	//			 \\Processor Information(0,2)\\% Privileged Time,
+	//			 ...
+	//			 \\Processor Information(0,63)\\% Privileged Time
+	var q pdh.Query
+	if err := q.Open(); err != nil {
+		return nil, fmt.Errorf("Failed to open query: %w", err)
+	}
 	allKernelCounters, err := q.GetCounterPaths(fmt.Sprintf(kernelTimeCounter, "*"))
 	if err != nil {
 		return nil, fmt.Errorf("call to fetch all kernel counters failed: %w", err)
@@ -202,6 +246,39 @@ func getAllCouterPaths(q *pdh.Query) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("call to fetch all user counters failed: %w", err)
 	}
-	return append(allKernelCounters, append(allUserCounters, allIdleCounters...)...), nil
 
+	allCounters := make([]*counter, 0)
+	for _, counterName := range slices.Concat(allKernelCounters, allUserCounters, allIdleCounters) {
+		instance, err := pdh.MatchInstanceName(counterName)
+		if err != nil {
+			// invalid counter name - ignore the error
+			// shouldn't really happen, but just in case
+			continue
+		}
+		allCounters = append(allCounters, &counter{
+			instance: instance,
+			name:     counterName,
+		})
+	}
+	return allCounters, nil
+
+}
+
+func getQuery() (*pdh.Query, error) {
+	var q pdh.Query
+	if err := q.Open(); err != nil {
+		return nil, fmt.Errorf("failed to open query: %w", err)
+	}
+	counters, err := getAllCouterPathsOnce()
+	if err != nil {
+		return nil, fmt.Errorf("call to getAllCouterPaths failed: %w", err)
+	}
+	// add all counters to our query.
+	// all of the counter data will be collected once we call CollectData() in Get()
+	for _, counter := range counters {
+		if err := q.AddCounter(counter.name, "", "", false); err != nil {
+			return nil, fmt.Errorf("call to AddCounter failed: %w", err)
+		}
+	}
+	return &q, nil
 }
