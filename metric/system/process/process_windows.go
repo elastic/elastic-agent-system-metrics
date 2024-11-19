@@ -409,16 +409,15 @@ func getProcCredName(pid int) (string, error) {
 
 func getIdleProcessTime() (float64, float64, error) {
 	idle, kernel, user, err := gowindows.GetSystemTimes()
+	if err != nil {
+		return 0, 0, toNonFatal(err)
+	}
 
 	// Average by cpu because GetSystemTimes returns summation of across all cpus
 	numCpus := float64(runtime.NumCPU())
 	idleTime := float64(idle) / numCpus
 	kernelTime := float64(kernel) / numCpus
 	userTime := float64(user) / numCpus
-
-	if err != nil {
-		return 0, 0, toNonFatal(err)
-	}
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
 	return totalTime, idleTime, nil
