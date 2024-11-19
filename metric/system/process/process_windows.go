@@ -422,7 +422,6 @@ func getIdleProcessTime() (float64, float64, error) {
 	// Calculate total CPU time, averaged by cpu
 	totalTime := idleTime + kernelTime + userTime
 	return totalTime, idleTime, nil
-
 }
 
 func getIdleProcessMemory(state ProcState) (ProcState, error) {
