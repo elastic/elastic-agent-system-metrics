@@ -108,7 +108,7 @@ func populatePerCPUMetrics(q *pdh.Query) ([]CPU, error) {
 		name := counter.name
 		instance := counter.instance
 
-		if strings.Contains(strings.ToLower(instance), "_total") {
+		if strings.Contains(instance, "_Total") {
 			// we're only interested in per-cpu performance counters
 			// counters containing "_TOTAL" are global counters i.e. average of all CPUs
 			// hence, ignore such counters
@@ -126,11 +126,11 @@ func populatePerCPUMetrics(q *pdh.Query) ([]CPU, error) {
 		// convert it to nanoseconds
 		valUint := uint64(time.Duration(val.FirstValue*100) / time.Millisecond)
 
-		if strings.Contains(strings.ToLower(name), "% idle time") {
+		if strings.Contains(name, "% Idle time") {
 			cpuMap[instance].Idle = opt.UintWith(valUint)
-		} else if strings.Contains(strings.ToLower(name), "% privileged time") {
+		} else if strings.Contains(name, "% Privileged time") {
 			cpuMap[instance].Sys = opt.UintWith(valUint)
-		} else if strings.Contains(strings.ToLower(name), "% user time") {
+		} else if strings.Contains(name, "% User time") {
 			cpuMap[instance].User = opt.UintWith(valUint)
 		}
 	}
