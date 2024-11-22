@@ -75,7 +75,7 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 		goto fallback
 	}
 
-	kernel, user, idle, err = populateGlobalCpuMetrics(q, int64(len(globalMetrics.list)))
+	kernel, user, idle, err = populateGlobalCPUMetrics(q, int64(len(globalMetrics.list)))
 	if err != nil {
 		combinedErr = errors.Join(combinedErr, err)
 		goto fallback
@@ -91,7 +91,7 @@ fallback:
 	// fallback to GetSystemTimes() and _NtQuerySystemInformation() if data collection via perf counter fails
 
 	// GetSystemTimes() return global data for current processor group i.e. upto 64 cores
-	kernel, user, idle, err = populateGlobalCpuMetricsFallback()
+	kernel, user, idle, err = populateGlobalCPUMetricsFallback()
 	if err != nil {
 		return CPUMetrics{}, fmt.Errorf("error getting counter values: %w", err)
 	}
@@ -110,7 +110,7 @@ fallback:
 	return globalMetrics, &PerfError{err: combinedErr}
 }
 
-func populateGlobalCpuMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.Duration, time.Duration, error) {
+func populateGlobalCPUMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.Duration, time.Duration, error) {
 	kernel, err := q.GetRawCounterValue(totalKernelTimeCounter)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Privileged Time counter: %w", err)
@@ -142,7 +142,7 @@ func populatePerCpuMetrics(q *pdh.Query) ([]CPU, error) {
 		if strings.Contains(strings.ToLower(instance), "_total") {
 			// we're only interested in per-cpu performance counters
 			// counters containing "_TOTAL" are global counters i.e. average of all CPUs
-			// hence, ignore such counteres
+			// hence, ignore such counters
 			continue
 		}
 
@@ -192,12 +192,11 @@ func populatePerCpuMetricsFallback() ([]CPU, error) {
 	return list, nil
 }
 
-func populateGlobalCpuMetricsFallback() (idle, kernel, user time.Duration, err error) {
+func populateGlobalCPUMetricsFallback() (idle, kernel, user time.Duration, err error) {
 	idle, kernel, user, err = windows.GetSystemTimes()
 	if err != nil {
 		return
 	}
-	return
 }
 
 type counter struct {
