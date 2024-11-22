@@ -62,9 +62,9 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 
 	// get per-cpu data
 	// try getting data via performance counters
-	globalMetrics.list, err = populatePerCpuMetrics(q)
+	globalMetrics.list, err = populatePerCPUMetrics(q)
 	if err != nil {
-		return CPUMetrics{}, fmt.Errorf("error calling populatePerCpuMetrics: %w", err)
+		return CPUMetrics{}, fmt.Errorf("error calling populatePerCPUMetrics: %w", err)
 	}
 
 	kernel, user, idle, err := populateGlobalCPUMetrics(q, int64(len(globalMetrics.list)))
@@ -98,7 +98,7 @@ func populateGlobalCPUMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.
 	return time.Duration(kernel.FirstValue * 100 * numCpus), time.Duration(idle.FirstValue * 100 * numCpus), time.Duration(user.FirstValue * 100 * numCpus), nil
 }
 
-func populatePerCpuMetrics(q *pdh.Query) ([]CPU, error) {
+func populatePerCPUMetrics(q *pdh.Query) ([]CPU, error) {
 	cpuMap := make(map[string]*CPU, runtime.NumCPU())
 	counters, err := getAllCouterPathsOnce()
 	if err != nil {
@@ -173,7 +173,7 @@ func getAllCouterPaths() ([]*counter, error) {
 	//			 \\Processor Information(0,63)\\% Privileged Time
 	var q pdh.Query
 	if err := q.Open(); err != nil {
-		return nil, fmt.Errorf("Failed to open query: %w", err)
+		return nil, fmt.Errorf("failed to open query: %w", err)
 	}
 	allKnownCounters, err := q.GetCounterPaths(fmt.Sprintf(processorInformationCounter, "*", "*"))
 	if err != nil {
