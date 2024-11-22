@@ -26,7 +26,6 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -38,17 +37,17 @@ import (
 )
 
 var (
-	kernelTimeCounter = "\\Processor Information(%s)\\% Privileged Time"
-	userTimeCounter   = "\\Processor Information(%s)\\% User Time"
-	idleTimeCounter   = "\\Processor Information(%s)\\% Idle Time"
+	processorInformationCounter = "\\Processor Information(%s)\\%s"
+	totalKernelTimeCounter      = fmt.Sprintf(processorInformationCounter, "_Total", "% Privileged Time")
+	totalIdleTimeCounter        = fmt.Sprintf(processorInformationCounter, "_Total", "% Idle Time")
+	totalUserTimeCounter        = fmt.Sprintf(processorInformationCounter, "_Total", "% User Time")
 )
 
 var (
 	// a call to getAllCouterPaths is idempodent i.e. it returns same set of counters every time you call it.
 	// we can save some cruicial cycles by converting it to a sync.Once
 	getAllCouterPathsOnce = sync.OnceValues(getAllCouterPaths)
-
-	getQueryOnce = sync.OnceValues(getQuery)
+	getQueryOnce          = sync.OnceValues(getQuery)
 )
 
 // Get fetches Windows CPU system times
@@ -112,15 +111,15 @@ fallback:
 }
 
 func populateGlobalCpuMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.Duration, time.Duration, error) {
-	kernel, err := q.GetRawCounterValue(fmt.Sprintf(kernelTimeCounter, "_Total"))
+	kernel, err := q.GetRawCounterValue(totalKernelTimeCounter)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Privileged Time counter: %w", err)
 	}
-	idle, err := q.GetRawCounterValue(fmt.Sprintf(idleTimeCounter, "_Total"))
+	idle, err := q.GetRawCounterValue(totalIdleTimeCounter)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Idle Time counter: %w", err)
 	}
-	user, err := q.GetRawCounterValue(fmt.Sprintf(userTimeCounter, "_Total"))
+	user, err := q.GetRawCounterValue(totalUserTimeCounter)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Privileged User counter: %w", err)
 	}
@@ -234,25 +233,23 @@ func getAllCouterPaths() ([]*counter, error) {
 	if err := q.Open(); err != nil {
 		return nil, fmt.Errorf("Failed to open query: %w", err)
 	}
-	allKernelCounters, err := q.GetCounterPaths(fmt.Sprintf(kernelTimeCounter, "*"))
+	allKnownCounters, err := q.GetCounterPaths(fmt.Sprintf(processorInformationCounter, "*", "*"))
 	if err != nil {
 		return nil, fmt.Errorf("call to fetch all kernel counters failed: %w", err)
 	}
-	allUserCounters, err := q.GetCounterPaths(fmt.Sprintf(userTimeCounter, "*"))
-	if err != nil {
-		return nil, fmt.Errorf("call to fetch all user counters failed: %w", err)
-	}
-	allIdleCounters, err := q.GetCounterPaths(fmt.Sprintf(idleTimeCounter, "*"))
-	if err != nil {
-		return nil, fmt.Errorf("call to fetch all user counters failed: %w", err)
-	}
+	allKnownCounters = append(allKnownCounters, totalKernelTimeCounter, totalIdleTimeCounter, totalUserTimeCounter)
 
 	allCounters := make([]*counter, 0)
-	for _, counterName := range slices.Concat(allKernelCounters, allUserCounters, allIdleCounters) {
+	for _, counterName := range allKnownCounters {
 		instance, err := pdh.MatchInstanceName(counterName)
 		if err != nil {
 			// invalid counter name - ignore the error
 			// shouldn't really happen, but just in case
+			continue
+		}
+		if !(strings.Contains(counterName, "Privileged Time") ||
+			strings.Contains(counterName, "User Time") ||
+			strings.Contains(counterName, "Idle Time")) {
 			continue
 		}
 		allCounters = append(allCounters, &counter{
