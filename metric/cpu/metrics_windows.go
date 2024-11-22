@@ -23,7 +23,6 @@ vagrant winrm -s cmd -e -c "cd C:\\Gopath\src\\github.com\\elastic\\beats\\metri
 package cpu
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 	"strings"
@@ -33,7 +32,6 @@ import (
 	"github.com/elastic/elastic-agent-libs/helpers/windows/pdh"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
-	"github.com/elastic/gosigar/sys/windows"
 )
 
 var (
@@ -52,33 +50,26 @@ var (
 
 // Get fetches Windows CPU system times
 func Get(_ resolve.Resolver) (CPUMetrics, error) {
-	var kernel, user, idle time.Duration
-	var combinedErr, err error
-
 	globalMetrics := CPUMetrics{}
 	q, err := getQueryOnce()
 	if err != nil {
-		combinedErr = errors.Join(combinedErr, err)
-		goto fallback
+		return CPUMetrics{}, err
 	}
 
 	if err := q.CollectData(); err != nil {
-		combinedErr = errors.Join(combinedErr, fmt.Errorf("error collecting counter data: %w", err))
-		goto fallback
+		return CPUMetrics{}, fmt.Errorf("error collecting counter data: %w", err)
 	}
 
 	// get per-cpu data
 	// try getting data via performance counters
 	globalMetrics.list, err = populatePerCpuMetrics(q)
 	if err != nil {
-		combinedErr = errors.Join(combinedErr, err)
-		goto fallback
+		return CPUMetrics{}, fmt.Errorf("error calling populatePerCpuMetrics: %w", err)
 	}
 
-	kernel, user, idle, err = populateGlobalCPUMetrics(q, int64(len(globalMetrics.list)))
+	kernel, user, idle, err := populateGlobalCPUMetrics(q, int64(len(globalMetrics.list)))
 	if err != nil {
-		combinedErr = errors.Join(combinedErr, err)
-		goto fallback
+		return CPUMetrics{}, fmt.Errorf("error calling populateGlobalCPUMetrics: %w", err)
 	}
 
 	globalMetrics.totals.Idle = opt.UintWith(uint64(idle / time.Millisecond))
@@ -86,28 +77,6 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	globalMetrics.totals.User = opt.UintWith(uint64(user / time.Millisecond))
 
 	return globalMetrics, nil
-
-fallback:
-	// fallback to GetSystemTimes() and _NtQuerySystemInformation() if data collection via perf counter fails
-
-	// GetSystemTimes() return global data for current processor group i.e. upto 64 cores
-	kernel, user, idle, err = populateGlobalCPUMetricsFallback()
-	if err != nil {
-		return CPUMetrics{}, fmt.Errorf("error getting counter values: %w", err)
-	}
-
-	// convert from duration to ticks
-	// ticks are measured in 1-ms intervals
-	globalMetrics.totals.Idle = opt.UintWith(uint64(idle / time.Millisecond))
-	globalMetrics.totals.Sys = opt.UintWith(uint64(kernel / time.Millisecond))
-	globalMetrics.totals.User = opt.UintWith(uint64(user / time.Millisecond))
-
-	// _NtQuerySystemInformation return per-cpu data for current processor group i.e. upto 64 cores
-	globalMetrics.list, err = populatePerCpuMetricsFallback()
-	if err != nil {
-		return CPUMetrics{}, fmt.Errorf("error getting per-cpu metrics: %w", err)
-	}
-	return globalMetrics, &PerfError{err: combinedErr}
 }
 
 func populateGlobalCPUMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.Duration, time.Duration, error) {
@@ -171,32 +140,6 @@ func populatePerCpuMetrics(q *pdh.Query) ([]CPU, error) {
 		list = append(list, *cpu)
 	}
 	return list, nil
-}
-
-func populatePerCpuMetricsFallback() ([]CPU, error) {
-	cpus, err := windows.NtQuerySystemProcessorPerformanceInformation()
-	if err != nil {
-		return nil, fmt.Errorf("catll to NtQuerySystemProcessorPerformanceInformation failed: %w", err)
-	}
-	list := make([]CPU, 0, len(cpus))
-	for _, cpu := range cpus {
-		idleMetric := uint64(cpu.IdleTime / time.Millisecond)
-		sysMetric := uint64(cpu.KernelTime / time.Millisecond)
-		userMetrics := uint64(cpu.UserTime / time.Millisecond)
-		list = append(list, CPU{
-			Idle: opt.UintWith(idleMetric),
-			Sys:  opt.UintWith(sysMetric),
-			User: opt.UintWith(userMetrics),
-		})
-	}
-	return list, nil
-}
-
-func populateGlobalCPUMetricsFallback() (idle, kernel, user time.Duration, err error) {
-	idle, kernel, user, err = windows.GetSystemTimes()
-	if err != nil {
-		return
-	}
 }
 
 type counter struct {
