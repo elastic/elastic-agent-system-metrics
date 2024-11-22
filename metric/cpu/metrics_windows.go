@@ -67,7 +67,7 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 		return CPUMetrics{}, fmt.Errorf("error calling populatePerCPUMetrics: %w", err)
 	}
 
-	kernel, user, idle, err := populateGlobalCPUMetrics(q, int64(len(globalMetrics.list)))
+	kernel, user, idle, err := populateGlobalCPUMetrics(q, len(globalMetrics.list))
 	if err != nil {
 		return CPUMetrics{}, fmt.Errorf("error calling populateGlobalCPUMetrics: %w", err)
 	}
@@ -79,7 +79,7 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	return globalMetrics, nil
 }
 
-func populateGlobalCPUMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.Duration, time.Duration, error) {
+func populateGlobalCPUMetrics(q *pdh.Query, numCpus int) (time.Duration, time.Duration, time.Duration, error) {
 	kernel, err := q.GetRawCounterValue(totalKernelTimeCounter)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("error getting Privileged Time counter: %w", err)
@@ -95,7 +95,7 @@ func populateGlobalCPUMetrics(q *pdh.Query, numCpus int64) (time.Duration, time.
 	// _Total values returned by PerfCounters are averaged by number of cpus i.e. average time for system as a whole
 	// Previously, we used to return sum of times for all CPUs.
 	// To be backward compatible with previous version, multiply the average time by number of CPUs.
-	return time.Duration(kernel.FirstValue * 100 * numCpus), time.Duration(idle.FirstValue * 100 * numCpus), time.Duration(user.FirstValue * 100 * numCpus), nil
+	return time.Duration(kernel.FirstValue * 100 * int64(numCpus)), time.Duration(idle.FirstValue * 100 * int64(numCpus)), time.Duration(user.FirstValue * 100 * int64(numCpus)), nil
 }
 
 func populatePerCPUMetrics(q *pdh.Query) ([]CPU, error) {

@@ -6,7 +6,7 @@
 // not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
 // software distributed under the License is distributed on an
@@ -100,14 +100,14 @@ func New(hostfs resolve.Resolver) *Monitor {
 // This will overwrite the currently stored samples.
 func (m *Monitor) Fetch() (Metrics, error) {
 	metric, err := Get(m.Hostfs)
-	if err != nil && !errors.Is(err, &PerfError{}) {
+	if err != nil {
 		return Metrics{}, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
 
 	oldLastSample := m.lastSample
 	m.lastSample = metric
 
-	return Metrics{previousSample: oldLastSample.totals, currentSample: metric.totals, count: len(metric.list), isTotals: true}, err
+	return Metrics{previousSample: oldLastSample.totals, currentSample: metric.totals, count: len(metric.list), isTotals: true}, nil
 }
 
 // FetchCores collects a new sample of CPU usage metrics per-core
@@ -115,7 +115,7 @@ func (m *Monitor) Fetch() (Metrics, error) {
 func (m *Monitor) FetchCores() ([]Metrics, error) {
 
 	metric, err := Get(m.Hostfs)
-	if err != nil && !errors.Is(err, &PerfError{}) {
+	if err != nil {
 		return nil, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
 
@@ -140,7 +140,7 @@ func (m *Monitor) FetchCores() ([]Metrics, error) {
 		}
 	}
 	m.lastSample = metric
-	return coreMetrics, err
+	return coreMetrics, nil
 }
 
 // Metrics stores the current and the last sample collected by a Beat.
@@ -243,19 +243,4 @@ func cpuMetricTimeDelta(prev, current opt.Uint, timeDelta uint64, numCPU int) fl
 	cpuDelta := int64(current.ValueOr(0) - prev.ValueOr(0))
 	pct := float64(cpuDelta) / float64(timeDelta)
 	return metric.Round(pct * float64(numCPU))
-}
-
-type PerfError struct {
-	err error
-}
-
-func (p *PerfError) Error() string {
-	if p.err == nil {
-		return ""
-	}
-	return fmt.Sprintf("Error while reading performance counter data: %s", p.err.Error())
-}
-
-func (p *PerfError) Unwrap() error {
-	return p.err
 }
