@@ -63,23 +63,23 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	var idle, kernel, user time.Duration
 	globalMetrics.list = make([]CPU, len(userRawData))
 	for i := 0; i < len(globalMetrics.list); i++ {
-		idleTimeNs := time.Duration(idleRawData[i].RawValue.FirstValue * 100)
-		kernelTimeNs := time.Duration(kernelRawData[i].RawValue.FirstValue * 100)
-		userTimeNs := time.Duration(userRawData[i].RawValue.FirstValue * 100)
+		idleTimeMs := time.Duration(idleRawData[i].RawValue.FirstValue*100) / time.Millisecond
+		kernelTimeMs := time.Duration(kernelRawData[i].RawValue.FirstValue*100) / time.Millisecond
+		userTimeMs := time.Duration(userRawData[i].RawValue.FirstValue*100) / time.Millisecond
 
-		globalMetrics.list[i].Idle = opt.UintWith(uint64(idleTimeNs / time.Millisecond))
-		globalMetrics.list[i].Sys = opt.UintWith(uint64(kernelTimeNs / time.Millisecond))
-		globalMetrics.list[i].User = opt.UintWith(uint64(userTimeNs / time.Millisecond))
+		globalMetrics.list[i].Idle = opt.UintWith(uint64(idleTimeMs))
+		globalMetrics.list[i].Sys = opt.UintWith(uint64(kernelTimeMs))
+		globalMetrics.list[i].User = opt.UintWith(uint64(userTimeMs))
 
 		// add the per-cpu time to track the total time spent by system
-		idle += idleTimeNs
-		kernel += kernelTimeNs
-		user += userTimeNs
+		idle += idleTimeMs
+		kernel += kernelTimeMs
+		user += userTimeMs
 	}
 
-	globalMetrics.totals.Idle = opt.UintWith(uint64(idle / time.Millisecond))
-	globalMetrics.totals.Sys = opt.UintWith(uint64(kernel / time.Millisecond))
-	globalMetrics.totals.User = opt.UintWith(uint64(user / time.Millisecond))
+	globalMetrics.totals.Idle = opt.UintWith(uint64(idle))
+	globalMetrics.totals.Sys = opt.UintWith(uint64(kernel))
+	globalMetrics.totals.User = opt.UintWith(uint64(user))
 
 	return globalMetrics, nil
 }
