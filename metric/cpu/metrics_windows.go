@@ -89,13 +89,13 @@ func buildQuery() (pdh.Query, error) {
 	if err := q.Open(); err != nil {
 		return q, err
 	}
-	if err := q.AddCounter(totalKernelTimeCounter, "", "", true); err != nil {
+	if err := q.AddCounter(totalKernelTimeCounter, "", "", true, true); err != nil {
 		return q, err
 	}
-	if err := q.AddCounter(totalUserTimeCounter, "", "", true); err != nil {
+	if err := q.AddCounter(totalUserTimeCounter, "", "", true, true); err != nil {
 		return q, err
 	}
-	if err := q.AddCounter(totalIdleTimeCounter, "", "", true); err != nil {
+	if err := q.AddCounter(totalIdleTimeCounter, "", "", true, true); err != nil {
 		return q, err
 	}
 	return q, nil
