@@ -27,7 +27,7 @@ import (
 )
 
 // Get is the Darwin implementation of Get
-func Get(_ resolve.Resolver) (CPUMetrics, error) {
+func Get(_ resolve.Resolver, _ ...OptionFunc) (CPUMetrics, error) {
 	// We're using the gopsutil library here.
 	// The code used by both gosigar and go-sysinfo appears to be
 	// the same code as gopsutil, including copy-pasted comments.

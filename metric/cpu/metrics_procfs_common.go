@@ -31,7 +31,7 @@ import (
 )
 
 // Get returns a metrics object for CPU data
-func Get(procfs resolve.Resolver) (CPUMetrics, error) {
+func Get(procfs resolve.Resolver, _ ...OptionFunc) (CPUMetrics, error) {
 	path := procfs.ResolveHostFS("/proc/stat")
 	fd, err := os.Open(path)
 	defer func() {

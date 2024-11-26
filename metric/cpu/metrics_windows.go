@@ -29,6 +29,7 @@ import (
 	"github.com/elastic/elastic-agent-libs/helpers/windows/pdh"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
+	"github.com/elastic/gosigar/sys/windows"
 )
 
 var (
@@ -41,7 +42,14 @@ var (
 var query, qError = buildQuery()
 
 // Get fetches Windows CPU system times
-func Get(_ resolve.Resolver) (CPUMetrics, error) {
+func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {
+	op := option{}
+	for _, o := range opts {
+		o(&op)
+	}
+	if !op.usePerformanceCounter {
+		return defaultGet()
+	}
 	globalMetrics := CPUMetrics{}
 	if qError != nil {
 		return globalMetrics, qError
@@ -106,4 +114,39 @@ func buildQuery() (pdh.Query, error) {
 		return q, fmt.Errorf("error calling AddCounter for idle counter: %w", err)
 	}
 	return q, nil
+}
+
+func defaultGet() (CPUMetrics, error) {
+	idle, kernel, user, err := windows.GetSystemTimes()
+	if err != nil {
+		return CPUMetrics{}, fmt.Errorf("call to GetSystemTimes failed: %w", err)
+	}
+
+	globalMetrics := CPUMetrics{}
+	//convert from duration to ticks
+	idleMetric := uint64(idle / time.Millisecond)
+	sysMetric := uint64(kernel / time.Millisecond)
+	userMetrics := uint64(user / time.Millisecond)
+	globalMetrics.totals.Idle = opt.UintWith(idleMetric)
+	globalMetrics.totals.Sys = opt.UintWith(sysMetric)
+	globalMetrics.totals.User = opt.UintWith(userMetrics)
+
+	// get per-cpu data
+	cpus, err := windows.NtQuerySystemProcessorPerformanceInformation()
+	if err != nil {
+		return CPUMetrics{}, fmt.Errorf("catll to NtQuerySystemProcessorPerformanceInformation failed: %w", err)
+	}
+	globalMetrics.list = make([]CPU, 0, len(cpus))
+	for _, cpu := range cpus {
+		idleMetric := uint64(cpu.IdleTime / time.Millisecond)
+		sysMetric := uint64(cpu.KernelTime / time.Millisecond)
+		userMetrics := uint64(cpu.UserTime / time.Millisecond)
+		globalMetrics.list = append(globalMetrics.list, CPU{
+			Idle: opt.UintWith(idleMetric),
+			Sys:  opt.UintWith(sysMetric),
+			User: opt.UintWith(userMetrics),
+		})
+	}
+
+	return globalMetrics, nil
 }

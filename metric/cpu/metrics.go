@@ -84,6 +84,18 @@ The below code implements a "metrics tracker" that gives us the ability to
 calculate CPU percentages, as we average usage across a time period.
 */
 
+type option struct {
+	usePerformanceCounter bool
+}
+
+type OptionFunc func(*option)
+
+func WithPerformanceCounter() OptionFunc {
+	return func(o *option) {
+		o.usePerformanceCounter = true
+	}
+}
+
 // Monitor is used to monitor the overall CPU usage of the system over time.
 type Monitor struct {
 	lastSample CPUMetrics
@@ -98,8 +110,8 @@ func New(hostfs resolve.Resolver) *Monitor {
 
 // Fetch collects a new sample of the CPU usage metrics.
 // This will overwrite the currently stored samples.
-func (m *Monitor) Fetch() (Metrics, error) {
-	metric, err := Get(m.Hostfs)
+func (m *Monitor) Fetch(opts ...OptionFunc) (Metrics, error) {
+	metric, err := Get(m.Hostfs, opts...)
 	if err != nil {
 		return Metrics{}, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
@@ -112,9 +124,8 @@ func (m *Monitor) Fetch() (Metrics, error) {
 
 // FetchCores collects a new sample of CPU usage metrics per-core
 // This will overwrite the currently stored samples.
-func (m *Monitor) FetchCores() ([]Metrics, error) {
-
-	metric, err := Get(m.Hostfs)
+func (m *Monitor) FetchCores(opts ...OptionFunc) ([]Metrics, error) {
+	metric, err := Get(m.Hostfs, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}

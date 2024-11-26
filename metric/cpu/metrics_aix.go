@@ -58,7 +58,7 @@ func tick2msec(val uint64) uint64 {
 }
 
 // Get returns a metrics object for CPU data
-func Get(_ resolve.Resolver) (CPUMetrics, error) {
+func Get(_ resolve.Resolver, _ ...OptionFunc) (CPUMetrics, error) {
 
 	totals, err := getCPUTotals()
 	if err != nil {

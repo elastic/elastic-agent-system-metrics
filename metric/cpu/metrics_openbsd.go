@@ -41,7 +41,7 @@ import (
 )
 
 // Get is the OpenBSD implementation of get
-func Get(_ resolve.Resolver) (CPUMetrics, error) {
+func Get(_ resolve.Resolver, _ ...OptionFunc) (CPUMetrics, error) {
 
 	// see man 2 sysctl
 	loadGlobal := [C.CPUSTATES]C.long{
