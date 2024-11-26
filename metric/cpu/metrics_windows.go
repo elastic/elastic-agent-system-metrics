@@ -70,18 +70,18 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 		// For CPU core {i}, idleRawData[i], kernelRawData[i], and userRawData[i] correspond to the idle time, kernel time, and user time, respectively.
 
 		// values returned by counter are in 100-ns intervals. Hence, convert it to millisecond.
-		idleTimeMs := time.Duration(idleRawData[i].RawValue.FirstValue*100) / time.Millisecond
-		kernelTimeMs := time.Duration(kernelRawData[i].RawValue.FirstValue*100) / time.Millisecond
-		userTimeMs := time.Duration(userRawData[i].RawValue.FirstValue*100) / time.Millisecond
+		idleTime := time.Duration(idleRawData[i].RawValue.FirstValue*100) / time.Millisecond
+		kernelTime := time.Duration(kernelRawData[i].RawValue.FirstValue*100) / time.Millisecond
+		userTime := time.Duration(userRawData[i].RawValue.FirstValue*100) / time.Millisecond
 
-		globalMetrics.list[i].Idle = opt.UintWith(uint64(idleTimeMs))
-		globalMetrics.list[i].Sys = opt.UintWith(uint64(kernelTimeMs))
-		globalMetrics.list[i].User = opt.UintWith(uint64(userTimeMs))
+		globalMetrics.list[i].Idle = opt.UintWith(uint64(idleTime))
+		globalMetrics.list[i].Sys = opt.UintWith(uint64(kernelTime))
+		globalMetrics.list[i].User = opt.UintWith(uint64(userTime))
 
 		// add the per-cpu time to track the total time spent by system
-		idle += idleTimeMs
-		kernel += kernelTimeMs
-		user += userTimeMs
+		idle += idleTime
+		kernel += kernelTime
+		user += userTime
 	}
 
 	globalMetrics.totals.Idle = opt.UintWith(uint64(idle))
