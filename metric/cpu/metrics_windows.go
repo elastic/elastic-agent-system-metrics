@@ -43,6 +43,9 @@ var query, qError = buildQuery()
 // Get fetches Windows CPU system times
 func Get(_ resolve.Resolver) (CPUMetrics, error) {
 	globalMetrics := CPUMetrics{}
+	if qError != nil {
+		return globalMetrics, qError
+	}
 
 	if err := query.CollectData(); err != nil {
 		return globalMetrics, err
@@ -50,19 +53,23 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 
 	kernelRawData, err := query.GetRawCounterArray(totalKernelTimeCounter, true)
 	if err != nil {
-		return globalMetrics, err
+		return globalMetrics, fmt.Errorf("error calling GetRawCounterArray for kernel counter: %w", err)
 	}
 	idleRawData, err := query.GetRawCounterArray(totalIdleTimeCounter, true)
 	if err != nil {
-		return globalMetrics, err
+		return globalMetrics, fmt.Errorf("error calling GetRawCounterArray for idle counter: %w", err)
 	}
 	userRawData, err := query.GetRawCounterArray(totalUserTimeCounter, true)
 	if err != nil {
-		return globalMetrics, err
+		return globalMetrics, fmt.Errorf("error calling GetRawCounterArray for user counter: %w", err)
 	}
 	var idle, kernel, user time.Duration
 	globalMetrics.list = make([]CPU, len(userRawData))
 	for i := 0; i < len(globalMetrics.list); i++ {
+		// The values returned by GetRawCounterArray are of equal length and are sorted by instance names.
+		// For CPU core {i}, idleRawData[i], kernelRawData[i], and userRawData[i] correspond to the idle time, kernel time, and user time, respectively.
+
+		// values returned by counter are in 100-ns intervals. Hence, convert it to millisecond.
 		idleTimeMs := time.Duration(idleRawData[i].RawValue.FirstValue*100) / time.Millisecond
 		kernelTimeMs := time.Duration(kernelRawData[i].RawValue.FirstValue*100) / time.Millisecond
 		userTimeMs := time.Duration(userRawData[i].RawValue.FirstValue*100) / time.Millisecond
@@ -87,16 +94,16 @@ func Get(_ resolve.Resolver) (CPUMetrics, error) {
 func buildQuery() (pdh.Query, error) {
 	var q pdh.Query
 	if err := q.Open(); err != nil {
-		return q, err
+		return q, fmt.Errorf("failed to open query: %w", err)
 	}
 	if err := q.AddCounter(totalKernelTimeCounter, "", "", true, true); err != nil {
-		return q, err
+		return q, fmt.Errorf("error calling AddCounter for kernel counter: %w", err)
 	}
 	if err := q.AddCounter(totalUserTimeCounter, "", "", true, true); err != nil {
-		return q, err
+		return q, fmt.Errorf("error calling AddCounter for user counter: %w", err)
 	}
 	if err := q.AddCounter(totalIdleTimeCounter, "", "", true, true); err != nil {
-		return q, err
+		return q, fmt.Errorf("error calling AddCounter for idle counter: %w", err)
 	}
 	return q, nil
 }
