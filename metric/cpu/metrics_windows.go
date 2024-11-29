@@ -39,7 +39,12 @@ var (
 	totalUserTimeCounter        = fmt.Sprintf(processorInformationCounter, "*", "% User Time")
 )
 
-var query, qError = buildQuery()
+var query pdh.Query
+var qError error
+
+func init() {
+	query, qError = buildQuery()
+}
 
 // Get fetches Windows CPU system times
 func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {

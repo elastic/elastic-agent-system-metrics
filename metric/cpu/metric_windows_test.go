@@ -26,8 +26,7 @@ import (
 )
 
 func TestCounterLength(t *testing.T) {
-	query, err := buildQuery()
-	require.NoError(t, err)
+	require.NoError(t, qError)
 	require.NoError(t, query.CollectData())
 
 	kernelRawData, err := query.GetRawCounterArray(totalKernelTimeCounter, true)
