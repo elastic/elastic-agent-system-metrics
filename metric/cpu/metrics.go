@@ -90,6 +90,7 @@ type option struct {
 
 type OptionFunc func(*option)
 
+// Note: WithPerformanceCounter option is only effective for windows and is ineffective if used by other OS'.
 func WithPerformanceCounter() OptionFunc {
 	return func(o *option) {
 		o.usePerformanceCounter = true
