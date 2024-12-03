@@ -54,5 +54,6 @@ func buildQuery() (*pdh.Query, error) {
 	if err := q.Open(); err != nil {
 		return nil, fmt.Errorf("failed to open query: %w", err)
 	}
+	// TODO: implement performance counters as a follow up
 	return &q, nil
 }
