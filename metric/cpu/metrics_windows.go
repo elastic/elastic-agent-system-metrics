@@ -26,9 +26,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elastic/elastic-agent-libs/helpers/windows/pdh"
 	"github.com/elastic/elastic-agent-libs/opt"
-	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	"github.com/elastic/gosigar/sys/windows"
 )
 
@@ -39,43 +37,26 @@ var (
 	totalUserTimeCounter        = fmt.Sprintf(processorInformationCounter, "*", "% User Time")
 )
 
-var (
-	query  *pdh.Query
-	qError error
-)
-
 // Get fetches Windows CPU system times
-func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {
-	op := option{}
-	for _, o := range opts {
-		o(&op)
-	}
-	if !op.usePerformanceCounter {
+func Get(m *Monitor) (CPUMetrics, error) {
+	if m.query == nil {
 		return defaultGet()
 	}
 	globalMetrics := CPUMetrics{}
 
-	// Check if the query has already been initialized, if not, initialize it
-	if query == nil {
-		query, qError = buildQuery() // Build query if not already done
-		if qError != nil {
-			return CPUMetrics{}, qError
-		}
-	}
-
-	if err := query.CollectData(); err != nil {
+	if err := m.query.CollectData(); err != nil {
 		return globalMetrics, err
 	}
 
-	kernelRawData, err := query.GetRawCounterArray(totalKernelTimeCounter, true)
+	kernelRawData, err := m.query.GetRawCounterArray(totalKernelTimeCounter, true)
 	if err != nil {
 		return globalMetrics, fmt.Errorf("error calling GetRawCounterArray for kernel counter: %w", err)
 	}
-	idleRawData, err := query.GetRawCounterArray(totalIdleTimeCounter, true)
+	idleRawData, err := m.query.GetRawCounterArray(totalIdleTimeCounter, true)
 	if err != nil {
 		return globalMetrics, fmt.Errorf("error calling GetRawCounterArray for idle counter: %w", err)
 	}
-	userRawData, err := query.GetRawCounterArray(totalUserTimeCounter, true)
+	userRawData, err := m.query.GetRawCounterArray(totalUserTimeCounter, true)
 	if err != nil {
 		return globalMetrics, fmt.Errorf("error calling GetRawCounterArray for user counter: %w", err)
 	}

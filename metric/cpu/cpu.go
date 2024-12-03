@@ -93,8 +93,8 @@ func WithPerformanceCounter() OptionFunc {
 
 // Fetch collects a new sample of the CPU usage metrics.
 // This will overwrite the currently stored samples.
-func (m *Monitor) Fetch(opts ...OptionFunc) (Metrics, error) {
-	metric, err := Get(m.Hostfs, opts...)
+func (m *Monitor) Fetch() (Metrics, error) {
+	metric, err := Get(m)
 	if err != nil {
 		return Metrics{}, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
@@ -107,8 +107,8 @@ func (m *Monitor) Fetch(opts ...OptionFunc) (Metrics, error) {
 
 // FetchCores collects a new sample of CPU usage metrics per-core
 // This will overwrite the currently stored samples.
-func (m *Monitor) FetchCores(opts ...OptionFunc) ([]Metrics, error) {
-	metric, err := Get(m.Hostfs, opts...)
+func (m *Monitor) FetchCores() ([]Metrics, error) {
+	metric, err := Get(m)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching CPU metrics: %w", err)
 	}
