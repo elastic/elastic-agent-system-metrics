@@ -78,6 +78,19 @@ func (cpu CPU) Total() uint64 {
 	return opt.SumOptUint(cpu.User, cpu.Nice, cpu.Sys, cpu.Idle, cpu.Wait, cpu.Irq, cpu.SoftIrq, cpu.Stolen)
 }
 
+type option struct {
+	usePerformanceCounter bool
+}
+
+type OptionFunc func(*option)
+
+// Note: WithPerformanceCounter option is only effective for windows and is ineffective if used by other OS'.
+func WithPerformanceCounter() OptionFunc {
+	return func(o *option) {
+		o.usePerformanceCounter = true
+	}
+}
+
 // Fetch collects a new sample of the CPU usage metrics.
 // This will overwrite the currently stored samples.
 func (m *Monitor) Fetch() (Metrics, error) {

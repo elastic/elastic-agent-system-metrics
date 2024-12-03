@@ -34,6 +34,6 @@ type Monitor struct {
 
 // New returns a new CPU metrics monitor
 // Hostfs is only relevant on linux and freebsd.
-func New(hostfs resolve.Resolver) *Monitor {
-	return &Monitor{Hostfs: hostfs}
+func New(hostfs resolve.Resolver, _ ...OptionFunc) (*Monitor, error) {
+	return &Monitor{Hostfs: hostfs}, nil
 }

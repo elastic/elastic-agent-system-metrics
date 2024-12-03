@@ -37,16 +37,29 @@ type Monitor struct {
 	Hostfs     resolve.Resolver
 
 	// windows specific fields
-	query  *pdh.Query
-	qError error
+	query *pdh.Query
 }
 
 // New returns a new CPU metrics monitor
 // Hostfs is only relevant on linux and freebsd.
-func New(hostfs resolve.Resolver) *Monitor {
-	m := &Monitor{Hostfs: hostfs}
-	m.query, m.qError = buildQuery()
-	return m
+func New(hostfs resolve.Resolver, opts ...OptionFunc) (*Monitor, error) {
+	var query *pdh.Query
+	var err error
+
+	op := option{}
+	for _, o := range opts {
+		o(&op)
+	}
+	if !op.usePerformanceCounter {
+		if query, err = buildQuery(); err != nil {
+			return nil, err
+		}
+	}
+
+	return &Monitor{
+		Hostfs: hostfs,
+		query:  query,
+	}, nil
 }
 
 func buildQuery() (*pdh.Query, error) {
