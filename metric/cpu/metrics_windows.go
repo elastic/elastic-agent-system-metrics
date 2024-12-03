@@ -107,23 +107,6 @@ func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {
 	return globalMetrics, nil
 }
 
-func buildQuery() (*pdh.Query, error) {
-	var q pdh.Query
-	if err := q.Open(); err != nil {
-		return nil, fmt.Errorf("failed to open query: %w", err)
-	}
-	if err := q.AddCounter(totalKernelTimeCounter, "", "", true, true); err != nil {
-		return nil, fmt.Errorf("error calling AddCounter for kernel counter: %w", err)
-	}
-	if err := q.AddCounter(totalUserTimeCounter, "", "", true, true); err != nil {
-		return nil, fmt.Errorf("error calling AddCounter for user counter: %w", err)
-	}
-	if err := q.AddCounter(totalIdleTimeCounter, "", "", true, true); err != nil {
-		return nil, fmt.Errorf("error calling AddCounter for idle counter: %w", err)
-	}
-	return &q, nil
-}
-
 func defaultGet() (CPUMetrics, error) {
 	idle, kernel, user, err := windows.GetSystemTimes()
 	if err != nil {
