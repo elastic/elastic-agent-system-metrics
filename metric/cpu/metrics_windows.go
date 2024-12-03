@@ -39,12 +39,10 @@ var (
 	totalUserTimeCounter        = fmt.Sprintf(processorInformationCounter, "*", "% User Time")
 )
 
-var query pdh.Query
-var qError error
-
-func init() {
-	query, qError = buildQuery()
-}
+var (
+	query  *pdh.Query
+	qError error
+)
 
 // Get fetches Windows CPU system times
 func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {
@@ -56,8 +54,13 @@ func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {
 		return defaultGet()
 	}
 	globalMetrics := CPUMetrics{}
-	if qError != nil {
-		return globalMetrics, qError
+
+	// Check if the query has already been initialized, if not, initialize it
+	if query == nil {
+		query, qError = buildQuery() // Build query if not already done
+		if qError != nil {
+			return CPUMetrics{}, qError
+		}
 	}
 
 	if err := query.CollectData(); err != nil {
@@ -104,21 +107,21 @@ func Get(_ resolve.Resolver, opts ...OptionFunc) (CPUMetrics, error) {
 	return globalMetrics, nil
 }
 
-func buildQuery() (pdh.Query, error) {
+func buildQuery() (*pdh.Query, error) {
 	var q pdh.Query
 	if err := q.Open(); err != nil {
-		return q, fmt.Errorf("failed to open query: %w", err)
+		return nil, fmt.Errorf("failed to open query: %w", err)
 	}
 	if err := q.AddCounter(totalKernelTimeCounter, "", "", true, true); err != nil {
-		return q, fmt.Errorf("error calling AddCounter for kernel counter: %w", err)
+		return nil, fmt.Errorf("error calling AddCounter for kernel counter: %w", err)
 	}
 	if err := q.AddCounter(totalUserTimeCounter, "", "", true, true); err != nil {
-		return q, fmt.Errorf("error calling AddCounter for user counter: %w", err)
+		return nil, fmt.Errorf("error calling AddCounter for user counter: %w", err)
 	}
 	if err := q.AddCounter(totalIdleTimeCounter, "", "", true, true); err != nil {
-		return q, fmt.Errorf("error calling AddCounter for idle counter: %w", err)
+		return nil, fmt.Errorf("error calling AddCounter for idle counter: %w", err)
 	}
-	return q, nil
+	return &q, nil
 }
 
 func defaultGet() (CPUMetrics, error) {
