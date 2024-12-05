@@ -22,13 +22,16 @@ package cpu
 import (
 	"testing"
 
+	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCounterLength(t *testing.T) {
-	require.NoError(t, qError)
-	require.NoError(t, query.CollectData())
+	monitor, err := New(systemtests.DockerTestResolver())
+	require.NoError(t, err)
+	require.NoError(t, monitor.query.CollectData())
 
+	query := monitor.query
 	kernelRawData, err := query.GetRawCounterArray(totalKernelTimeCounter, true)
 	require.NoError(t, err)
 
