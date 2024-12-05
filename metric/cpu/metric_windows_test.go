@@ -22,8 +22,9 @@ package cpu
 import (
 	"testing"
 
-	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/stretchr/testify/require"
+
+	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 )
 
 func TestCounterLength(t *testing.T) {
