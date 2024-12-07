@@ -40,6 +40,8 @@ import (
 	sysinfotypes "github.com/elastic/go-sysinfo/types"
 )
 
+var errFetchingPIDs = "error fetching PID metrics for %d processes, most likely a \"permission denied\" error. Enable debug logging to determine the exact cause."
+
 // ListStates is a wrapper that returns a list of processess with only the basic PID info filled out.
 func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 	init := Stats{
@@ -96,6 +98,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	if wrappedErr != nil && !isNonFatal(wrappedErr) {
 		return nil, nil, fmt.Errorf("error gathering PIDs: %w", wrappedErr)
 	}
+	failedPIDs := extractFailedPIDs(pidMap)
 	// We use this to track processes over time.
 	procStats.ProcsMap.SetMap(pidMap)
 
@@ -133,8 +136,11 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		procs = append(procs, proc)
 		rootEvents = append(rootEvents, rootMap)
 	}
-
-	return procs, rootEvents, toNonFatal(wrappedErr)
+	if len(failedPIDs) > 0 {
+		procStats.logger.Debugf("error fetching process metrics: %v", wrappedErr)
+		return procs, rootEvents, NonFatalErr{Err: errors.New(fmt.Sprintf(errFetchingPIDs, len(failedPIDs)))}
+	}
+	return procs, rootEvents, nil
 }
 
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
@@ -197,6 +203,7 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 	status, saved, err := procStats.pidFill(pid, true)
 	var nonFatalErr error
 	if err != nil {
+		procMap[pid] = ProcState{Failed: true}
 		if !errors.Is(err, NonFatalErr{}) {
 			procStats.logger.Debugf("Error fetching PID info for %d, skipping: %s", pid, err)
 			// While monitoring a set of processes, some processes might get killed after we get all the PIDs
@@ -408,4 +415,16 @@ func (procStats *Stats) isWhitelistedEnvVar(varName string) bool {
 		}
 	}
 	return false
+}
+
+func extractFailedPIDs(procMap ProcsMap) []int {
+	list := make([]int, 0)
+	for pid, state := range procMap {
+		if state.Failed {
+			list = append(list, pid)
+			// delete the failed state so we don't return the state to caller
+			delete(procMap, pid)
+		}
+	}
+	return list
 }
