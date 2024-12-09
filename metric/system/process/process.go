@@ -138,7 +138,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	}
 	if len(failedPIDs) > 0 {
 		procStats.logger.Debugf("error fetching process metrics: %v", wrappedErr)
-		return procs, rootEvents, NonFatalErr{Err: errors.New(fmt.Sprintf(errFetchingPIDs, len(failedPIDs)))}
+		return procs, rootEvents, NonFatalErr{Err: fmt.Errorf(errFetchingPIDs, len(failedPIDs))}
 	}
 	return procs, rootEvents, nil
 }
