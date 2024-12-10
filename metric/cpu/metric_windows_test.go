@@ -54,7 +54,7 @@ func TestCounterLength(t *testing.T) {
 }
 
 func TestCounterDisabled(t *testing.T) {
-	monitor, err := New(systemtests.DockerTestResolver(), WithWindowsPerformanceCounter())
+	monitor, err := New(systemtests.DockerTestResolver())
 	require.NoError(t, err)
 	require.Nil(t, monitor.query)
 }
