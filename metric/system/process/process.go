@@ -213,7 +213,7 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 			}
 			return procMap, proclist, err
 		}
-		nonFatalErr = fmt.Errorf("non fatal error fetching PID some info for %d, metrics are valid, but partial: %w", pid, err)
+		nonFatalErr = fmt.Errorf("error for pid %d: %w", pid, err)
 		procStats.logger.Debugf(err.Error())
 	}
 	if !saved {
@@ -259,7 +259,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 		if !errors.Is(err, NonFatalErr{}) {
 			return status, true, fmt.Errorf("FillPidMetrics failed for PID %d: %w", pid, err)
 		}
-		wrappedErr = errors.Join(wrappedErr, fmt.Errorf("non-fatal error fetching PID metrics for %d, metrics are valid, but partial: %w", pid, err))
+		wrappedErr = errors.Join(wrappedErr, err)
 		procStats.logger.Debugf(wrappedErr.Error())
 	}
 
