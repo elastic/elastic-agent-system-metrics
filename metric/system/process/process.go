@@ -56,11 +56,15 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 	}
 
 	// actually fetch the PIDs from the OS-specific code
-	_, plist, err := init.FetchPids()
+	pidMap, plist, err := init.FetchPids()
 	if err != nil && !isNonFatal(err) {
 		return nil, fmt.Errorf("error gathering PIDs: %w", err)
 	}
-
+	failedPIDs := extractFailedPIDs(pidMap)
+	if err != nil && len(failedPIDs) > 0 {
+		init.logger.Debugf("error fetching process metrics: %v", err)
+		return plist, NonFatalErr{Err: fmt.Errorf(errFetchingPIDs, len(failedPIDs))}
+	}
 	return plist, toNonFatal(err)
 }
 
