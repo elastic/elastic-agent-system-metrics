@@ -202,7 +202,7 @@ func FillMetricsRequiringMoreAccess(pid int, state ProcState) (ProcState, error)
 
 func getProcArgs(pid int) ([]string, error) {
 	if ok := shouldIgnore(pid); ok {
-		return []string{}, nil
+		return nil, nil
 	}
 	handle, err := syscall.OpenProcess(
 		windows.PROCESS_QUERY_LIMITED_INFORMATION|
@@ -480,6 +480,7 @@ func shouldIgnore(pid int) bool {
 		logp.L().Warnw("Failed to read registry path SYSTEM\\CurrentControlSet\\Control\\Lsa", "error", err)
 		return false
 	}
+	defer key.Close()
 	lsassPid, _, err := key.GetIntegerValue("LasPid")
 	if err != nil {
 		logp.L().Warnw("Failed to read pid for lsass.exe", "error", err)
