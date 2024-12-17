@@ -27,7 +27,9 @@ import (
 	"unsafe"
 
 	xsyswindows "golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 
+	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	gowindows "github.com/elastic/go-windows"
@@ -467,7 +469,7 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	return state, nil
 }
 
-func shouldIgnore(pid int) (bool, err) {
+func shouldIgnore(pid int) bool {
 	// shouldIgnore checks if we should ignore the pid, to avoid elevated permissions
 
 	// LSASS.exe is a process which has no useful cmdline arguments, we should ignore acessing such process to avoid triggering Windows ASR rules
