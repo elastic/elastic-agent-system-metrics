@@ -39,7 +39,7 @@ func isNonFatal(err error) bool {
 }
 
 func processesToIgnore() (m map[uint64]struct{}) {
-	// shouldIgnore checks if we should ignore the pid, to avoid elevated permissions
+	// processesToIgnore checks if we should ignore the pid, to avoid elevated permissions
 
 	// LSASS.exe is a process which has no useful cmdline arguments, we should ignore acessing such process to avoid triggering Windows ASR rules
 	// we can query pid for LASASS.exe from registry
