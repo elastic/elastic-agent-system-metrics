@@ -55,5 +55,5 @@ func processesToIgnore() (m map[uint64]struct{}) {
 		return m
 	}
 	m[lsassPid] = struct{}{}
-	return
+	return m
 }

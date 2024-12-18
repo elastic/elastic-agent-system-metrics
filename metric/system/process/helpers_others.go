@@ -35,5 +35,5 @@ func isNonFatal(err error) bool {
 }
 
 func processesToIgnore() (m map[uint64]struct{}) {
-	return
+	return m
 }
