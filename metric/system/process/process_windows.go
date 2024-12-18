@@ -27,9 +27,7 @@ import (
 	"unsafe"
 
 	xsyswindows "golang.org/x/sys/windows"
-	"golang.org/x/sys/windows/registry"
 
-	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	gowindows "github.com/elastic/go-windows"
@@ -201,9 +199,6 @@ func FillMetricsRequiringMoreAccess(pid int, state ProcState) (ProcState, error)
 }
 
 func getProcArgs(pid int) ([]string, error) {
-	if ok := shouldIgnore(pid); ok {
-		return nil, nil
-	}
 	handle, err := syscall.OpenProcess(
 		windows.PROCESS_QUERY_LIMITED_INFORMATION|
 			windows.PROCESS_VM_READ,
@@ -467,27 +462,4 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	state.CPU.Total.Ticks = opt.UintWith(uint64(idle / 1e6))
 	state.CPU.Total.Value = opt.FloatWith(idle)
 	return state, nil
-}
-
-func shouldIgnore(pid int) bool {
-	// shouldIgnore checks if we should ignore the pid, to avoid elevated permissions
-
-	// LSASS.exe is a process which has no useful cmdline arguments, we should ignore acessing such process to avoid triggering Windows ASR rules
-	// we can query pid for LASASS.exe from registry
-
-	key, err := registry.OpenKey(registry.LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Lsa", registry.READ)
-	if err != nil {
-		logp.L().Warnw("Failed to read registry path SYSTEM\\CurrentControlSet\\Control\\Lsa", "error", err)
-		return false
-	}
-	defer key.Close()
-	lsassPid, _, err := key.GetIntegerValue("LasPid")
-	if err != nil {
-		logp.L().Warnw("Failed to read pid for lsass.exe", "error", err)
-		return false
-	}
-	if lsassPid == pid {
-		return true
-	}
-	return false
 }

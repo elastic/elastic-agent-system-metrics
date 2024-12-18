@@ -291,15 +291,17 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 
 	} // end cgroups processor
 
-	status, err = FillMetricsRequiringMoreAccess(pid, status)
-	if err != nil {
-		procStats.logger.Debugf("error calling FillMetricsRequiringMoreAccess for pid %d: %w", pid, err)
-	}
+	if _, ok := procStats.excludedPIDs[uint64(pid)]; !ok {
+		status, err = FillMetricsRequiringMoreAccess(pid, status)
+		if err != nil {
+			procStats.logger.Debugf("error calling FillMetricsRequiringMoreAccess for pid %d: %w", pid, err)
+		}
 
-	// Generate `status.Cmdline` here for compatibility because on Windows
-	// `status.Args` is set by `FillMetricsRequiringMoreAccess`.
-	if len(status.Args) > 0 && status.Cmdline == "" {
-		status.Cmdline = strings.Join(status.Args, " ")
+		// Generate `status.Cmdline` here for compatibility because on Windows
+		// `status.Args` is set by `FillMetricsRequiringMoreAccess`.
+		if len(status.Args) > 0 && status.Cmdline == "" {
+			status.Cmdline = strings.Join(status.Args, " ")
+		}
 	}
 
 	// network data

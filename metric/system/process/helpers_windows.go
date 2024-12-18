@@ -23,7 +23,9 @@ import (
 	"errors"
 	"syscall"
 
+	"github.com/elastic/elastic-agent-libs/logp"
 	"golang.org/x/sys/windows"
+	"golang.org/x/sys/windows/registry"
 )
 
 func isNonFatal(err error) bool {
@@ -34,4 +36,24 @@ func isNonFatal(err error) bool {
 		errors.Is(err, syscall.EPERM) ||
 		errors.Is(err, syscall.EINVAL) ||
 		errors.Is(err, windows.ERROR_INVALID_PARAMETER) || errors.Is(err, NonFatalErr{})
+}
+
+func processesToIgnore() (m map[uint64]struct{}) {
+	// shouldIgnore checks if we should ignore the pid, to avoid elevated permissions
+
+	// LSASS.exe is a process which has no useful cmdline arguments, we should ignore acessing such process to avoid triggering Windows ASR rules
+	// we can query pid for LASASS.exe from registry
+	key, err := registry.OpenKey(registry.LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Lsa", registry.READ)
+	if err != nil {
+		logp.L().Warnw("Failed to read registry path SYSTEM\\CurrentControlSet\\Control\\Lsa", "error", err)
+		return m
+	}
+	defer key.Close()
+	lsassPid, _, err := key.GetIntegerValue("LasPid")
+	if err != nil {
+		logp.L().Warnw("Failed to read pid for lsass.exe", "error", err)
+		return m
+	}
+	m[lsassPid] = struct{}{}
+	return
 }

@@ -33,3 +33,7 @@ func isNonFatal(err error) bool {
 		errors.Is(err, syscall.EINVAL) ||
 		errors.Is(err, NonFatalErr{}))
 }
+
+func processesToIgnore() (m map[uint64]struct{}) {
+	return
+}
