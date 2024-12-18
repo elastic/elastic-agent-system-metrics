@@ -34,6 +34,6 @@ func isNonFatal(err error) bool {
 		errors.Is(err, NonFatalErr{}))
 }
 
-func processesToIgnore() (m map[uint64]struct{}) {
-	return m
+func processesToIgnore() map[uint64]struct{} {
+	return map[uint64]struct{}{}
 }

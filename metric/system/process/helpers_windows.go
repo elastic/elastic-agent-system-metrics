@@ -39,7 +39,8 @@ func isNonFatal(err error) bool {
 		errors.Is(err, windows.ERROR_INVALID_PARAMETER) || errors.Is(err, NonFatalErr{})
 }
 
-func processesToIgnore() (m map[uint64]struct{}) {
+func processesToIgnore() map[uint64]struct{} {
+	m := make(map[uint64]struct{})
 	// processesToIgnore checks if we should ignore the pid, to avoid elevated permissions
 
 	// LSASS.exe is a process which has no useful cmdline arguments, we should ignore acessing such process to avoid triggering Windows ASR rules
