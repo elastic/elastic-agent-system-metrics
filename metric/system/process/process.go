@@ -291,7 +291,7 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 
 	} // end cgroups processor
 
-	if _, ok := procStats.excludedPIDs[uint64(pid)]; !ok {
+	if _, isExcluded := procStats.excludedPIDs[uint64(pid)]; !isExcluded {
 		status, err = FillMetricsRequiringMoreAccess(pid, status)
 		if err != nil {
 			procStats.logger.Debugf("error calling FillMetricsRequiringMoreAccess for pid %d: %w", pid, err)
