@@ -23,9 +23,10 @@ import (
 	"errors"
 	"syscall"
 
-	"github.com/elastic/elastic-agent-libs/logp"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/registry"
+
+	"github.com/elastic/elastic-agent-libs/logp"
 )
 
 func isNonFatal(err error) bool {
