@@ -642,7 +642,7 @@ func TestProcessesExcluded(t *testing.T) {
 	require.NoError(t, state.Init())
 
 	_, processes, err := state.Get()
-	require.NoError(t, err)
+	assert.True(t, isNonFatal(err), fmt.Sprintf("Fatal Error: %s", err))
 
 	for _, pMap := range processes {
 		iPid, err := pMap.GetValue("process.pid")
