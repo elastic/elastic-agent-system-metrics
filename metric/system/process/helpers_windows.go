@@ -51,7 +51,7 @@ func processesToIgnore() map[uint64]struct{} {
 		return m
 	}
 	defer key.Close()
-	lsassPid, _, err := key.GetIntegerValue("LasPid")
+	lsassPid, _, err := key.GetIntegerValue("LsaPid")
 	if err != nil {
 		logp.L().Warnw("Failed to read pid for lsass.exe", "error", err)
 		return m
