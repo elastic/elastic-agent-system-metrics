@@ -140,11 +140,11 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		procs = append(procs, proc)
 		rootEvents = append(rootEvents, rootMap)
 	}
-	if len(failedPIDs) > 0 {
+	if wrappedErr != nil && len(failedPIDs) > 0 {
 		procStats.logger.Debugf("error fetching process metrics: %v", wrappedErr)
 		return procs, rootEvents, NonFatalErr{Err: fmt.Errorf(errFetchingPIDs, len(failedPIDs))}
 	}
-	return procs, rootEvents, nil
+	return procs, rootEvents, toNonFatal(wrappedErr)
 }
 
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
