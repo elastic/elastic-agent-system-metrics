@@ -224,6 +224,10 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
 		return procMap, proclist, nonFatalErr
 	}
+	// there was some non-fatal error and given state is partial
+	if nonFatalErr != nil {
+		status.Partial = true
+	}
 	procMap[pid] = status
 	proclist = append(proclist, status)
 
@@ -422,12 +426,15 @@ func (procStats *Stats) isWhitelistedEnvVar(varName string) bool {
 }
 
 func extractFailedPIDs(procMap ProcsMap) []int {
+	// calculate the total amount of partial/failed PIDs
 	list := make([]int, 0)
 	for pid, state := range procMap {
 		if state.Failed {
 			list = append(list, pid)
 			// delete the failed state so we don't return the state to caller
 			delete(procMap, pid)
+		} else if state.Partial {
+			list = append(list, pid)
 		}
 	}
 	return list
