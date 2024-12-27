@@ -47,7 +47,7 @@ func processesToIgnore() map[uint64]struct{} {
 	// we can query pid for LASASS.exe from registry
 	key, err := registry.OpenKey(registry.LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Lsa", registry.READ)
 	if err != nil {
-		logp.L().Warnw("Failed to read registry path SYSTEM\\CurrentControlSet\\Control\\Lsa", "error", err)
+		logp.L().Warnw("Failed to open registry path SYSTEM\\CurrentControlSet\\Control\\Lsa", "error", err)
 		return m
 	}
 	defer key.Close()
