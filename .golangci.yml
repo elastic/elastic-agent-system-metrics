@@ -95,6 +95,7 @@ linters-settings:
     # Select the Go version to target. The default is '1.13'.
     go: "1.22.11"
 
+
   nakedret:
     # make an issue if func has more lines of code than this setting and it has naked returns; default is 30
     max-func-lines: 0
