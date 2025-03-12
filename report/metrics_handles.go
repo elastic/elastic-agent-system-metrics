@@ -38,7 +38,7 @@ var (
 func SetupWindowsHandlesMetrics(logger *logp.Logger, reg *monitoring.Registry) {
 	beatProcessSysInfo, err := sysinfo.Self()
 	if err != nil {
-		logger.Error("Error while getting own process info: %v", err)
+		logger.Errorf("Error while getting own process info: %s", err)
 		logger.Error(fileHandlesNotReported)
 		return
 	}
@@ -46,7 +46,7 @@ func SetupWindowsHandlesMetrics(logger *logp.Logger, reg *monitoring.Registry) {
 	var ok bool
 	handleCounter, ok = beatProcessSysInfo.(types.OpenHandleCounter)
 	if !ok {
-		logger.Error("Process does not implement types.OpenHandleCounter: %v", beatProcessSysInfo)
+		logger.Errorf("Process does not implement types.OpenHandleCounter: %s", beatProcessSysInfo)
 		logger.Error(fileHandlesNotReported)
 		return
 	}
@@ -61,7 +61,7 @@ func openHandlesReporter(logger *logp.Logger) func(_ monitoring.Mode, V monitori
 
 		n, err := handleCounter.OpenHandleCount()
 		if err != nil {
-			logger.Error("Error while retrieving the number of open file handles: %v", err)
+			logger.Errorf("Error while retrieving the number of open file handles: %s", err)
 			return
 		}
 		monitoring.ReportInt(V, "open", int64(n))

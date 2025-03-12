@@ -72,7 +72,7 @@ func ioCounters(names ...string) (map[string]disk.IOCountersStat, error) {
 		var counter diskPerformance
 		err = ioCounter(drive.UNCPath, &counter)
 		if err != nil {
-			logp.Err("Could not return any performance counter values for %s .Error: %v", drive.UNCPath, err)
+			logp.Err("Could not return any performance counter values for %s .Error: %s", drive.UNCPath, err)
 			continue
 		}
 		ret[drive.Name] = disk.IOCountersStat{

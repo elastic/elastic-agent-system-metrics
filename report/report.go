@@ -51,7 +51,7 @@ func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(mon
 
 		state, err := processStats.GetSelf()
 		if err != nil {
-			logger.Errorf("Error while getting memory usage: %v", err)
+			logger.Errorf("Error while getting memory usage: %s", err)
 			return
 		}
 
@@ -67,7 +67,7 @@ func InstanceCPUReporter(logger *logp.Logger, processStats *process.Stats) func(
 
 		state, err := processStats.GetSelf()
 		if err != nil {
-			logger.Errorf("Error retrieving CPU percentages: %v", err)
+			logger.Errorf("Error retrieving CPU percentages: %s", err)
 			return
 		}
 
@@ -99,7 +99,7 @@ func ReportSystemLoadAverage(_ monitoring.Mode, V monitoring.Visitor) {
 
 	load, err := cpu.Load()
 	if err != nil {
-		logp.Err("Error retrieving load average: %v", err)
+		logp.Err("Error retrieving load average: %s", err)
 		return
 	}
 	avgs := load.Averages()
@@ -145,16 +145,16 @@ func InstanceCroupsReporter(logger *logp.Logger, override string) func(monitorin
 		})
 		if err != nil {
 			if errors.Is(err, cgroup.ErrCgroupsMissing) {
-				logger.Warnf("cgroup data collection disabled in internal monitoring: %v", err)
+				logger.Warnf("cgroup data collection disabled in internal monitoring: %s", err)
 			} else {
-				logger.Errorf("cgroup data collection disabled in internal monitoring: %v", err)
+				logger.Errorf("cgroup data collection disabled in internal monitoring: %s", err)
 			}
 			return
 		}
 
 		cgv, err := cgroups.CgroupsVersion(pid)
 		if err != nil {
-			logger.Errorf("error determining cgroups version for internal monitoring: %v", err)
+			logger.Errorf("error determining cgroups version for internal monitoring: %s", err)
 			return
 		}
 
@@ -170,7 +170,7 @@ func InstanceCroupsReporter(logger *logp.Logger, override string) func(monitorin
 func ReportMetricsCGV1(logger *logp.Logger, pid int, cgroups *cgroup.Reader, V monitoring.Visitor) {
 	selfStats, err := cgroups.GetV1StatsForProcess(pid)
 	if err != nil {
-		logger.Errorf("error getting cgroup stats for V1: %v", err)
+		logger.Errorf("error getting cgroup stats for V1: %s", err)
 	}
 	// GetStatsForProcess returns a nil selfStats and no error when there's no stats
 	if selfStats == nil {
@@ -231,7 +231,7 @@ func ReportMetricsCGV1(logger *logp.Logger, pid int, cgroups *cgroup.Reader, V m
 func ReportMetricsCGV2(logger *logp.Logger, pid int, cgroups *cgroup.Reader, V monitoring.Visitor) {
 	selfStats, err := cgroups.GetV2StatsForProcess(pid)
 	if err != nil {
-		logger.Errorf("error getting cgroup stats for V2: %v", err)
+		logger.Errorf("error getting cgroup stats for V2: %s", err)
 		return
 	}
 

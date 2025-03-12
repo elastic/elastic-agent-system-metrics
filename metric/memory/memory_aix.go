@@ -57,7 +57,7 @@ func get(_ resolve.Resolver) (Memory, error) {
 	meminfo := C.perfstat_memory_total_t{}
 	_, err := C.perfstat_memory_total(nil, &meminfo, C.sizeof_perfstat_memory_total_t, 1)
 	if err != nil {
-		return memData, fmt.Errorf("perfstat_memory_total: %s", err)
+		return memData, fmt.Errorf("perfstat_memory_total: %w", err)
 	}
 
 	totalMem := uint64(meminfo.real_total) * system.pagesize
