@@ -115,7 +115,7 @@ func TestGetState(t *testing.T) {
 
 	assert.Eventuallyf(t, test,
 		time.Second*5, 50*time.Millisecond,
-		"got process state %q. Last error: %v", got, err)
+		"got process state %q. Last error: %s", got, err)
 }
 
 func TestGetOneRoot(t *testing.T) {

@@ -123,7 +123,7 @@ func TestSupportedSubsystems(t *testing.T) {
 func TestSupportedSubsystemsErrCgroupsMissing(t *testing.T) {
 	_, err := SupportedSubsystems(resolve.NewTestResolver("testdata/doesnotexist"))
 	if !errors.Is(err, ErrCgroupsMissing) {
-		t.Fatalf("expected ErrCgroupsMissing, but got %v", err)
+		t.Fatalf("expected ErrCgroupsMissing, but got %s", err)
 	}
 }
 
