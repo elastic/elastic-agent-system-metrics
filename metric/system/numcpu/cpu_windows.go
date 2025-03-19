@@ -29,7 +29,7 @@ func getCPU() (int, bool, error) {
 	// GetActiveProcessorCount returns processors within a given group
 	//		specifying 0xffff returns total processors for all the groups i.e. total processors
 	//		installed on a system
-	numCPU := windows.GetActiveProcessorCount(0xffff)
+	numCPU := windows.GetActiveProcessorCount(windows.ALL_PROCESSOR_GROUPS)
 	if numCPU == 0 {
 		return -1, false, fmt.Errorf("received an error while fetching cpu count: %w", windows.GetLastError())
 	}
