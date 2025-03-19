@@ -19,6 +19,7 @@ package numcpu
 
 import (
 	"encoding/binary"
+	"errors"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -30,45 +31,51 @@ var (
 	getLogicalProcessorInformationEx = modkernel32.NewProc("GetLogicalProcessorInformationEx")
 )
 
-type SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX struct {
+type systemLogicalProcessorInformationEx struct {
 	Relationship uint32
 	Size         uint32
 }
 
-type GROUP_RELATIONSHIP struct {
+type groupRelationship struct {
 	MaximumGroupCount uint16
 	ActiveGroupCount  uint16
 	Reserved          [20]uint8
-	// variable size array of PROCESSOR_GROUP_INFO
-	ProcesorGrupInfo []PROCESSOR_GROUP_INFO
+	// variable size array of processorGroupInfo
+	ProcesorGrupInfo []processorGroupInfo
 }
 
-type PROCESSOR_GROUP_INFO struct {
+type processorGroupInfo struct {
 	MaximumProcessorCount byte
 	ActiveProcessorCount  byte
 	Reserved              [38]byte
 	ActiveProcessorMask   uint64
 }
 
-func convertByteTpProcessorInformationStruct(data []byte) (inf SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX) {
-	inf.Relationship = binary.LittleEndian.Uint32(data)
-	inf.Size = binary.LittleEndian.Uint32(data[4:])
-	return
+func convertByteTpProcessorInformationStruct(data []byte) systemLogicalProcessorInformationEx {
+	return systemLogicalProcessorInformationEx{
+		Relationship: binary.LittleEndian.Uint32(data),
+		Size:         binary.LittleEndian.Uint32(data[4:]),
+	}
 }
 
-func convertByteToGroupStruct(data []byte) (group GROUP_RELATIONSHIP) {
+func convertByteToGroupStruct(data []byte) groupRelationship {
+	group := groupRelationship{}
 	group.MaximumGroupCount = binary.LittleEndian.Uint16(data)
 	group.ActiveGroupCount = binary.LittleEndian.Uint16(data[2:4])
 	if group.ActiveGroupCount > 0 {
-		groups := make([]PROCESSOR_GROUP_INFO, group.ActiveGroupCount)
+		groups := make([]processorGroupInfo, group.ActiveGroupCount)
+		index := 24 // need to account for 20 reserved bytes
 		for i := uint16(0); i < group.ActiveGroupCount; i++ {
-			groups[i].MaximumProcessorCount = data[24] // need to account for 20 reserved bytes
-			groups[i].ActiveProcessorCount = data[25]
-			groups[i].ActiveProcessorMask = binary.LittleEndian.Uint64(data[63:]) // need to account for 20 reserved bytes + 38 reserved bytes
+			groups[i].MaximumProcessorCount = data[index]
+			index += 1
+			groups[i].ActiveProcessorCount = data[index]
+			index += 1 + 38 // need to account 38 reserved bytes
+			groups[i].ActiveProcessorMask = binary.LittleEndian.Uint64(data[index:])
+			index += 8
 		}
 		group.ProcesorGrupInfo = groups
 	}
-	return
+	return group
 }
 
 // getCPU implements NumCPU on windows
@@ -76,15 +83,15 @@ func convertByteToGroupStruct(data []byte) (group GROUP_RELATIONSHIP) {
 func getCPU() (int, bool, error) {
 	var bufLen uint32 = 0
 	_, _, err := getLogicalProcessorInformationEx.Call(uintptr(4), uintptr(0), uintptr(unsafe.Pointer(&bufLen)))
-	if err != nil && err != windows.ERROR_INSUFFICIENT_BUFFER {
+	if err != nil && !errors.Is(err, windows.ERROR_INSUFFICIENT_BUFFER) {
 		return -1, false, err
 	}
 	if bufLen == 0 {
-		return -1, false, windows.Errno(1)
+		return -1, false, windows.ERROR_INVALID_FUNCTION
 	}
 	buf := make([]byte, bufLen)
 	_, _, err = getLogicalProcessorInformationEx.Call(uintptr(4), uintptr(unsafe.Pointer(&buf[0])), uintptr(unsafe.Pointer(&bufLen)))
-	if err != nil && err != windows.ERROR_SUCCESS {
+	if err != nil && !errors.Is(err, windows.ERROR_SUCCESS) {
 		return -1, false, err
 	}
 	index := 0
