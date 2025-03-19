@@ -26,9 +26,6 @@ import (
 // getCPU implements NumCPU on windows
 // For now, this is a bit of a hack that just asks for per-CPU performance data, and reports the CPU count
 func getCPU() (int, bool, error) {
-	// GetActiveProcessorCount returns processors within a given group
-	//		specifying 0xffff returns total processors for all the groups i.e. total processors
-	//		installed on a system
 	numCPU := windows.GetActiveProcessorCount(windows.ALL_PROCESSOR_GROUPS)
 	if numCPU == 0 {
 		return -1, false, fmt.Errorf("received an error while fetching cpu count: %w", windows.GetLastError())
