@@ -140,11 +140,11 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		procs = append(procs, proc)
 		rootEvents = append(rootEvents, rootMap)
 	}
-	if len(failedPIDs) > 0 {
+	if wrappedErr != nil && len(failedPIDs) > 0 {
 		procStats.logger.Debugf("error fetching process metrics: %v", wrappedErr)
 		return procs, rootEvents, NonFatalErr{Err: fmt.Errorf(errFetchingPIDs, len(failedPIDs))}
 	}
-	return procs, rootEvents, nil
+	return procs, rootEvents, toNonFatal(wrappedErr)
 }
 
 // GetOne fetches process data for a given PID if its name matches the regexes provided from the host.
@@ -224,6 +224,10 @@ func (procStats *Stats) pidIter(pid int, procMap ProcsMap, proclist []ProcState)
 		procStats.logger.Debugf("Process name does not match the provided regex; PID=%d; name=%s", pid, status.Name)
 		return procMap, proclist, nonFatalErr
 	}
+	// there was some non-fatal error and given state is partial
+	if nonFatalErr != nil {
+		status.Partial = true
+	}
 	procMap[pid] = status
 	proclist = append(proclist, status)
 
@@ -291,15 +295,17 @@ func (procStats *Stats) pidFill(pid int, filter bool) (ProcState, bool, error) {
 
 	} // end cgroups processor
 
-	status, err = FillMetricsRequiringMoreAccess(pid, status)
-	if err != nil {
-		procStats.logger.Debugf("error calling FillMetricsRequiringMoreAccess for pid %d: %w", pid, err)
-	}
+	if _, isExcluded := procStats.excludedPIDs[uint64(pid)]; !isExcluded {
+		status, err = FillMetricsRequiringMoreAccess(pid, status)
+		if err != nil {
+			procStats.logger.Debugf("error calling FillMetricsRequiringMoreAccess for pid %d: %w", pid, err)
+		}
 
-	// Generate `status.Cmdline` here for compatibility because on Windows
-	// `status.Args` is set by `FillMetricsRequiringMoreAccess`.
-	if len(status.Args) > 0 && status.Cmdline == "" {
-		status.Cmdline = strings.Join(status.Args, " ")
+		// Generate `status.Cmdline` here for compatibility because on Windows
+		// `status.Args` is set by `FillMetricsRequiringMoreAccess`.
+		if len(status.Args) > 0 && status.Cmdline == "" {
+			status.Cmdline = strings.Join(status.Args, " ")
+		}
 	}
 
 	// network data
@@ -422,12 +428,15 @@ func (procStats *Stats) isWhitelistedEnvVar(varName string) bool {
 }
 
 func extractFailedPIDs(procMap ProcsMap) []int {
+	// calculate the total amount of partial/failed PIDs
 	list := make([]int, 0)
 	for pid, state := range procMap {
 		if state.Failed {
 			list = append(list, pid)
 			// delete the failed state so we don't return the state to caller
 			delete(procMap, pid)
+		} else if state.Partial {
+			list = append(list, pid)
 		}
 	}
 	return list
