@@ -162,7 +162,7 @@ func (procStats *Stats) Init() error {
 	procStats.host, err = sysinfo.Host()
 	if err != nil {
 		procStats.host = nil
-		procStats.logger.Warnf("Getting host details: %v", err)
+		procStats.logger.Warnf("Getting host details: %s", err)
 	}
 
 	// footcannon prevention
@@ -201,7 +201,7 @@ func (procStats *Stats) Init() error {
 	if procStats.EnableCgroups {
 		cgReader, err := cgroup.NewReaderOptions(procStats.CgroupOpts)
 		if errors.Is(err, cgroup.ErrCgroupsMissing) {
-			logp.Warn("cgroup data collection will be disabled: %v", err)
+			logp.Warn("cgroup data collection will be disabled: %s", err)
 			procStats.EnableCgroups = false
 		} else if err != nil {
 			return fmt.Errorf("error initializing cgroup reader: %w", err)
