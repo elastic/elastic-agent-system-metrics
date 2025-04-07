@@ -54,7 +54,7 @@ func TestGetInfoForPid_numThreads(t *testing.T) {
 	if !state.NumThreads.Exists() {
 		bs, err := json.Marshal(state)
 		if err != nil {
-			t.Logf("could not marshal ProcState: %v", err)
+			t.Logf("could not marshal ProcState: %s", err)
 		}
 		t.Fatalf("num_thread was not collected. Collected info: %s", bs)
 	}
