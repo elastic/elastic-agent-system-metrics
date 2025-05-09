@@ -16,7 +16,7 @@
 // under the License.
 
 //go:build freebsd || linux || aix
-// +build freebsd linux || aix
+// +build freebsd linux aix
 
 package filesystem
 
