@@ -95,7 +95,7 @@ func (stat *IOStat) CalcIOStatistics(counter disk.IOCountersStat) (IOMetric, err
 	}
 
 	// calculate the delta ms between the CloseSampling and OpenSampling
-	deltams := 1000.0 * (total(stat.curCPU) - total(stat.lastCPU)) / float64(numcpu.NumCPU())
+	deltams := 1000.0 * (float64(uint64(total(stat.curCPU)) - uint64(total(stat.lastCPU)))) / float64(numcpu.NumCPU())
 	if deltams <= 0 {
 		return IOMetric{}, errors.New("the delta cpu time between close sampling and open sampling is less or equal to 0")
 	}
