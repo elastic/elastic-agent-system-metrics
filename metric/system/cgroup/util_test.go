@@ -30,6 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/testhelpers"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -153,6 +154,32 @@ func TestSubsystemMountpoints(t *testing.T) {
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/hugetlb", mountpoints.V1Mounts["hugetlb"])
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/memory", mountpoints.V1Mounts["memory"])
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/perf_event", mountpoints.V1Mounts["perf_event"])
+}
+
+func BenchmarkSubsystemMountpoints(b *testing.B) {
+	subsystems := map[string]struct{}{
+		"blkio":      {},
+		"cpu":        {},
+		"cpuacct":    {},
+		"cpuset":     {},
+		"devices":    {},
+		"freezer":    {},
+		"hugetlb":    {},
+		"memory":     {},
+		"perf_event": {},
+	}
+
+	resolver := resolve.NewTestResolver("testdata/docker")
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := SubsystemMountpoints(resolver, subsystems)
+		if err != nil {
+			b.Fatalf("error in SubsystemMountpoints: %s", err)
+		}
+	}
 }
 
 func TestProcessCgroupPaths(t *testing.T) {
