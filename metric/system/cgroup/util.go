@@ -30,6 +30,8 @@ import (
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/stringutil"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
@@ -120,35 +122,36 @@ func (pl PathList) Flatten() []ControllerPath {
 func parseMountinfoLine(line string) (mountinfo, error) {
 	mount := mountinfo{}
 
-	fields := strings.Fields(line)
-	if len(fields) < 10 {
+	var fields [10 + 6]string // support up to 6 optional fields
+
+	nFields := stringutil.FieldsN(line, fields[:])
+	if nFields < 10 {
 		return mount, fmt.Errorf("invalid mountinfo line, expected at least "+
-			"10 fields but got %d from line='%s'", len(fields), line)
+			"10 fields but got %d from line='%s'", nFields, line)
 	}
 
-	mount.mountpoint = fields[4]
-
 	var separatorIndex int
-	for i, value := range fields {
-		if value == "-" {
+	for i := 6; i < nFields; i++ {
+		if fields[i] == "-" {
 			separatorIndex = i
 			break
 		}
 	}
-	if fields[separatorIndex] != "-" {
+	if separatorIndex == 0 {
 		return mount, fmt.Errorf("invalid mountinfo line, separator ('-') not "+
 			"found in line='%s'", line)
 	}
-
-	if len(fields)-separatorIndex-1 < 3 {
+	if nFields-separatorIndex-1 < 3 {
 		return mount, fmt.Errorf("invalid mountinfo line, expected at least "+
 			"3 fields after separator but got %d from line='%s'",
-			len(fields)-separatorIndex-1, line)
+			nFields-separatorIndex-1, line)
 	}
 
-	fields = fields[separatorIndex+1:]
-	mount.filesystemType = fields[0]
-	mount.superOptions = strings.Split(fields[2], ",")
+	mount.mountpoint = fields[4]
+	mount.filesystemType = fields[separatorIndex+1]
+	if mount.filesystemType == "cgroup" {
+		mount.superOptions = stringutil.SplitInline(fields[separatorIndex+3], ",")
+	}
 	return mount, nil
 }
 
@@ -210,6 +213,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	}
 	defer mountinfo.Close()
 
+	hostFS := rootfs.ResolveHostFS("")
 	mounts := map[string]string{}
 	mountInfo := Mountpoints{}
 	sc := bufio.NewScanner(mountinfo)
@@ -218,7 +222,11 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 		// https://www.kernel.org/doc/Documentation/filesystems/proc.txt
 		// Example:
 		// 25 21 0:20 / /cgroup/cpu rw,relatime - cgroup cgroup rw,cpu
-		line := strings.TrimSpace(sc.Text())
+
+		// Avoid heap allocation by not using scanner.Text().
+		// NOTE: The underlying bytes will change with the next call to scanner.Scan(),
+		// so make sure to not keep any references after the end of the loop iteration.
+		line := strings.TrimSpace(stringutil.ByteSlice2String(sc.Bytes()))
 		if line == "" {
 			continue
 		}
@@ -229,7 +237,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 		}
 
 		// if the mountpoint from the subsystem has a different root than ours, it probably belongs to something else.
-		if !strings.HasPrefix(mount.mountpoint, rootfs.ResolveHostFS("")) {
+		if !strings.HasPrefix(mount.mountpoint, hostFS) {
 			continue
 		}
 
@@ -237,8 +245,8 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 		if mount.filesystemType == "cgroup" {
 			for _, opt := range mount.superOptions {
 				// Sometimes the subsystem name is written like "name=blkio".
-				fields := strings.SplitN(opt, "=", 2)
-				if len(fields) > 1 {
+				var fields [2]string
+				if n := stringutil.SplitN(opt, "=", fields[:]); n > 1 {
 					opt = fields[1]
 				}
 
@@ -246,7 +254,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 				if _, found := subsystems[opt]; found {
 					// Add the subsystem mount if it does not already exist.
 					if _, exists := mounts[opt]; !exists {
-						mounts[opt] = mount.mountpoint
+						mounts[opt] = strings.Clone(mount.mountpoint)
 					}
 				}
 			}
@@ -254,7 +262,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 
 		// V2 option
 		if mount.filesystemType == "cgroup2" {
-			possibleV2Paths = append(possibleV2Paths, mount.mountpoint)
+			possibleV2Paths = append(possibleV2Paths, strings.Clone(mount.mountpoint))
 		}
 
 	}
@@ -290,9 +298,25 @@ func isCgroupNSPrivate() bool {
 	}
 	// if we have a path of just "/" that means we're in our own private namespace
 	// if it's something else, we're probably in a host namespace
-	segments := strings.Split(strings.TrimSpace(string(raw)), ":")
-	return segments[len(segments)-1] == "/"
+	colons := 2
+	for i := range trimBytes(raw) {
+		if raw[i] == ':' {
+			colons++
+			if colons == 2 {
+				// if we have a second colon, check if the next character is a slash
+				return len(raw) == i+2 && raw[i+1] == '/'
+			}
+		}
+	}
+	return false
+}
 
+func trimBytes(b []byte) []byte {
+	// trim the trailing newlines
+	for i := len(b) - 1; i >= 0 && b[i] == '\n'; i-- {
+		b = b[:i]
+	}
+	return b
 }
 
 // tries to find the cgroup path for the currently-running container,
