@@ -19,6 +19,7 @@ package cgroup
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -30,6 +31,8 @@ import (
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/bytesutil"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
@@ -71,9 +74,9 @@ var (
 
 // mountinfo represents a subset of the fields containing /proc/[pid]/mountinfo.
 type mountinfo struct {
-	mountpoint     string
-	filesystemType string
-	superOptions   []string
+	mountpoint     []byte
+	filesystemType []byte
+	superOptions   []byte
 }
 
 // Mountpoints organizes info about V1 and V2 cgroup mountpoints
@@ -117,38 +120,44 @@ func (pl PathList) Flatten() []ControllerPath {
 // parseMountinfoLine parses a line from the /proc/[pid]/mountinfo file on
 // Linux. The format of the line is specified in section 3.5 of
 // https://www.kernel.org/doc/Documentation/filesystems/proc.txt.
-func parseMountinfoLine(line string) (mountinfo, error) {
+func parseMountinfoLine(line []byte) (mountinfo, error) {
 	mount := mountinfo{}
 
-	fields := strings.Fields(line)
-	if len(fields) < 10 {
-		return mount, fmt.Errorf("invalid mountinfo line, expected at least "+
-			"10 fields but got %d from line='%s'", len(fields), line)
+	var fields [10 + 6][]byte // support up to 6 optional fields
+	nFields := 0
+	for i, field := range bytesutil.Fields(line) {
+		fields[i] = field
+		nFields = i + 1
+		if nFields >= len(fields) {
+			break // avoid out of bounds
+		}
 	}
 
-	mount.mountpoint = fields[4]
+	if nFields < 10 {
+		return mount, fmt.Errorf("invalid mountinfo line, expected at least "+
+			"10 fields but got %d from line='%s'", nFields, line)
+	}
 
 	var separatorIndex int
-	for i, value := range fields {
-		if value == "-" {
+	for i := 6; i < nFields; i++ {
+		if len(fields[i]) == 1 && fields[i][0] == '-' {
 			separatorIndex = i
 			break
 		}
 	}
-	if fields[separatorIndex] != "-" {
+	if separatorIndex == 0 {
 		return mount, fmt.Errorf("invalid mountinfo line, separator ('-') not "+
 			"found in line='%s'", line)
 	}
-
-	if len(fields)-separatorIndex-1 < 3 {
+	if nFields-separatorIndex-1 < 3 {
 		return mount, fmt.Errorf("invalid mountinfo line, expected at least "+
 			"3 fields after separator but got %d from line='%s'",
-			len(fields)-separatorIndex-1, line)
+			nFields-separatorIndex-1, line)
 	}
 
-	fields = fields[separatorIndex+1:]
-	mount.filesystemType = fields[0]
-	mount.superOptions = strings.Split(fields[2], ",")
+	mount.mountpoint = fields[4]
+	mount.filesystemType = fields[separatorIndex+1]
+	mount.superOptions = fields[separatorIndex+3]
 	return mount, nil
 }
 
@@ -210,16 +219,22 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	}
 	defer mountinfo.Close()
 
-	mounts := map[string]string{}
+	hostFS := rootfs.ResolveHostFS("")
+	mounts := make(map[string]string, len(subsystems)) // preallocate map with expected size
 	mountInfo := Mountpoints{}
-	sc := bufio.NewScanner(mountinfo)
 	possibleV2Paths := []string{}
+
+	sc := bufio.NewScanner(mountinfo)
 	for sc.Scan() {
 		// https://www.kernel.org/doc/Documentation/filesystems/proc.txt
 		// Example:
 		// 25 21 0:20 / /cgroup/cpu rw,relatime - cgroup cgroup rw,cpu
-		line := strings.TrimSpace(sc.Text())
-		if line == "" {
+		line := bytes.TrimSpace(sc.Bytes())
+		if len(line) == 0 {
+			continue
+		}
+
+		if !bytes.Contains(line, []byte(" cgroup")) {
 			continue
 		}
 
@@ -229,34 +244,33 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 		}
 
 		// if the mountpoint from the subsystem has a different root than ours, it probably belongs to something else.
-		if !strings.HasPrefix(mount.mountpoint, rootfs.ResolveHostFS("")) {
+		if !bytes.HasPrefix(mount.mountpoint, []byte(hostFS)) {
 			continue
 		}
 
 		// cgroupv1 option
-		if mount.filesystemType == "cgroup" {
-			for _, opt := range mount.superOptions {
+		if bytes.Equal(mount.filesystemType, []byte("cgroup")) {
+			for _, opt := range bytesutil.Split(mount.superOptions, ',') {
 				// Sometimes the subsystem name is written like "name=blkio".
-				fields := strings.SplitN(opt, "=", 2)
-				if len(fields) > 1 {
-					opt = fields[1]
+				if _, v, found := bytes.Cut(opt, []byte{'='}); found {
+					opt = v
 				}
 
 				// Test if option is a subsystem name.
-				if _, found := subsystems[opt]; found {
+				if _, found := subsystems[string(opt)]; found {
 					// Add the subsystem mount if it does not already exist.
-					if _, exists := mounts[opt]; !exists {
-						mounts[opt] = mount.mountpoint
+					if _, exists := mounts[string(opt)]; !exists {
+						mounts[string(opt)] = string(mount.mountpoint)
 					}
 				}
 			}
+			continue
 		}
 
 		// V2 option
-		if mount.filesystemType == "cgroup2" {
-			possibleV2Paths = append(possibleV2Paths, mount.mountpoint)
+		if bytes.Equal(mount.filesystemType, []byte("cgroup2")) {
+			possibleV2Paths = append(possibleV2Paths, string(mount.mountpoint))
 		}
-
 	}
 
 	mountInfo.V2Loc = getProperV2Paths(rootfs, possibleV2Paths)
@@ -277,7 +291,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 	return mountInfo, sc.Err()
 }
 
-// isCgroupNSHost returns true if we're running inside a container with a
+// isCgroupNSPrivate returns true if we're running inside a container with a
 // private cgroup namespace. Will return true if we're in a public namespace, or there's an error
 // Note that this function only makes sense *inside* a container. Outside it will probably always return false.
 func isCgroupNSPrivate() bool {
@@ -290,9 +304,17 @@ func isCgroupNSPrivate() bool {
 	}
 	// if we have a path of just "/" that means we're in our own private namespace
 	// if it's something else, we're probably in a host namespace
-	segments := strings.Split(strings.TrimSpace(string(raw)), ":")
-	return segments[len(segments)-1] == "/"
+	logp.L().Infof("isCgroupPathSlash(%s) = %v", string(raw), isCgroupPathSlash(raw))
+	return isCgroupPathSlash(raw)
+}
 
+func isCgroupPathSlash(raw []byte) bool {
+	for i, field := range bytesutil.Split(bytes.TrimSpace(raw), ':') {
+		if i == 2 {
+			return bytes.Equal(field, []byte{'/'})
+		}
+	}
+	return false
 }
 
 // tries to find the cgroup path for the currently-running container,

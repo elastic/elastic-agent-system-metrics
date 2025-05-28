@@ -21,6 +21,7 @@
 package cgroup
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -259,7 +260,7 @@ func TestMountpointsV2(t *testing.T) {
 		[]byte(pidFmt), 0o744)
 	require.NoError(t, err)
 
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup() //nolint:staticcheck // Use logp.NewDevelopmentLogger
 
 	reader, err := NewReader(resolve.NewTestResolver("testdata/docker2"), false)
 	require.NoError(t, err)
@@ -289,14 +290,14 @@ func TestParseMountinfoLine(t *testing.T) {
 	}
 
 	for _, line := range lines {
-		mount, err := parseMountinfoLine(line)
+		mount, err := parseMountinfoLine([]byte(line))
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, "/sys/fs/cgroup/blkio", mount.mountpoint)
-		assert.Equal(t, "cgroup", mount.filesystemType)
-		assert.Len(t, mount.superOptions, 2)
+		assert.Equal(t, "/sys/fs/cgroup/blkio", string(mount.mountpoint))
+		assert.Equal(t, "cgroup", string(mount.filesystemType))
+		assert.Equal(t, bytes.Count(mount.superOptions, []byte{','}), 1)
 	}
 }
 
@@ -361,4 +362,9 @@ func TestFetchV2Paths(t *testing.T) {
 			assert.Equal(t, testCase.expectedPath, got)
 		})
 	}
+}
+
+func TestIsCgroupPathSlash(t *testing.T) {
+	require.False(t, isCgroupPathSlash([]byte("0::/user.slice/user-1000.slice/session-520.scope")))
+	require.True(t, isCgroupPathSlash([]byte("0::/")))
 }
