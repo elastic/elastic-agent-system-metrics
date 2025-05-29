@@ -39,6 +39,15 @@ import (
 )
 
 func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(monitoring.Mode, monitoring.Visitor) {
+	p := psprocess.Process{
+		Pid: int32(os.Getpid()),
+	}
+
+	ctx := context.Background()
+	if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
+		ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("")})
+	}
+
 	return func(m monitoring.Mode, V monitoring.Visitor) {
 		var stats runtime.MemStats
 		runtime.ReadMemStats(&stats)
@@ -53,14 +62,6 @@ func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(mon
 			monitoring.ReportInt(V, "gc_next", int64(stats.NextGC))
 		}
 
-		p := psprocess.Process{
-			Pid: int32(os.Getpid()),
-		}
-
-		ctx := context.Background()
-		if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
-			ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("")})
-		}
 		statm, err := p.MemoryInfoWithContext(ctx)
 		if err != nil {
 			logger.Errorf("Error while getting memory usage: %v", err)
