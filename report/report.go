@@ -21,9 +21,13 @@
 package report
 
 import (
+	"context"
 	"errors"
 	"os"
 	"runtime"
+
+	"github.com/shirou/gopsutil/v4/common"
+	psprocess "github.com/shirou/gopsutil/v4/process"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/monitoring"
@@ -49,14 +53,21 @@ func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(mon
 			monitoring.ReportInt(V, "gc_next", int64(stats.NextGC))
 		}
 
-		state, err := processStats.GetSelf()
+		p := psprocess.Process{
+			Pid: int32(os.Getpid()),
+		}
+
+		ctx := context.Background()
+		if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
+			ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("")})
+		}
+		statm, err := p.MemoryInfoWithContext(ctx)
 		if err != nil {
 			logger.Errorf("Error while getting memory usage: %v", err)
 			return
 		}
 
-		rss := state.Memory.Rss.Bytes.ValueOr(0)
-		monitoring.ReportInt(V, "rss", int64(rss))
+		monitoring.ReportInt(V, "rss", int64(statm.RSS))
 	}
 }
 
