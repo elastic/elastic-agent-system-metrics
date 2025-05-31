@@ -21,6 +21,7 @@
 package cgroup
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -289,14 +290,14 @@ func TestParseMountinfoLine(t *testing.T) {
 	}
 
 	for _, line := range lines {
-		mount, err := parseMountinfoLine(line)
+		mount, err := parseMountinfoLine([]byte(line))
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, "/sys/fs/cgroup/blkio", mount.mountpoint)
-		assert.Equal(t, "cgroup", mount.filesystemType)
-		assert.Len(t, mount.superOptions, 2)
+		assert.Equal(t, "/sys/fs/cgroup/blkio", string(mount.mountpoint))
+		assert.Equal(t, "cgroup", string(mount.filesystemType))
+		assert.Equal(t, bytes.Count(mount.superOptions, []byte{','}), 1)
 	}
 }
 
