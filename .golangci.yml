@@ -12,6 +12,11 @@ issues:
   # Set to 0 to disable.
   # Default: 50
   max-issues-per-linter: 0
+  exclude-rules:
+    # Exclude some linters from running on tests files.
+    - path: _test\.go
+      linters:
+        - errcheck
 
 output:
   sort-results: true
@@ -20,8 +25,7 @@ output:
 linters:
   disable-all: true
   enable:
-    # Disabling temporarily, as this linter adds lots of noise for test code.
-    # - errcheck # checking for unchecked errors in go programs
+    - errcheck # checking for unchecked errors in go programs
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
     - forbidigo # forbids identifiers	matched by reg exps
     - gosimple # linter for Go source code that specializes in simplifying a code
