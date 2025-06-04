@@ -104,6 +104,9 @@ linters-settings:
     # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
     require-specific: true
 
+  staticcheck:
+    checks: ["all"]
+
   gosec:
     excludes:
     - G115 # Integer overflow conversion
