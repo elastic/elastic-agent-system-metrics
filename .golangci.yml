@@ -20,6 +20,7 @@ output:
 linters:
   disable-all: true
   enable:
+    # Disabling temporarily, as this linter adds lots of noise for test code.
     # - errcheck # checking for unchecked errors in go programs
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
     - forbidigo # forbids identifiers	matched by reg exps
@@ -56,7 +57,6 @@ linters-settings:
     # List of functions to exclude from checking, where each entry is a single function to exclude.
     # See https://github.com/kisielk/errcheck#excluding-functions for details.
     exclude-functions:
-      - Test
       - (mapstr.M).Delete # Only returns ErrKeyNotFound, can safely be ignored.
       - (mapstr.M).Put # Can only fail on type conversions, usually safe to ignore.
 
