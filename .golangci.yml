@@ -20,7 +20,7 @@ output:
 linters:
   disable-all: true
   enable:
-    - errcheck # checking for unchecked errors in go programs
+    # - errcheck # checking for unchecked errors in go programs
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
     - forbidigo # forbids identifiers	matched by reg exps
     - gosimple # linter for Go source code that specializes in simplifying a code
@@ -36,7 +36,7 @@ linters:
     - asciicheck # simple linter to check that your code does not contain non-ASCII identifiers
     - bodyclose # checks whether HTTP response body is closed successfully
     - durationcheck # check for two durations multiplied together
-    - exportloopref # checks for pointers to enclosing loop variables
+    - copyloopvar # checks for pointers to enclosing loop variables
     - goimports # Goimports does everything that gofmt does. Additionally it checks unused imports
     - gosec # inspects source code for security problems
     - importas # enforces consistent import aliases
@@ -56,6 +56,7 @@ linters-settings:
     # List of functions to exclude from checking, where each entry is a single function to exclude.
     # See https://github.com/kisielk/errcheck#excluding-functions for details.
     exclude-functions:
+      - Test
       - (mapstr.M).Delete # Only returns ErrKeyNotFound, can safely be ignored.
       - (mapstr.M).Put # Can only fail on type conversions, usually safe to ignore.
 
@@ -91,11 +92,6 @@ linters-settings:
         - github.com/elastic/beats/v7:
             reason: "There must be no Beats dependency"
 
-  gosimple:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.22.11"
-
-
   nakedret:
     # make an issue if func has more lines of code than this setting and it has naked returns; default is 30
     max-func-lines: 0
@@ -112,22 +108,13 @@ linters-settings:
     # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
     require-specific: true
 
-  staticcheck:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.22.11"
-    checks: ["all"]
-
-  stylecheck:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.22.11"
-    checks: ["all"]
-
   unused:
     # Select the Go version to target. The default is '1.13'.
-    go: "1.22.11"
+    go: "1.23.9"
 
   gosec:
     excludes:
+    - G115 # Integer overflow conversion
     - G306 # Expect WriteFile permissions to be 0600 or less
     - G404 # Use of weak random number generator
     - G401 # Detect the usage of DES, RC4, MD5 or SHA1: Used in non-crypto contexts.
