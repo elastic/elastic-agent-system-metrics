@@ -72,8 +72,6 @@ linters-settings:
     # Forbid the following identifiers
     forbid:
       - fmt.Print.* # too much log noise
-    # Exclude godoc examples from forbidigo checks.  Default is true.
-    exclude_godoc_examples: true
 
   goimports:
     local-prefixes: github.com/elastic
@@ -99,18 +97,12 @@ linters-settings:
   nolintlint:
     # Enable to ensure that nolint directives are all used. Default is true.
     allow-unused: true
-    # Disable to ensure that nolint directives don't have a leading space. Default is true.
-    allow-leading-space: false
     # Exclude following linters from requiring an explanation.  Default is [].
     allow-no-explanation: []
     # Enable to require an explanation of nonzero length after each nolint directive. Default is false.
     require-explanation: true
     # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
     require-specific: true
-
-  unused:
-    # Select the Go version to target. The default is '1.13'.
-    go: "1.23.9"
 
   gosec:
     excludes:
