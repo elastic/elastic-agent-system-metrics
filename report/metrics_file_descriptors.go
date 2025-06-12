@@ -73,7 +73,6 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 			if stat.Resource == psprocess.RLIMIT_NOFILE {
 				hardLimit = int(stat.Hard)
 				softLimit = int(stat.Soft)
-
 			}
 		}
 
