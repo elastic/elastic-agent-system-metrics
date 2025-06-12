@@ -37,8 +37,13 @@ func SetupLinuxBSDFDMetrics(logger *logp.Logger, reg *monitoring.Registry, proce
 }
 
 func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ monitoring.Mode, V monitoring.Visitor) {
+	pid, err := process.GetSelfPid(processStats.Hostfs)
+	if err != nil {
+		logger.Error("Error while retrieving pid: %v", err)
+		return nil
+	}
 	p := psprocess.Process{
-		Pid: int32(os.Getpid()),
+		Pid: int32(pid),
 	}
 
 	ctx := context.Background()
