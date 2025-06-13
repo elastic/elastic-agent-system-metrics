@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -89,7 +90,7 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSystemHostFromContainer(t *testing.T) {
-	logp.Info("%v", t.Name())
+	t.Logf("start: %v", time.Now())
 	_ = logp.DevelopmentSetup()
 
 	testStats := Stats{CPUTicks: true,
@@ -121,7 +122,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 				proc["process"].(map[string]interface{})["command_line"])
 		}
 	}
-	logp.Info("DONE")
+	t.Logf("end: %v", time.Now())
 }
 
 // validate test results.
