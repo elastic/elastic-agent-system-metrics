@@ -41,8 +41,8 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 	if err != nil {
 		logger.Error("Error while retrieving pid: %v", err)
 		return return func(_ monitoring.Mode, V monitoring.Visitor) {
-		      	 V.OnRegistryStart()
-		          V.OnRegistryFinished()
+			V.OnRegistryStart()
+			V.OnRegistryFinished()
 		}
 	}
 	p := psprocess.Process{
