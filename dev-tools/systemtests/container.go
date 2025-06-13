@@ -215,7 +215,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	_, err = io.Copy(os.Stdout, reader)
 	require.NoError(tr.Runner, err, "error copying image")
 
-	wdCmd := exec.Command("go", "list", "-m", "-f", "'{{.Dir}}'")
+	wdCmd := exec.Command("go", "list", "-m", "-f", "{{.Dir}}")
 	wdPath, err := wdCmd.CombinedOutput()
 	require.NoError(tr.Runner, err, "error finding root path")
 
