@@ -28,6 +28,7 @@ import (
 	"os/user"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 
 	"github.com/elastic/elastic-agent-libs/logp"
@@ -38,7 +39,7 @@ import (
 
 // Indulging in one non-const global variable for the sake of storing boot time
 // This value obviously won't change while this code is running.
-var bootTime uint64 = 0
+var bootTime atomic.Uint64
 
 // system tick multiplier, see C.sysconf(C._SC_CLK_TCK)
 const ticks = 100
@@ -485,8 +486,8 @@ func getFDStats(hostfs resolve.Resolver, pid int) (ProcFDInfo, error) {
 
 // getLinuxBootTime fetches the static unix time for when the system was booted.
 func getLinuxBootTime(hostfs resolve.Resolver) (uint64, error) {
-	if bootTime != 0 {
-		return bootTime, nil
+	if bt := bootTime.Load(); bt != 0 {
+		return bt, nil
 	}
 
 	path := hostfs.Join("proc", "stat")
@@ -504,7 +505,7 @@ func getLinuxBootTime(hostfs resolve.Resolver) (uint64, error) {
 			if err != nil {
 				return 0, fmt.Errorf("error reading boot time: %w", err)
 			}
-			bootTime = btime
+			bootTime.Store(btime)
 			return btime, nil
 		}
 	}
