@@ -85,6 +85,7 @@ func TestFetchProcessFromOtherUser(t *testing.T) {
 	rootpath := systemtests.DockerTestResolver()
 	dir, err := os.Open(rootpath.ResolveHostFS("/proc"))
 	require.NoError(t, err, "error opening /proc")
+	defer dir.Close()
 
 	const readAllDirnames = -1 // see os.File.Readdirnames doc
 

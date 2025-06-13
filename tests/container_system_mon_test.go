@@ -46,6 +46,7 @@ func TestKernelProc(t *testing.T) {
 	// kernel processes will have a parent pid of 2
 	dir, err := os.Open("/proc")
 	require.NoError(t, err, "error opening /proc")
+	defer dir.Close()
 
 	const readAllDirnames = -1 // see os.File.Readdirnames doc
 
