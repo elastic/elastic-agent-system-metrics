@@ -257,6 +257,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	}, &container.HostConfig{
 		CgroupnsMode: tr.CgroupNSMode,
 		Privileged:   tr.Privileged,
+		Binds:        []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
 		Mounts: []mount.Mount{
 			{
 				Type:   mount.TypeBind,
@@ -264,7 +265,6 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 				Target: "/go/pkg/mod",
 			},
 		},
-		Binds: []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
 	}, nil, nil, "")
 	require.NoError(tr.Runner, err, "error creating container")
 
