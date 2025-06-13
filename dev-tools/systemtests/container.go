@@ -240,6 +240,11 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 		containerEnv = append(containerEnv, fmt.Sprintf("MONITOR_PID=%d", tr.MonitorPID))
 	}
 
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err := gomodcacheCmd.CombinedOutput()
+	require.NoError(tr.Runner, err)
+	require.NotEmpty(tr.Runner, gomodcacheValue)
+
 	resp, err := apiClient.ContainerCreate(ctx, &container.Config{
 		Image:      tr.Container,
 		Cmd:        testRunCmd,
@@ -250,7 +255,11 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	}, &container.HostConfig{
 		CgroupnsMode: tr.CgroupNSMode,
 		Privileged:   tr.Privileged,
-		Binds:        []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
+		Binds: []string{
+			fmt.Sprintf("%s:/go/pkg/mod", gomodcacheValue),
+			fmt.Sprintf("/:%s", mountPath),
+			fmt.Sprintf("%s:/app", cwd),
+		},
 	}, nil, nil, "")
 	require.NoError(tr.Runner, err, "error creating container")
 
