@@ -65,11 +65,6 @@ type DockerTestRunner struct {
 	FatalLogMessages []string
 	// MonitorPID will tell tests to specifically check the correctness of process-level monitoring for this PID
 	MonitorPID int
-	// CreateHostProcess: this will start a process with the following args outside of the container,
-	// and use the integration tests to monitor it.
-	// Useful as "monitor random running processes" as a test heuristic tends to be flaky.
-	// This will overrite MonitorPID, so only set either this or MonitorPID.
-	CreateHostProcess *exec.Cmd
 }
 
 // RunResult returns the logs and return code from the container
@@ -127,7 +122,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 	baseRunner := tr.Runner // some odd recursion happens here if we just refer to tr.Runner
 	for _, tc := range cases {
 		baseRunner.Run(tc.String(), func(t *testing.T) {
-			runner := tr
+			runner := *tr
 			runner.Runner = t
 			runner.CgroupNSMode = tc.nsmode
 			runner.Privileged = tc.priv
@@ -172,7 +167,8 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 	}
 
 	// create monitored process, if we need to
-	tr.createMonitoredProcess(ctx)
+	cmd := tr.createMonitoredProcess(ctx)
+	defer cmd.Cancel()
 
 	resp := tr.createTestContainer(ctx, apiClient)
 
@@ -285,27 +281,28 @@ func (tr *DockerTestRunner) runContainerTest(ctx context.Context, apiClient *cli
 	return res
 }
 
-func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) {
-	log := logp.L()
-	// if user has specified a process to monitor, start it now
-	// skip if the process has already been created
-	if tr.CreateHostProcess != nil && tr.CreateHostProcess.Process == nil {
-		// We don't need to do this in a channel, but it prevents races between this goroutine
-		// and the rest of test framework
-		startPid := make(chan int)
-		log.Infof("Creating test Process...")
-		go func() {
-			err := tr.CreateHostProcess.Start()
-			// if the process fails to start up, the resulting tests will fail anyway, so just log it
-			assert.NoError(tr.Runner, err, "error starting monitor process")
-			startPid <- tr.CreateHostProcess.Process.Pid
-
-		}()
-		select {
-		case pid := <-startPid:
-			tr.MonitorPID = pid
-		case <-ctx.Done():
-		}
-		log.Infof("Monitoring pid %d", tr.MonitorPID)
+func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) *exec.Cmd {
+	if tr.MonitorPID != 0 {
+		return nil
 	}
+	log := logp.L()
+	cmd := exec.CommandContext(ctx, "sleep", "240")
+	// We don't need to do this in a channel, but it prevents races between this goroutine
+	// and the rest of test framework
+	startPid := make(chan int)
+	log.Infof("Creating test Process...")
+	go func() {
+		err := cmd.Start()
+		// if the process fails to start up, the resulting tests will fail anyway, so just log it
+		assert.NoError(tr.Runner, err, "error starting monitor process")
+		startPid <- cmd.Process.Pid
+
+	}()
+	select {
+	case pid := <-startPid:
+		tr.MonitorPID = pid
+	case <-ctx.Done():
+	}
+	log.Infof("Monitoring pid %d", tr.MonitorPID)
+	return cmd
 }
