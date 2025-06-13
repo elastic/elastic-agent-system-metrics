@@ -30,6 +30,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/stretchr/testify/assert"
@@ -255,11 +256,14 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	}, &container.HostConfig{
 		CgroupnsMode: tr.CgroupNSMode,
 		Privileged:   tr.Privileged,
-		Binds: []string{
-			fmt.Sprintf("%s:/go/pkg/mod", gomodcacheValue),
-			fmt.Sprintf("/:%s", mountPath),
-			fmt.Sprintf("%s:/app", cwd),
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: string(gomodcacheValue),
+				Target: "/go/pkg/mod",
+			},
 		},
+		Binds: []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
 	}, nil, nil, "")
 	require.NoError(tr.Runner, err, "error creating container")
 
