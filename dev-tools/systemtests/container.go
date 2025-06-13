@@ -244,6 +244,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
 	gomodcacheValue, err := gomodcacheCmd.CombinedOutput()
 	require.NoError(tr.Runner, err)
+	gomodcacheValue = bytes.TrimSuffix(gomodcacheValue, []byte("\n"))
 	require.NotEmpty(tr.Runner, gomodcacheValue)
 
 	_, err = os.Stat(string(gomodcacheValue))
