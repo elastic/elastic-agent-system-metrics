@@ -37,7 +37,7 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 
 		open, hardLimit, softLimit, err := getFDUsage(processStats)
 		if err != nil {
-			logger.Error("Error while retrieving FD information: %v", err)
+			logger.Errorf("Error while retrieving FD information: %s", err)
 			return
 		}
 

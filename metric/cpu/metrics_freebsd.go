@@ -42,7 +42,7 @@ func parseCPULine(line string) (CPU, error) {
 	tryParseUint := func(name, field string) (v opt.Uint) {
 		u, err := touint(field)
 		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to parse %v: %s", name, field))
+			errs = append(errs, fmt.Errorf("failed to parse %s: %s", name, field))
 		} else {
 			v = opt.UintWith(u)
 		}

@@ -62,7 +62,7 @@ func ListStates(hostfs resolve.Resolver) ([]ProcState, error) {
 	}
 	failedPIDs := extractFailedPIDs(pidMap)
 	if err != nil && len(failedPIDs) > 0 {
-		init.logger.Debugf("error fetching process metrics: %v", err)
+		init.logger.Debugf("error fetching process metrics: %s", err)
 		return plist, NonFatalErr{Err: fmt.Errorf(errFetchingPIDs, len(failedPIDs))}
 	}
 	return plist, toNonFatal(err)
@@ -115,7 +115,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 	if procStats.host != nil {
 		memStats, err := procStats.host.Memory()
 		if err != nil {
-			procStats.logger.Warnf("Getting memory details: %v", err)
+			procStats.logger.Warnf("Getting memory details: %s", err)
 		} else {
 			totalPhyMem = memStats.Total
 		}
@@ -141,7 +141,7 @@ func (procStats *Stats) Get() ([]mapstr.M, []mapstr.M, error) {
 		rootEvents = append(rootEvents, rootMap)
 	}
 	if wrappedErr != nil && len(failedPIDs) > 0 {
-		procStats.logger.Debugf("error fetching process metrics: %v", wrappedErr)
+		procStats.logger.Debugf("error fetching process metrics: %s", wrappedErr)
 		return procs, rootEvents, NonFatalErr{Err: fmt.Errorf(errFetchingPIDs, len(failedPIDs))}
 	}
 	return procs, rootEvents, toNonFatal(wrappedErr)
