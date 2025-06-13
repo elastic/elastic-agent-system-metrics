@@ -229,7 +229,8 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 
 	mountPath := "/hostfs"
 
-	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath)}
+	// set GOCACHE to /tmp to prevent permission issues with non root users
+	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath), "GOCACHE=/tmp"}
 	// used by a few vendored libaries
 	containerEnv = append(containerEnv, "HOST_PROC=%s", mountPath)
 	if tr.Privileged {
