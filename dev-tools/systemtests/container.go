@@ -120,6 +120,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 	tr.Runner.Logf("Running %d tests", len(cases))
 
 	baseRunner := tr.Runner // some odd recursion happens here if we just refer to tr.Runner
+	parallel := len(cases) > 1
 	for _, tc := range cases {
 		baseRunner.Run(tc.String(), func(t *testing.T) {
 			runner := *tr
@@ -127,7 +128,9 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 			runner.CgroupNSMode = tc.nsmode
 			runner.Privileged = tc.priv
 			runner.RunAsUser = tc.user
-			t.Parallel()
+			if parallel {
+				t.Parallel()
+			}
 			runner.RunTestsOnDocker(ctx)
 		})
 	}
