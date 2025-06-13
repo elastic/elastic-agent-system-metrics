@@ -20,7 +20,6 @@ package tests
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
