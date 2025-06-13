@@ -132,6 +132,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 			runner.CgroupNSMode = tc.nsmode
 			runner.Privileged = tc.priv
 			runner.RunAsUser = tc.user
+			t.Parallel()
 			runner.RunTestsOnDocker(ctx)
 		})
 	}
