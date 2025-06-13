@@ -240,6 +240,13 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 		containerEnv = append(containerEnv, fmt.Sprintf("MONITOR_PID=%d", tr.MonitorPID))
 	}
 
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err := gomodcacheCmd.CombinedOutput()
+	require.NoError(tr.Runner, err)
+	require.NotEmpty(tr.Runner, gomodcacheValue)
+
+	tr.Runner.Logf("out: GOMODCACHE=%s", gomodcacheValue)
+
 	resp, err := apiClient.ContainerCreate(ctx, &container.Config{
 		Image:      tr.Container,
 		Cmd:        testRunCmd,

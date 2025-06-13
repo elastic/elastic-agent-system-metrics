@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
@@ -40,11 +41,11 @@ func TestFileSystemList(t *testing.T) {
 	if err != nil {
 		t.Fatal("GetFileSystemList", err)
 	}
-	assert.True(t, (len(fss) > 0))
+	require.True(t, (len(fss) > 0))
 
 	for _, fs := range fss {
 		err := fs.GetUsage()
-		assert.NoError(t, err, "filesystem=%#v: %v", fs, err)
+		require.NoError(t, err, "filesystem=%#v: %v", fs, err)
 
 	}
 }

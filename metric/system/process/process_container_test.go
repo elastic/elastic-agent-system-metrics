@@ -20,10 +20,12 @@ package process
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -38,6 +40,13 @@ import (
 // However, they are designed so that `go test` can run them normally as well
 
 func TestContainerMonitoringFromInsideContainer(t *testing.T) {
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err1 := gomodcacheCmd.CombinedOutput()
+	require.NoError(t, err1)
+	require.NotEmpty(t, gomodcacheValue)
+
+	t.Logf("in: GOMODCACHE=%s", gomodcacheValue)
+
 	_ = logp.DevelopmentSetup()
 
 	testStats := Stats{CPUTicks: true,
@@ -64,6 +73,13 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSelfMonitoringFromInsideContainer(t *testing.T) {
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err1 := gomodcacheCmd.CombinedOutput()
+	require.NoError(t, err1)
+	require.NotEmpty(t, gomodcacheValue)
+
+	t.Logf("in: GOMODCACHE=%s", gomodcacheValue)
+
 	_ = logp.DevelopmentSetup()
 
 	testStats := Stats{CPUTicks: true,
@@ -89,6 +105,14 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSystemHostFromContainer(t *testing.T) {
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err1 := gomodcacheCmd.CombinedOutput()
+	require.NoError(t, err1)
+	require.NotEmpty(t, gomodcacheValue)
+
+	t.Logf("in: GOMODCACHE=%s", gomodcacheValue)
+
+	t.Logf("start: %v", time.Now())
 	_ = logp.DevelopmentSetup()
 
 	testStats := Stats{CPUTicks: true,
@@ -120,6 +144,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 				proc["process"].(map[string]interface{})["command_line"])
 		}
 	}
+	t.Logf("end: %v", time.Now())
 }
 
 // validate test results.
