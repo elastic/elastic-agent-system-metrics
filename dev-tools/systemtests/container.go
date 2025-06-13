@@ -167,8 +167,9 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 	}
 
 	// create monitored process, if we need to
-	cmd := tr.createMonitoredProcess(ctx)
-	defer cmd.Cancel()
+	if cmd := tr.createMonitoredProcess(ctx); cmd != nil {
+		defer cmd.Cancel()
+	}
 
 	resp := tr.createTestContainer(ctx, apiClient)
 
