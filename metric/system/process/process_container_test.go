@@ -89,6 +89,7 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSystemHostFromContainer(t *testing.T) {
+	logp.Info("%v", t.Name())
 	_ = logp.DevelopmentSetup()
 
 	testStats := Stats{CPUTicks: true,
@@ -120,6 +121,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 				proc["process"].(map[string]interface{})["command_line"])
 		}
 	}
+	logp.Info("DONE")
 }
 
 // validate test results.
