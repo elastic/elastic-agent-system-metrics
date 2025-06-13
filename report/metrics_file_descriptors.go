@@ -40,7 +40,10 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 	pid, err := process.GetSelfPid(processStats.Hostfs)
 	if err != nil {
 		logger.Error("Error while retrieving pid: %v", err)
-		return nil
+		return return func(_ monitoring.Mode, V monitoring.Visitor) {
+		      	 V.OnRegistryStart()
+		          V.OnRegistryFinished()
+		}
 	}
 	p := psprocess.Process{
 		Pid: int32(pid),
