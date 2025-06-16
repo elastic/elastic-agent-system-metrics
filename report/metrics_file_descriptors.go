@@ -22,7 +22,6 @@ package report
 
 import (
 	"context"
-	"os"
 
 	"github.com/shirou/gopsutil/v4/common"
 	psprocess "github.com/shirou/gopsutil/v4/process"
