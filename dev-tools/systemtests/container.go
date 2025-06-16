@@ -30,6 +30,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/stretchr/testify/assert"
@@ -157,7 +158,7 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 	}
 
 	if tr.Container == "" {
-		tr.Container = "golang:latest"
+		tr.Container = "golang:alpine"
 	}
 
 	// setup and run
@@ -216,7 +217,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 	_, err = io.Copy(os.Stdout, reader)
 	require.NoError(tr.Runner, err, "error copying image")
 
-	wdCmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	wdCmd := exec.Command("go", "list", "-m", "-f", "{{.Dir}}")
 	wdPath, err := wdCmd.CombinedOutput()
 	require.NoError(tr.Runner, err, "error finding root path")
 
@@ -230,7 +231,8 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 
 	mountPath := "/hostfs"
 
-	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath)}
+	// set GOCACHE to /tmp to prevent permission issues with non root users
+	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath), "GOCACHE=/tmp"}
 	// used by a few vendored libaries
 	containerEnv = append(containerEnv, "HOST_PROC=%s", mountPath)
 	if tr.Privileged {
@@ -240,6 +242,12 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 	if tr.MonitorPID != 0 {
 		containerEnv = append(containerEnv, fmt.Sprintf("MONITOR_PID=%d", tr.MonitorPID))
 	}
+
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err := gomodcacheCmd.CombinedOutput()
+	require.NoError(tr.Runner, err)
+	gomodcacheValue = bytes.TrimSuffix(gomodcacheValue, []byte("\n"))
+	require.NotEmpty(tr.Runner, gomodcacheValue)
 
 	resp, err := apiClient.ContainerCreate(ctx, &container.Config{
 		Image:      tr.Container,
@@ -252,6 +260,13 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 		CgroupnsMode: tr.CgroupNSMode,
 		Privileged:   tr.Privileged,
 		Binds:        []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: string(gomodcacheValue),
+				Target: "/go/pkg/mod",
+			},
+		},
 	}, nil, nil, "")
 	require.NoError(tr.Runner, err, "error creating container")
 
