@@ -42,7 +42,10 @@ func TestKernelProc(t *testing.T) {
 	if runtime.GOOS != "linux" {
 		t.Skip("test is linux-only")
 	}
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	//manually fetch a kernel process
 	// kernel processes will have a parent pid of 2
 	dir, err := os.Open("/proc")
@@ -95,7 +98,10 @@ func TestKernelProc(t *testing.T) {
 }
 
 func TestProcessMetricsElevatedPerms(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 	// runs test cases where we do not expect any kind of permissions errors
@@ -114,7 +120,10 @@ func TestProcessMetricsElevatedPerms(t *testing.T) {
 }
 
 func TestProcessAllSettings(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 	// runs test cases where we do not expect any kind of permissions errors
@@ -135,7 +144,10 @@ func TestProcessAllSettings(t *testing.T) {
 }
 
 func TestContainerProcess(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 	// Make sure that monitoring container procs from within the container still works
@@ -155,7 +167,10 @@ func TestContainerProcess(t *testing.T) {
 }
 
 func TestFilesystem(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 

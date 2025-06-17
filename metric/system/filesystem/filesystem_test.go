@@ -29,7 +29,10 @@ import (
 )
 
 func TestFileSystemList(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	if runtime.GOOS == "darwin" && os.Getenv("TRAVIS") == "true" {
 		t.Skip("FileSystem test fails on Travis/OSX with i/o error")
 	}
@@ -54,7 +57,10 @@ func TestFileSystemListFiltering(t *testing.T) {
 		// Windows doesn't like these unix paths, the OS-specific code in stdlib will return different results.
 		t.Skip("These cases don't need to work on Windows")
 	}
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	fakeDevDir := t.TempDir()
 
 	cases := []struct {

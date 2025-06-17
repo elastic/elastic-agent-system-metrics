@@ -37,8 +37,10 @@ import (
 )
 
 func TestFetchOtherProcessCgroup(t *testing.T) {
-	_ = logp.DevelopmentSetup()
-
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	testConfig := Stats{
 		Procs:        []string{".*"},
 		Hostfs:       systemtests.DockerTestResolver(),
@@ -56,7 +58,7 @@ func TestFetchOtherProcessCgroup(t *testing.T) {
 			IgnoreRootCgroups: true,
 		},
 	}
-	err := testConfig.Init()
+	err = testConfig.Init()
 	assert.NoError(t, err, "Init")
 
 	evts, _, err := testConfig.Get()
@@ -77,7 +79,10 @@ func TestGetSelfPidNoHostfs(t *testing.T) {
 }
 
 func TestFetchProcessFromOtherUser(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	// If we just used Get() or FetchPids() to get a list of processes on the system, this would produce a bootstrapping problem
 	// where if the code wasn't working (and we were skipping over PIDs not owned by us) this test would pass.
 	// re-implement part of the core pid-fetch logic
@@ -181,7 +186,10 @@ func TestParseProcStat(t *testing.T) {
 
 func TestCgroupsBadCgroupsConfig(t *testing.T) {
 	rootfs := systemtests.DockerTestResolver()
-	_ = logp.DevelopmentSetup(logp.ToObserverOutput())
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
 		EnableNetwork: true,
@@ -189,7 +197,7 @@ func TestCgroupsBadCgroupsConfig(t *testing.T) {
 		Procs:         []string{".*"},
 		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: resolve.NewTestResolver("testdata")}, // procs here have no cgroup data, leading to errors
 	}
-	err := testStats.Init()
+	err = testStats.Init()
 	require.NoError(t, err)
 
 	// make sure we still have proc data despite cgroups errors

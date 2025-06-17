@@ -38,7 +38,10 @@ import (
 // However, they are designed so that `go test` can run them normally as well
 
 func TestContainerMonitoringFromInsideContainer(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
@@ -47,7 +50,7 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 		Procs:         []string{".*"},
 		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: systemtests.DockerTestResolver()},
 	}
-	err := testStats.Init()
+	err = testStats.Init()
 	require.NoError(t, err)
 
 	stats, err := testStats.GetSelf()
@@ -64,7 +67,10 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSelfMonitoringFromInsideContainer(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
@@ -72,7 +78,7 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 		Procs:         []string{".*"},
 		CgroupOpts:    cgroup.ReaderOptions{},
 	}
-	err := testStats.Init()
+	err = testStats.Init()
 	require.NoError(t, err)
 
 	stats, err := testStats.GetSelf()
@@ -89,7 +95,10 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSystemHostFromContainer(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
@@ -98,7 +107,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 		Procs:         []string{".*"},
 		CgroupOpts:    cgroup.ReaderOptions{RootfsMountpoint: systemtests.DockerTestResolver()},
 	}
-	err := testStats.Init()
+	err = testStats.Init()
 	require.NoError(t, err)
 
 	// two modes to the test:

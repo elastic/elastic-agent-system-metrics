@@ -30,7 +30,10 @@ import (
 )
 
 func TestMonitorSample(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
+	if err != nil {
+		t.Fatal(err)
+	}
 	cpu, err := New(systemtests.DockerTestResolver())
 	require.NoError(t, err)
 	s, err := cpu.Fetch()

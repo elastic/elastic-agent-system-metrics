@@ -712,7 +712,7 @@ func runThreads(t *testing.T) *exec.Cmd { //nolint: deadcode,structcheck,unused 
 }
 
 func initTestResolver() (Stats, error) {
-	err := logp.DevelopmentSetup()
+	_, err := logp.NewDevelopmentLogger("test")
 	if err != nil {
 		return Stats{}, err
 	}
