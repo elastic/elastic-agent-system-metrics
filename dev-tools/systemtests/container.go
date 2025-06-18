@@ -30,12 +30,14 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+	"github.com/elastic/elastic-agent-libs/logp/logptest"
 )
 
 // DockerTestRunner is a simple test framework for running a given go test inside a container.
@@ -119,6 +121,10 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 
 	tr.Runner.Logf("Running %d tests", len(cases))
 
+	apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+	require.NoError(tr.Runner, err)
+	defer apiClient.Close()
+
 	baseRunner := tr.Runner // some odd recursion happens here if we just refer to tr.Runner
 	parallel := len(cases) > 1
 	for _, tc := range cases {
@@ -131,7 +137,7 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 			if parallel {
 				t.Parallel()
 			}
-			runner.RunTestsOnDocker(ctx)
+			runner.RunTestsOnDocker(ctx, apiClient)
 		})
 	}
 
@@ -142,39 +148,33 @@ func (tr *DockerTestRunner) CreateAndRunPermissionMatrix(ctx context.Context,
 // This framework relies on the tests using DockerTestResolver().
 // If docker returns !0 or if there's a matching string entry from FatalLogMessages in stdout/stderr,
 // this will fail the test
-func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
+func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context, apiClient *client.Client) {
 	// do we want to run on windows? Much of what we're testing, such as host
 	// cgroup monitoring, is invalid.
 	if runtime.GOOS != "linux" {
 		tr.Runner.Skip("Tests only supported on Linux.")
 	}
 
-	log := logp.L()
+	log := logptest.NewTestingLogger(tr.Runner, "")
 	if tr.Basepath == "" {
 		tr.Basepath = "./..."
 	}
 
 	if tr.Container == "" {
-		tr.Container = "golang:latest"
+		tr.Container = "golang:alpine"
 	}
 
-	// setup and run
-
-	apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
-	require.NoError(tr.Runner, err)
-	defer apiClient.Close()
-
-	_, err = apiClient.ContainerList(ctx, container.ListOptions{})
+	_, err := apiClient.Ping(ctx)
 	if err != nil {
 		tr.Runner.Skipf("got error in container list, docker isn't installed or not running: %s", err)
 	}
 
 	// create monitored process, if we need to
-	if cmd := tr.createMonitoredProcess(ctx); cmd != nil {
+	if cmd := tr.createMonitoredProcess(ctx, log); cmd != nil {
 		defer cmd.Cancel()
 	}
 
-	resp := tr.createTestContainer(ctx, apiClient)
+	resp := tr.createTestContainer(ctx, log, apiClient)
 
 	log.Infof("running test...")
 	result := tr.runContainerTest(ctx, apiClient, resp)
@@ -208,7 +208,7 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context) {
 }
 
 // createTestContainer creates a container with the given test path and test name
-func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *client.Client) container.CreateResponse {
+func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *logp.Logger, apiClient *client.Client) container.CreateResponse {
 	reader, err := apiClient.ImagePull(ctx, tr.Container, image.PullOptions{})
 	require.NoError(tr.Runner, err, "error pulling image")
 	defer reader.Close()
@@ -216,12 +216,12 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	_, err = io.Copy(os.Stdout, reader)
 	require.NoError(tr.Runner, err, "error copying image")
 
-	wdCmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	wdCmd := exec.Command("go", "list", "-m", "-f", "{{.Dir}}")
 	wdPath, err := wdCmd.CombinedOutput()
 	require.NoError(tr.Runner, err, "error finding root path")
 
 	cwd := strings.TrimSpace(string(wdPath))
-	logp.L().Infof("using cwd: %s", cwd)
+	logger.Infof("using cwd: %s", cwd)
 
 	testRunCmd := []string{"go", "test", "-v", tr.Basepath}
 	if tr.Testname != "" {
@@ -230,7 +230,8 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 
 	mountPath := "/hostfs"
 
-	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath)}
+	// set GOCACHE to /tmp to prevent permission issues with non root users
+	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath), "GOCACHE=/tmp"}
 	// used by a few vendored libaries
 	containerEnv = append(containerEnv, "HOST_PROC=%s", mountPath)
 	if tr.Privileged {
@@ -240,6 +241,12 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 	if tr.MonitorPID != 0 {
 		containerEnv = append(containerEnv, fmt.Sprintf("MONITOR_PID=%d", tr.MonitorPID))
 	}
+
+	gomodcacheCmd := exec.Command("go", "env", "GOMODCACHE")
+	gomodcacheValue, err := gomodcacheCmd.CombinedOutput()
+	require.NoError(tr.Runner, err)
+	gomodcacheValue = bytes.TrimSuffix(gomodcacheValue, []byte("\n"))
+	require.NotEmpty(tr.Runner, gomodcacheValue)
 
 	resp, err := apiClient.ContainerCreate(ctx, &container.Config{
 		Image:      tr.Container,
@@ -252,6 +259,13 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, apiClient *
 		CgroupnsMode: tr.CgroupNSMode,
 		Privileged:   tr.Privileged,
 		Binds:        []string{fmt.Sprintf("/:%s", mountPath), fmt.Sprintf("%s:/app", cwd)},
+		Mounts: []mount.Mount{
+			{
+				Type:   mount.TypeBind,
+				Source: string(gomodcacheValue),
+				Target: "/go/pkg/mod",
+			},
+		},
 	}, nil, nil, "")
 	require.NoError(tr.Runner, err, "error creating container")
 
@@ -285,16 +299,15 @@ func (tr *DockerTestRunner) runContainerTest(ctx context.Context, apiClient *cli
 	return res
 }
 
-func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) *exec.Cmd {
+func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context, logger *logp.Logger) *exec.Cmd {
 	if tr.MonitorPID != 0 {
 		return nil
 	}
-	log := logp.L()
 	cmd := exec.CommandContext(ctx, "sleep", "240")
 	// We don't need to do this in a channel, but it prevents races between this goroutine
 	// and the rest of test framework
 	startPid := make(chan int)
-	log.Infof("Creating test Process...")
+	logger.Infof("Creating test Process...")
 	go func() {
 		err := cmd.Start()
 		// if the process fails to start up, the resulting tests will fail anyway, so just log it
@@ -307,6 +320,6 @@ func (tr *DockerTestRunner) createMonitoredProcess(ctx context.Context) *exec.Cm
 		tr.MonitorPID = pid
 	case <-ctx.Done():
 	}
-	log.Infof("Monitoring pid %d", tr.MonitorPID)
+	logger.Infof("Monitoring pid %d", tr.MonitorPID)
 	return cmd
 }

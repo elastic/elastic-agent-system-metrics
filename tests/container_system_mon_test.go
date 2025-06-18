@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
@@ -50,6 +51,7 @@ func TestKernelProc(t *testing.T) {
 
 	names, err := dir.Readdirnames(readAllDirnames)
 	require.NoError(t, err, "error reading directory names")
+	require.NoError(t, dir.Close(), "error closing /proc")
 	var testPid int64
 	for _, name := range names {
 		if name[0] < '0' || name[0] > '9' {
@@ -84,7 +86,12 @@ func TestKernelProc(t *testing.T) {
 		Testname:         "TestSystemHostFromContainer",
 		FatalLogMessages: []string{"error", "Error"},
 	}
-	runner.RunTestsOnDocker(ctx)
+
+	apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+	require.NoError(t, err)
+	defer apiClient.Close()
+
+	runner.RunTestsOnDocker(ctx, apiClient)
 }
 
 func TestProcessMetricsElevatedPerms(t *testing.T) {
@@ -119,9 +126,10 @@ func TestProcessAllSettings(t *testing.T) {
 		FatalLogMessages:  []string{"Error fetching PID info for"},
 	}
 
-	// is it kinda cursed that we just use the system `mail` user? Yeah, but it works
+	// pick a user that has permission for its own home and GOMODCACHE dir
+	// 'nobody' has id 65534 on golang:alpine and has the same GOMODCACHE as root (/go/pkg/mod)
 	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
-		[]bool{true, false}, []string{"mail", ""})
+		[]bool{true, false}, []string{"nobody", ""})
 }
 
 func TestContainerProcess(t *testing.T) {
@@ -138,9 +146,10 @@ func TestContainerProcess(t *testing.T) {
 		FatalLogMessages: []string{"error", "Error"},
 	}
 
-	// is it kinda cursed that we just use the system `mail` user? Yeah, but it works
+	// pick a user that has permission for its own home and GOMODCACHE dir
+	// 'nobody' has id 65534 on golang:alpine and has the same GOMODCACHE as root (/go/pkg/mod)
 	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
-		[]bool{true, false}, []string{"mail", ""})
+		[]bool{true, false}, []string{"nobody", ""})
 }
 
 func TestFilesystem(t *testing.T) {
@@ -157,5 +166,9 @@ func TestFilesystem(t *testing.T) {
 		Privileged: false,
 	}
 
-	baseRunner.RunTestsOnDocker(ctx)
+	apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+	require.NoError(t, err)
+	defer apiClient.Close()
+
+	baseRunner.RunTestsOnDocker(ctx, apiClient)
 }
