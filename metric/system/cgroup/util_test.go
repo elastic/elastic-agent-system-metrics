@@ -260,7 +260,7 @@ func TestMountpointsV2(t *testing.T) {
 		[]byte(pidFmt), 0o744)
 	require.NoError(t, err)
 
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup() //nolint:staticcheck // Use logp.NewDevelopmentLogger
 
 	reader, err := NewReader(resolve.NewTestResolver("testdata/docker2"), false)
 	require.NoError(t, err)
