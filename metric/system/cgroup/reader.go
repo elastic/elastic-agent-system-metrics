@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgv1"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgv2"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -361,6 +362,7 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 	controllers := strings.Split(cgroupsFile, "\n")
 	var cgpath string
 	for _, controller := range controllers {
+		logp.L().Infof("controller: %s", controller)
 		if strings.Contains(controller, "0::/") {
 			fields := strings.Split(controller, ":")
 			cgpath = fields[2]
@@ -372,7 +374,10 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 	}
 	cgFilePath := filepath.Join(r.cgroupMountpoints.V2Loc, cgpath, "cgroup.controllers")
 	if cgroupNSStateFetch() && r.rootfsMountpoint.IsSet() {
+		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
+	} else {
+		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc)
 	}
 
 	controllersRaw, err := os.ReadFile(cgFilePath)
