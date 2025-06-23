@@ -234,7 +234,7 @@ func SubsystemMountpoints(rootfs resolve.Resolver, subsystems map[string]struct{
 			continue
 		}
 
-		if !bytes.Contains(line, []byte("cgroup")) {
+		if !bytes.Contains(line, []byte(" cgroup")) {
 			continue
 		}
 
@@ -304,6 +304,10 @@ func isCgroupNSPrivate() bool {
 	}
 	// if we have a path of just "/" that means we're in our own private namespace
 	// if it's something else, we're probably in a host namespace
+	return isCgroupPathSlash(raw)
+}
+
+func isCgroupPathSlash(raw []byte) bool {
 	for i, field := range bytesutil.Split(bytes.TrimSpace(raw), ':') {
 		if i == 2 {
 			return bytes.Equal(field, []byte{'/'})
