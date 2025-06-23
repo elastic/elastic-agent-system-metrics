@@ -304,6 +304,7 @@ func isCgroupNSPrivate() bool {
 	}
 	// if we have a path of just "/" that means we're in our own private namespace
 	// if it's something else, we're probably in a host namespace
+	logp.L().Infof("isCgroupPathSlash(%s) = %v", string(raw), isCgroupPathSlash(raw))
 	return isCgroupPathSlash(raw)
 }
 
@@ -482,6 +483,7 @@ func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		if r.cgroupsHierarchyOverride != "" {
 			path = r.cgroupsHierarchyOverride
 		}
+		path = filepath.Join(path)
 
 		//on newer docker versions (1.41+?), docker will do  namespacing with cgroups
 		// such that we'll get a cgroup path like `0::/../../user.slice/user-1000.slice/session-520.scope`
