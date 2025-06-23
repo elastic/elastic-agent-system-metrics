@@ -377,9 +377,10 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
 	} else {
-		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc)
+		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 	}
 
+	logp.L().Infof("reading %s", cgFilePath)
 	controllersRaw, err := os.ReadFile(cgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading cgroup '%s': file %s: %w", cgpath, cgFilePath, err)
