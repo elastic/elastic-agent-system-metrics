@@ -387,6 +387,7 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 		return nil, fmt.Errorf("error reading cgroup '%s': file %s: %w", cgpath, cgFilePath, err)
 	}
 
+	logp.L().Infof("controllersRaw: %s", controllersRaw)
 	if len(controllersRaw) == 0 {
 		return []string{}, nil
 	}
