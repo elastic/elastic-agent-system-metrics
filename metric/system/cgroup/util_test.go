@@ -363,3 +363,8 @@ func TestFetchV2Paths(t *testing.T) {
 		})
 	}
 }
+
+func TestIsCgroupPathSlash(t *testing.T) {
+	require.False(t, isCgroupPathSlash([]byte("0::/user.slice/user-1000.slice/session-520.scope")))
+	require.True(t, isCgroupPathSlash([]byte("0::/")))
+}
