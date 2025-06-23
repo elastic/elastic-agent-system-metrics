@@ -372,12 +372,13 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 	if cgpath == "" {
 		return []string{}, nil
 	}
+	cgpath = filepath.Join(cgpath) // The path may have a relative prefix like "/../..`, which effectively is "/".
 	cgFilePath := filepath.Join(r.cgroupMountpoints.V2Loc, cgpath, "cgroup.controllers")
 	if cgroupNSStateFetch() && r.rootfsMountpoint.IsSet() {
-		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
+		logp.L().Infof("a) V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
 	} else {
-		logp.L().Infof("V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
+		logp.L().Infof("b) V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 	}
 
 	logp.L().Infof("reading %s", cgFilePath)
