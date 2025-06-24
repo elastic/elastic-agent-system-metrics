@@ -19,6 +19,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,6 +34,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 )
 
@@ -116,23 +118,39 @@ func TestProcessMetricsElevatedPerms(t *testing.T) {
 
 func TestProcessAllSettings(t *testing.T) {
 	_ = logp.DevelopmentSetup()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
-	defer cancel()
-	// runs test cases where we do not expect any kind of permissions errors
-	baseRunner := systemtests.DockerTestRunner{
-		Runner:            t,
-		Basepath:          "./metric/system/process",
-		Verbose:           false,
-		Privileged:        true,
-		Testname:          "TestSystemHostFromContainer",
-		CreateHostProcess: exec.Command("sleep", "480"),
-		FatalLogMessages:  []string{"Error fetching PID info for"},
-	}
+	for _, ns := range []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate} {
+		// pick a user that has permission for its own home and GOMODCACHE dir
+		// 'nobody' has id 65534 on golang:alpine and has the same GOMODCACHE as root (/go/pkg/mod)
+		for _, user := range []string{"nobody", ""} {
+			for _, priv := range []bool{true, false} {
+				name := strings.Join([]string{string(ns), user, fmt.Sprintf("%v", priv)}, "-")
+				t.Run(name, func(t *testing.T) {
+					t.Parallel()
 
-	// pick a user that has permission for its own home and GOMODCACHE dir
-	// 'nobody' has id 65534 on golang:alpine and has the same GOMODCACHE as root (/go/pkg/mod)
-	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
-		[]bool{true, false}, []string{"nobody", ""})
+					apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
+					require.NoError(t, err)
+					defer apiClient.Close()
+
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+					defer cancel()
+
+					// runs test cases where we do not expect any kind of permissions errors
+					runner := systemtests.DockerTestRunner{
+						Runner:            t,
+						Basepath:          "./metric/system/process",
+						Verbose:           false,
+						CgroupNSMode:      ns,
+						Privileged:        priv,
+						RunAsUser:         user,
+						Testname:          "TestSystemHostFromContainer",
+						CreateHostProcess: exec.Command("sleep", "480"),
+						FatalLogMessages:  []string{"Error fetching PID info for"},
+					}
+					runner.RunTestsOnDocker(ctx, apiClient)
+				})
+			}
+		}
+	}
 }
 
 func TestContainerProcess(t *testing.T) {
