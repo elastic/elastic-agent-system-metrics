@@ -483,7 +483,7 @@ func (r *Reader) ProcessCgroupPaths(pid int) (PathList, error) {
 		if r.cgroupsHierarchyOverride != "" {
 			path = r.cgroupsHierarchyOverride
 		}
-		path = filepath.Join(path)
+		path = filepath.Clean(path)
 
 		//on newer docker versions (1.41+?), docker will do  namespacing with cgroups
 		// such that we'll get a cgroup path like `0::/../../user.slice/user-1000.slice/session-520.scope`
