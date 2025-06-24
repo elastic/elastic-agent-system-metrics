@@ -174,8 +174,8 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 		return state, fmt.Errorf("error getting CPU times: %w", err)
 	}
 
-	sysTime := uint64(time.Duration(stat.System) / time.Millisecond)
-	userTime := uint64(time.Duration(stat.User) / time.Millisecond)
+	sysTime := uint64(time.Duration(stat.System) * time.Second / time.Millisecond)
+	userTime := uint64(time.Duration(stat.User) * time.Second / time.Millisecond)
 
 	state.CPU.System.Ticks = opt.UintWith(sysTime)
 	state.CPU.User.Ticks = opt.UintWith(userTime)

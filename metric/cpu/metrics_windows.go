@@ -55,9 +55,9 @@ func getUsingSystemTimes() (CPUMetrics, error) {
 
 	globalMetrics := CPUMetrics{}
 	//convert from duration to ticks
-	idleMetric := uint64(time.Duration(stats[0].Idle) / time.Millisecond)
-	sysMetric := uint64(time.Duration(stats[0].System) / time.Millisecond)
-	userMetrics := uint64(time.Duration(stats[0].User) / time.Millisecond)
+	idleMetric := uint64(time.Duration(stats[0].Idle) * time.Second / time.Millisecond)
+	sysMetric := uint64(time.Duration(stats[0].System) * time.Second / time.Millisecond)
+	userMetrics := uint64(time.Duration(stats[0].User) * time.Second / time.Millisecond)
 	globalMetrics.totals.Idle = opt.UintWith(idleMetric)
 	globalMetrics.totals.Sys = opt.UintWith(sysMetric)
 	globalMetrics.totals.User = opt.UintWith(userMetrics)
@@ -69,9 +69,9 @@ func getUsingSystemTimes() (CPUMetrics, error) {
 	}
 	globalMetrics.list = make([]CPU, 0, len(cpus))
 	for _, cpu := range cpus {
-		idleMetric := uint64(time.Duration(cpu.Idle) / time.Millisecond)
-		sysMetric := uint64(time.Duration(cpu.System) / time.Millisecond)
-		userMetrics := uint64(time.Duration(cpu.User) / time.Millisecond)
+		idleMetric := uint64(time.Duration(cpu.Idle) * time.Second / time.Millisecond)
+		sysMetric := uint64(time.Duration(cpu.System) * time.Second / time.Millisecond)
+		userMetrics := uint64(time.Duration(cpu.User) * time.Second / time.Millisecond)
 		globalMetrics.list = append(globalMetrics.list, CPU{
 			Idle: opt.UintWith(idleMetric),
 			Sys:  opt.UintWith(sysMetric),
