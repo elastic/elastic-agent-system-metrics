@@ -96,12 +96,12 @@ func getAccessPaths() ([]string, error) {
 	return paths, nil
 }
 
-// MAX_PATH is the maximum length for a path in Windows.
+// maxPath is the maximum length for a path in Windows.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa365247(v=vs.85).aspx
-const MAX_PATH = 260
+const maxPath = 260
 
 func getVolumes() ([]string, error) {
-	buffer := make([]uint16, MAX_PATH+1)
+	buffer := make([]uint16, maxPath+1)
 
 	var volumes []string
 
@@ -142,7 +142,7 @@ func getVolumePathsForVolume(volumeName string) ([]string, error) {
 		return nil, nil
 	}
 
-	buffer := make([]uint16, length*(MAX_PATH+1))
+	buffer := make([]uint16, length*(maxPath+1))
 	err = windows.GetVolumePathNamesForVolumeName(volumeNamePtr, &buffer[0], length, &length)
 	if err != nil {
 		return nil, fmt.Errorf("GetVolumePathNamesForVolumeNameW failed: %w", err)
@@ -179,9 +179,9 @@ func getFilesystemType(rootPathName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("UTF16PtrFromString failed for rootPathName=%v: %w", rootPathName, err)
 	}
-	buffer := make([]uint16, MAX_PATH+1)
+	buffer := make([]uint16, maxPath+1)
 	// _GetVolumeInformation will fail for external drives like CD-ROM or other type with error codes as ERROR_NOT_READY. ERROR_INVALID_FUNCTION, ERROR_INVALID_PARAMETER, etc., these types of errors will be ignored
-	err = windows.GetVolumeInformation(rootPathNamePtr, nil, 0, nil, nil, nil, &buffer[0], MAX_PATH)
+	err = windows.GetVolumeInformation(rootPathNamePtr, nil, 0, nil, nil, nil, &buffer[0], maxPath)
 	if err == nil {
 		systemType = strings.ToLower(windows.UTF16ToString(buffer))
 	}
