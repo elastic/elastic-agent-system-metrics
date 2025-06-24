@@ -26,9 +26,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/shirou/gopsutil/v4/cpu"
+
 	"github.com/elastic/elastic-agent-libs/helpers/windows/pdh"
 	"github.com/elastic/elastic-agent-libs/opt"
-	"github.com/elastic/gosigar/sys/windows"
 )
 
 var (
@@ -47,30 +48,30 @@ func Get(m *Monitor) (CPUMetrics, error) {
 }
 
 func getUsingSystemTimes() (CPUMetrics, error) {
-	idle, kernel, user, err := windows.GetSystemTimes()
+	stats, err := cpu.Times(false)
 	if err != nil {
 		return CPUMetrics{}, fmt.Errorf("call to GetSystemTimes failed: %w", err)
 	}
 
 	globalMetrics := CPUMetrics{}
 	//convert from duration to ticks
-	idleMetric := uint64(idle / time.Millisecond)
-	sysMetric := uint64(kernel / time.Millisecond)
-	userMetrics := uint64(user / time.Millisecond)
+	idleMetric := uint64(time.Duration(stats[0].Idle) / time.Millisecond)
+	sysMetric := uint64(time.Duration(stats[0].System) / time.Millisecond)
+	userMetrics := uint64(time.Duration(stats[0].User) / time.Millisecond)
 	globalMetrics.totals.Idle = opt.UintWith(idleMetric)
 	globalMetrics.totals.Sys = opt.UintWith(sysMetric)
 	globalMetrics.totals.User = opt.UintWith(userMetrics)
 
 	// get per-cpu data
-	cpus, err := windows.NtQuerySystemProcessorPerformanceInformation()
+	cpus, err := cpu.Times(true)
 	if err != nil {
 		return CPUMetrics{}, fmt.Errorf("catll to NtQuerySystemProcessorPerformanceInformation failed: %w", err)
 	}
 	globalMetrics.list = make([]CPU, 0, len(cpus))
 	for _, cpu := range cpus {
-		idleMetric := uint64(cpu.IdleTime / time.Millisecond)
-		sysMetric := uint64(cpu.KernelTime / time.Millisecond)
-		userMetrics := uint64(cpu.UserTime / time.Millisecond)
+		idleMetric := uint64(time.Duration(cpu.Idle) / time.Millisecond)
+		sysMetric := uint64(time.Duration(cpu.System) / time.Millisecond)
+		userMetrics := uint64(time.Duration(cpu.User) / time.Millisecond)
 		globalMetrics.list = append(globalMetrics.list, CPU{
 			Idle: opt.UintWith(idleMetric),
 			Sys:  opt.UintWith(sysMetric),
