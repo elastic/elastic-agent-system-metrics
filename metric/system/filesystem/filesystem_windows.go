@@ -134,7 +134,7 @@ func getVolumePathsForVolume(volumeName string) ([]string, error) {
 
 	var length uint32
 	err = windows.GetVolumePathNamesForVolumeName(volumeNamePtr, nil, 0, &length)
-	if errors.Is(err, windows.ERROR_MORE_DATA) {
+	if !errors.Is(err, windows.ERROR_MORE_DATA) {
 		return nil, fmt.Errorf("GetVolumePathNamesForVolumeNameW failed to get needed buffer length: %w", err)
 	}
 	if length == 0 {
