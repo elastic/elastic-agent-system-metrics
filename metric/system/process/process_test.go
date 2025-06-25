@@ -175,6 +175,7 @@ func TestGetOne(t *testing.T) {
 
 	procData, _, err := testConfig.Get()
 	assert.True(t, isNonFatal(err), fmt.Sprintf("Fatal Error: %s", err))
+	require.NotEmpty(t, procData)
 
 	t.Logf("Proc: %s", procData[0].StringToPrint())
 }
