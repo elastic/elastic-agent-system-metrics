@@ -21,6 +21,7 @@
 package cgroup
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -30,6 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/testhelpers"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
@@ -155,6 +157,32 @@ func TestSubsystemMountpoints(t *testing.T) {
 	assert.Equal(t, "testdata/docker/sys/fs/cgroup/perf_event", mountpoints.V1Mounts["perf_event"])
 }
 
+func BenchmarkSubsystemMountpoints(b *testing.B) {
+	subsystems := map[string]struct{}{
+		"blkio":      {},
+		"cpu":        {},
+		"cpuacct":    {},
+		"cpuset":     {},
+		"devices":    {},
+		"freezer":    {},
+		"hugetlb":    {},
+		"memory":     {},
+		"perf_event": {},
+	}
+
+	resolver := resolve.NewTestResolver("testdata/docker")
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := SubsystemMountpoints(resolver, subsystems)
+		if err != nil {
+			b.Fatalf("error in SubsystemMountpoints: %s", err)
+		}
+	}
+}
+
 func TestProcessCgroupPaths(t *testing.T) {
 	reader, err := NewReader(resolve.NewTestResolver("testdata/docker"), false)
 	if err != nil {
@@ -232,7 +260,7 @@ func TestMountpointsV2(t *testing.T) {
 		[]byte(pidFmt), 0o744)
 	require.NoError(t, err)
 
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup() //nolint:staticcheck // Use logp.NewDevelopmentLogger
 
 	reader, err := NewReader(resolve.NewTestResolver("testdata/docker2"), false)
 	require.NoError(t, err)
@@ -262,14 +290,14 @@ func TestParseMountinfoLine(t *testing.T) {
 	}
 
 	for _, line := range lines {
-		mount, err := parseMountinfoLine(line)
+		mount, err := parseMountinfoLine([]byte(line))
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, "/sys/fs/cgroup/blkio", mount.mountpoint)
-		assert.Equal(t, "cgroup", mount.filesystemType)
-		assert.Len(t, mount.superOptions, 2)
+		assert.Equal(t, "/sys/fs/cgroup/blkio", string(mount.mountpoint))
+		assert.Equal(t, "cgroup", string(mount.filesystemType))
+		assert.Equal(t, bytes.Count(mount.superOptions, []byte{','}), 1)
 	}
 }
 
@@ -334,4 +362,9 @@ func TestFetchV2Paths(t *testing.T) {
 			assert.Equal(t, testCase.expectedPath, got)
 		})
 	}
+}
+
+func TestIsCgroupPathSlash(t *testing.T) {
+	require.False(t, isCgroupPathSlash([]byte("0::/user.slice/user-1000.slice/session-520.scope")))
+	require.True(t, isCgroupPathSlash([]byte("0::/")))
 }
