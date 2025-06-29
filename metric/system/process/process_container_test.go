@@ -29,6 +29,7 @@ import (
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/mapstr"
+
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup"
 )
@@ -157,6 +158,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	if runtime.GOOS == "linux" {
 		cgroups := result["cgroup"]
 		require.NotNil(t, cgroups)
+		require.True(t, false, "stopping tests on purpose to get logs")
 	}
 
 }
