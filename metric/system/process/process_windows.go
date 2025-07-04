@@ -21,17 +21,17 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"syscall"
+	"time"
 	"unsafe"
 
-	xsyswindows "golang.org/x/sys/windows"
+	"github.com/shirou/gopsutil/v4/process"
+	"golang.org/x/sys/windows"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	gowindows "github.com/elastic/go-windows"
-	"github.com/elastic/gosigar/sys/windows"
 )
 
 var (
@@ -40,7 +40,7 @@ var (
 
 // FetchPids returns a map and array of pids
 func (procStats *Stats) FetchPids() (ProcsMap, []ProcState, error) {
-	pids, err := windows.EnumProcesses()
+	pids, err := process.Pids()
 	if err != nil {
 		return nil, nil, fmt.Errorf("EnumProcesses failed: %w", err)
 	}
@@ -104,7 +104,7 @@ func GetInfoForPid(_ resolve.Resolver, pid int) (ProcState, error) {
 
 func FetchNumThreads(pid int) (int, error) {
 	targetProcessHandle, err := syscall.OpenProcess(
-		xsyswindows.PROCESS_QUERY_INFORMATION,
+		windows.PROCESS_QUERY_INFORMATION,
 		false,
 		uint32(pid))
 	if err != nil {
@@ -165,16 +165,28 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 	state.Memory.Rss.Bytes = opt.UintWith(wss)
 	state.Memory.Size = opt.UintWith(size)
 
-	userTime, sysTime, startTime, err := getProcTimes(pid)
+	ps := process.Process{
+		Pid: int32(pid),
+	}
+
+	stat, err := ps.Times()
 	if err != nil {
 		return state, fmt.Errorf("error getting CPU times: %w", err)
 	}
+
+	sysTime := uint64(time.Duration(stat.System) * time.Second / time.Millisecond)
+	userTime := uint64(time.Duration(stat.User) * time.Second / time.Millisecond)
 
 	state.CPU.System.Ticks = opt.UintWith(sysTime)
 	state.CPU.User.Ticks = opt.UintWith(userTime)
 	state.CPU.Total.Ticks = opt.UintWith(userTime + sysTime)
 
-	state.CPU.StartTime = unixTimeMsToTime(startTime)
+	startTime, err := ps.CreateTime()
+	if err != nil {
+		return state, fmt.Errorf("error getting process CreateTime: %w", err)
+	}
+
+	state.CPU.StartTime = unixTimeMsToTime(uint64(startTime))
 
 	return state, nil
 }
@@ -199,54 +211,16 @@ func FillMetricsRequiringMoreAccess(pid int, state ProcState) (ProcState, error)
 }
 
 func getProcArgs(pid int) ([]string, error) {
-	handle, err := syscall.OpenProcess(
-		windows.PROCESS_QUERY_LIMITED_INFORMATION|
-			windows.PROCESS_VM_READ,
-		false,
-		uint32(pid))
-	if err != nil {
-		return nil, fmt.Errorf("OpenProcess failed for PID %d: %w", pid, err)
-	}
-	defer func() {
-		_ = syscall.CloseHandle(handle)
-	}()
-	pbi, err := windows.NtQueryProcessBasicInformation(handle)
-	if err != nil {
-		return nil, fmt.Errorf("NtQueryProcessBasicInformation failed for PID %d: %w", pid, err)
+	ps := process.Process{
+		Pid: int32(pid),
 	}
 
-	userProcParams, err := windows.GetUserProcessParams(handle, pbi)
+	args, err := ps.CmdlineSlice()
 	if err != nil {
-		return nil, fmt.Errorf("GetUserProcessParams failed for PID %d: %w", pid, err)
-	}
-	argsW, err := windows.ReadProcessUnicodeString(handle, &userProcParams.CommandLine)
-	if err != nil {
-		return nil, fmt.Errorf("ReadProcessUnicodeString failed for PID %d: %w", pid, err)
+		return nil, fmt.Errorf("error fetching cmdline: %w", err)
 	}
 
-	procList, err := windows.ByteSliceToStringSlice(argsW)
-	if err != nil {
-		return nil, fmt.Errorf("ByteSliceToStringSlice failed for PID %d: %w", pid, err)
-	}
-	return procList, nil
-}
-
-func getProcTimes(pid int) (uint64, uint64, uint64, error) {
-	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
-	if err != nil {
-		return 0, 0, 0, fmt.Errorf("OpenProcess failed for pid=%v: %w", pid, err)
-	}
-	defer func() {
-		_ = syscall.CloseHandle(handle)
-	}()
-
-	var cpu syscall.Rusage
-	if err := syscall.GetProcessTimes(handle, &cpu.CreationTime, &cpu.ExitTime, &cpu.KernelTime, &cpu.UserTime); err != nil {
-		return 0, 0, 0, fmt.Errorf("GetProcessTimes failed for pid=%v: %w", pid, err)
-	}
-
-	// Everything expects ticks, so we need to go some math.
-	return uint64(windows.FiletimeToDuration(&cpu.UserTime).Nanoseconds() / 1e6), uint64(windows.FiletimeToDuration(&cpu.KernelTime).Nanoseconds() / 1e6), uint64(cpu.CreationTime.Nanoseconds() / 1e6), nil
+	return args, nil
 }
 
 // procMem gets the memory usage for the given PID.
@@ -255,35 +229,24 @@ func getProcTimes(pid int) (uint64, uint64, uint64, error) {
 // We only need `PROCESS_QUERY_LIMITED_INFORMATION` because we do not support
 // Windows Server 2003 or Windows XP
 func procMem(pid int) (uint64, uint64, error) {
-	handle, err := syscall.OpenProcess(
-		windows.PROCESS_QUERY_LIMITED_INFORMATION,
-		false,
-		uint32(pid))
-	if err != nil {
-		return 0, 0, fmt.Errorf("OpenProcess failed for pid=%v: %w", pid, err)
+	ps := process.Process{
+		Pid: int32(pid),
 	}
-	defer func() {
-		_ = syscall.CloseHandle(handle)
-	}()
 
-	counters, err := windows.GetProcessMemoryInfo(handle)
+	info, err := ps.MemoryInfo()
 	if err != nil {
-		return 0, 0, fmt.Errorf("GetProcessMemoryInfo failed for pid=%v: %w", pid, err)
+		return 0, 0, fmt.Errorf("error retrieving memory for pid=%v: %w", pid, err)
 	}
-	return uint64(counters.WorkingSetSize), uint64(counters.PrivateUsage), nil
+	return info.RSS, info.VMS, nil
 }
 
 // getProcName returns the process name associated with the PID.
 func getProcName(pid int) (string, error) {
-	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
-	if err != nil {
-		return "", fmt.Errorf("OpenProcess failed for pid=%v: %w", pid, err)
+	ps := process.Process{
+		Pid: int32(pid),
 	}
-	defer func() {
-		_ = syscall.CloseHandle(handle)
-	}()
 
-	filename, err := windows.GetProcessImageFileName(handle)
+	filename, err := ps.Name()
 
 	//nolint:nilerr // safe to ignore this error
 	if err != nil {
@@ -295,7 +258,7 @@ func getProcName(pid int) (string, error) {
 		return "", err
 	}
 
-	return filepath.Base(filename), nil
+	return filename, nil
 }
 
 // getProcStatus returns the status of a process.
@@ -322,20 +285,41 @@ func getPidStatus(pid int) (PidState, error) {
 
 // getParentPid returns the parent process ID of a process.
 func getParentPid(pid int) (int, error) {
-	handle, err := syscall.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
+	handle, err := windows.OpenProcess(windows.PROCESS_QUERY_LIMITED_INFORMATION, false, uint32(pid))
 	if err != nil {
 		return 0, fmt.Errorf("OpenProcess failed for pid=%v: %w", pid, err)
 	}
 	defer func() {
-		_ = syscall.CloseHandle(handle)
+		_ = windows.CloseHandle(handle)
 	}()
 
-	procInfo, err := windows.NtQueryProcessBasicInformation(handle)
+	ppid, err := getppid(handle)
 	if err != nil {
 		return 0, fmt.Errorf("NtQueryProcessBasicInformation failed for pid=%v: %w", pid, err)
 	}
 
-	return int(procInfo.InheritedFromUniqueProcessID), nil
+	return ppid, nil
+}
+
+type ProcessBasicInformation struct {
+	ExitStatus                   uint
+	PebBaseAddress               uintptr
+	AffinityMask                 uint
+	BasePriority                 uint
+	UniqueProcessID              uint
+	InheritedFromUniqueProcessID uint
+}
+
+func getppid(handle windows.Handle) (int, error) {
+	var processBasicInfo ProcessBasicInformation
+	processBasicInfoPtr := unsafe.Pointer(&processBasicInfo)
+	size := uint32(unsafe.Sizeof(processBasicInfo))
+	err := windows.NtQueryInformationProcess(handle, 0, processBasicInfoPtr, size, nil)
+	if err != nil {
+		return 0, fmt.Errorf("NtQueryInformationProcess failed: %w", err)
+	}
+
+	return int(processBasicInfo.InheritedFromUniqueProcessID), nil
 }
 
 //nolint:unused // this is actually used while dereferencing the pointer, but results in lint failure.
@@ -349,7 +333,7 @@ type systemProcessInformation struct {
 		Buffer        *uint16
 	}
 	BasePriority           int32
-	UniqueProcessID        xsyswindows.Handle
+	UniqueProcessID        windows.Handle
 	Reserved2              uintptr
 	HandleCount            uint32
 	SessionID              uint32
@@ -426,7 +410,7 @@ func getIdleProcessMemory(state ProcState) (ProcState, error) {
 	systemInfo := make([]byte, 1024*1024)
 	var returnLength uint32
 
-	_, _, err := ntQuerySystemInformation.Call(xsyswindows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
+	_, _, err := ntQuerySystemInformation.Call(windows.SystemProcessInformation, uintptr(unsafe.Pointer(&systemInfo[0])), uintptr(len(systemInfo)), uintptr(unsafe.Pointer(&returnLength)))
 	// NtQuerySystemInformation returns "operation permitted successfully"(i.e. errorno 0) on success.
 	// Hence, we can ignore syscall.Errno(0).
 	if err != nil && !errors.Is(err, syscall.Errno(0)) {
