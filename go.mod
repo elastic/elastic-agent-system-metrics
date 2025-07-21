@@ -9,11 +9,10 @@ require (
 	github.com/elastic/go-structform v0.0.9
 	github.com/elastic/go-sysinfo v1.14.1
 	github.com/elastic/go-windows v1.0.1
-	github.com/elastic/gosigar v0.14.2
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/magefile/mage v1.15.0
-	github.com/shirou/gopsutil/v4 v4.24.7
-	github.com/stretchr/testify v1.9.0
+	github.com/shirou/gopsutil/v4 v4.25.5
+	github.com/stretchr/testify v1.10.0
 	go.elastic.co/go-licence-detector v0.6.1
 	golang.org/x/sys v0.31.0
 )
@@ -27,6 +26,7 @@ require (
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
+	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/elastic/go-ucfg v0.8.8 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -50,7 +50,6 @@ require (
 	github.com/prometheus/procfs v0.13.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
