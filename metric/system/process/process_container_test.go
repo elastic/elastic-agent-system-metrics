@@ -38,7 +38,7 @@ import (
 // However, they are designed so that `go test` can run them normally as well
 
 func TestContainerMonitoringFromInsideContainer(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup() //nolint:staticcheck // Use logp.NewDevelopmentLogger
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
@@ -64,7 +64,7 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSelfMonitoringFromInsideContainer(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup() //nolint:staticcheck // Use logp.NewDevelopmentLogger
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
@@ -89,7 +89,7 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 }
 
 func TestSystemHostFromContainer(t *testing.T) {
-	_ = logp.DevelopmentSetup()
+	_ = logp.DevelopmentSetup() //nolint:staticcheck // Use logp.NewDevelopmentLogger
 
 	testStats := Stats{CPUTicks: true,
 		EnableCgroups: true,
