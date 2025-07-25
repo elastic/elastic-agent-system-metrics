@@ -20,7 +20,6 @@ package systemtests
 import (
 	"os"
 
-	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
