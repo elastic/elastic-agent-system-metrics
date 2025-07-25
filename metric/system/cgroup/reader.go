@@ -362,7 +362,6 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 	controllers := strings.Split(cgroupsFile, "\n")
 	var cgpath string
 	for _, controller := range controllers {
-		logp.L().Infof("controller: %s", controller)
 		if strings.Contains(controller, "0::/") {
 			fields := strings.Split(controller, ":")
 			cgpath = fields[2]
@@ -375,19 +374,14 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 	cgpath = filepath.Clean(cgpath) // The path may have a relative prefix like "/../..`, which effectively is "/".
 	cgFilePath := filepath.Join(r.cgroupMountpoints.V2Loc, cgpath, "cgroup.controllers")
 	if cgroupNSStateFetch() && r.rootfsMountpoint.IsSet() {
-		logp.L().Infof("a) V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
-	} else {
-		logp.L().Infof("b) V2Loc: %s, ContainerizedRootMount %s", r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount)
 	}
 
-	logp.L().Infof("reading %s", cgFilePath)
 	controllersRaw, err := os.ReadFile(cgFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("error reading cgroup '%s': file %s: %w", cgpath, cgFilePath, err)
 	}
 
-	logp.L().Infof("controllersRaw: %s", controllersRaw)
 	if len(controllersRaw) == 0 {
 		return []string{}, nil
 	}

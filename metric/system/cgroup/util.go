@@ -304,7 +304,6 @@ func isCgroupNSPrivate() bool {
 	}
 	// if we have a path of just "/" that means we're in our own private namespace
 	// if it's something else, we're probably in a host namespace
-	logp.L().Infof("isCgroupPathSlash(%s) = %v", string(raw), isCgroupPathSlash(raw))
 	return isCgroupPathSlash(raw)
 }
 
