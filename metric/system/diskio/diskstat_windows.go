@@ -23,6 +23,7 @@ package diskio
 import (
 	"errors"
 
+	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/shirou/gopsutil/v4/disk"
 )
 
@@ -47,6 +48,6 @@ func (stat *IOStat) CalcIOStatistics(counter disk.IOCountersStat) (IOMetric, err
 func (stat *IOStat) CloseSampling() {}
 
 // IOCounters should map functionality to disk package for linux os.
-func IOCounters(names ...string) (map[string]disk.IOCountersStat, error) {
-	return ioCounters(names...)
+func IOCounters(logger *logp.Logger, names ...string) (map[string]disk.IOCountersStat, error) {
+	return ioCounters(logger, names...)
 }
