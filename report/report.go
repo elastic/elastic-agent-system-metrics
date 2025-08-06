@@ -135,7 +135,7 @@ func ReportSystemLoadAverage(logger *logp.Logger) func(monitoring.Mode, monitori
 
 		load, err := cpu.Load()
 		if err != nil {
-			logger.Error("Error retrieving load average: %v", err)
+			logger.Errorf("Error retrieving load average: %v", err)
 			return
 		}
 		avgs := load.Averages()
