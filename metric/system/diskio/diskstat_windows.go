@@ -23,8 +23,9 @@ package diskio
 import (
 	"errors"
 
-	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/shirou/gopsutil/v4/disk"
+
+	"github.com/elastic/elastic-agent-libs/logp"
 )
 
 // NewDiskIOStat :init DiskIOStat object.
