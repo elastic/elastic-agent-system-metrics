@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
+
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgv1"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgv2"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
@@ -370,6 +371,7 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 	if cgpath == "" {
 		return []string{}, nil
 	}
+	cgpath = filepath.Clean(cgpath) // The path may have a relative prefix like "/../..`, which effectively is "/".
 	cgFilePath := filepath.Join(r.cgroupMountpoints.V2Loc, cgpath, "cgroup.controllers")
 	if cgroupNSStateFetch() && r.rootfsMountpoint.IsSet() {
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
