@@ -46,7 +46,7 @@ func SetupMetrics(logger *logp.Logger, name, version string) error {
 	return SetupMetricsOptions(MetricOptions{
 		Name:           name,
 		Version:        version,
-		EphemeralID:    ephemeralID,
+		EphemeralID:    ephemeralID.String(),
 		Logger:         logp.NewNopLogger(),
 		SystemMetrics:  monitoring.Default.GetOrCreateRegistry("system"),
 		ProcessMetrics: monitoring.Default.GetOrCreateRegistry("beat"),
