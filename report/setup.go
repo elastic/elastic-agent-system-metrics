@@ -39,22 +39,14 @@ var (
 // Elastic Agent under Docker.
 const monitoringCgroupsHierarchyOverride = "LIBBEAT_MONITORING_CGROUPS_HIERARCHY_OVERRIDE"
 
-type MetricOptions struct {
-	Name           string
-	Version        string
-	EphemeralID    string
-	Logger         *logp.Logger
-	SystemMetrics  *monitoring.Registry
-	ProcessMetrics *monitoring.Registry
-}
-
 // SetupMetrics creates a basic suite of metrics handlers for monitoring, including build info and system resources
 //
 // Deprecated: use SetupMetricsOptions
-func SetupMetrics(logger *logp.Logger, name, version, ephemeralID string) error {
+func SetupMetrics(logger *logp.Logger, name, version string) error {
 	return SetupMetricsOptions(MetricOptions{
 		Name:           name,
 		Version:        version,
+		EphemeralID:    ephemeralID,
 		Logger:         logp.NewNopLogger(),
 		SystemMetrics:  monitoring.Default.GetOrCreateRegistry("system"),
 		ProcessMetrics: monitoring.Default.GetOrCreateRegistry("beat"),
