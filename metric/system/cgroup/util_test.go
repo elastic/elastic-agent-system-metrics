@@ -23,7 +23,6 @@ package cgroup
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
