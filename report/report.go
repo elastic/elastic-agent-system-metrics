@@ -133,7 +133,7 @@ func ReportSystemLoadAverage(logger *logp.Logger) func(monitoring.Mode, monitori
 		V.OnRegistryStart()
 		defer V.OnRegistryFinished()
 
-		load, err := cpu.Load()
+		load, err := cpu.Load(logger)
 		if err != nil {
 			logger.Errorf("Error retrieving load average: %v", err)
 			return
@@ -152,11 +152,13 @@ func ReportSystemLoadAverage(logger *logp.Logger) func(monitoring.Mode, monitori
 	}
 }
 
-func ReportSystemCPUUsage(_ monitoring.Mode, V monitoring.Visitor) {
-	V.OnRegistryStart()
-	defer V.OnRegistryFinished()
+func ReportSystemCPUUsage(logger *logp.Logger) func(monitoring.Mode, monitoring.Visitor) {
+	return func(m monitoring.Mode, V monitoring.Visitor) {
+		V.OnRegistryStart()
+		defer V.OnRegistryFinished()
 
-	monitoring.ReportInt(V, "cores", int64(numcpu.NumCPU()))
+		monitoring.ReportInt(V, "cores", int64(numcpu.NumCPU(logger)))
+	}
 }
 
 func ReportRuntime(_ monitoring.Mode, V monitoring.Visitor) {

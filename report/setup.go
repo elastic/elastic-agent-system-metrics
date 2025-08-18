@@ -41,7 +41,7 @@ const monitoringCgroupsHierarchyOverride = "LIBBEAT_MONITORING_CGROUPS_HIERARCHY
 
 // SetupMetrics creates a basic suite of metrics handlers for monitoring, including build info and system resources
 func SetupMetrics(logger *logp.Logger, name, version, ephemeralID string, systemMetrics *monitoring.Registry, processMetrics *monitoring.Registry) error {
-	monitoring.NewFunc(systemMetrics, "cpu", ReportSystemCPUUsage, monitoring.Report)
+	monitoring.NewFunc(systemMetrics, "cpu", ReportSystemCPUUsage(logger), monitoring.Report)
 
 	name = processName(name)
 	processStats = &process.Stats{
