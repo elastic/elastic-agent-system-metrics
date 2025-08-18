@@ -47,13 +47,13 @@ func SetupMetrics(logger *logp.Logger, name, version string) error {
 		Name:           name,
 		Version:        version,
 		EphemeralID:    ephemeralID.String(),
-		Logger:         logp.NewNopLogger(),
+		Logger:         logger,
 		SystemMetrics:  monitoring.Default.GetOrCreateRegistry("system"),
 		ProcessMetrics: monitoring.Default.GetOrCreateRegistry("beat"),
 	})
 }
 
-// SetupMetrics creates a basic suite of metrics handlers for monitoring, including build info and system resources
+// SetupMetricsOptions performs creation of metrics handlers using specified options.
 func SetupMetricsOptions(opts MetricOptions) error {
 	monitoring.NewFunc(opts.SystemMetrics, "cpu", ReportSystemCPUUsage, monitoring.Report)
 
