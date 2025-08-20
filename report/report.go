@@ -41,7 +41,7 @@ import (
 func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(monitoring.Mode, monitoring.Visitor) {
 	pid, err := process.GetSelfPid(processStats.Hostfs)
 	if err != nil {
-		logger.Error("Error while retrieving pid: %v", err)
+		logger.Errorf("Error while retrieving pid: %v", err)
 		return nil
 	}
 	p := psprocess.Process{
@@ -80,7 +80,7 @@ func MemStatsReporter(logger *logp.Logger, processStats *process.Stats) func(mon
 func InstanceCPUReporter(logger *logp.Logger, processStats *process.Stats) func(monitoring.Mode, monitoring.Visitor) {
 	pid, err := process.GetSelfPid(processStats.Hostfs)
 	if err != nil {
-		logger.Error("Error while retrieving pid: %v", err)
+		logger.Errorf("Error while retrieving pid: %v", err)
 		return nil
 	}
 	p := psprocess.Process{

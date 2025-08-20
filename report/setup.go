@@ -40,17 +40,35 @@ var (
 const monitoringCgroupsHierarchyOverride = "LIBBEAT_MONITORING_CGROUPS_HIERARCHY_OVERRIDE"
 
 // SetupMetrics creates a basic suite of metrics handlers for monitoring, including build info and system resources
-func SetupMetrics(logger *logp.Logger, name, version, ephemeralID string, systemMetrics *monitoring.Registry, processMetrics *monitoring.Registry) error {
-	monitoring.NewFunc(systemMetrics, "cpu", ReportSystemCPUUsage(logger), monitoring.Report)
+//
+// Deprecated: use SetupMetricsOptions
+func SetupMetrics(logger *logp.Logger, name, version string) error {
+	return SetupMetricsOptions(MetricOptions{
+		Name:           name,
+		Version:        version,
+		EphemeralID:    ephemeralID.String(),
+		Logger:         logger,
+		SystemMetrics:  monitoring.Default.GetOrCreateRegistry("system"),
+		ProcessMetrics: monitoring.Default.GetOrCreateRegistry("beat"),
+	})
+}
 
-	name = processName(name)
+// SetupMetricsOptions performs creation of metrics handlers using specified options.
+func SetupMetricsOptions(opts MetricOptions) error {
+	log := logp.NewLogger("")
+	if opts.Logger != nil {
+		log = opts.Logger
+	}
+	monitoring.NewFunc(opts.SystemMetrics, "cpu", ReportSystemCPUUsage(log), monitoring.Report)
+
+	opts.Name = processName(opts.Name)
 	processStats = &process.Stats{
-		Procs:        []string{name},
+		Procs:        []string{opts.Name},
 		EnvWhitelist: nil,
 		CPUTicks:     true,
 		CacheCmdLine: true,
 		IncludeTop:   process.IncludeTopConfig{},
-		Logger:       logger,
+		Logger:       opts.Logger,
 	}
 
 	err := processStats.Init()
@@ -58,12 +76,12 @@ func SetupMetrics(logger *logp.Logger, name, version, ephemeralID string, system
 		return fmt.Errorf("failed to init process stats for agent: %w", err)
 	}
 
-	monitoring.NewFunc(processMetrics, "memstats", MemStatsReporter(logger, processStats), monitoring.Report)
-	monitoring.NewFunc(processMetrics, "cpu", InstanceCPUReporter(logger, processStats), monitoring.Report)
-	monitoring.NewFunc(processMetrics, "runtime", ReportRuntime, monitoring.Report)
-	monitoring.NewFunc(processMetrics, "info", infoReporter(name, version, ephemeralID), monitoring.Report)
+	monitoring.NewFunc(opts.ProcessMetrics, "memstats", MemStatsReporter(log, processStats), monitoring.Report)
+	monitoring.NewFunc(opts.ProcessMetrics, "cpu", InstanceCPUReporter(log, processStats), monitoring.Report)
+	monitoring.NewFunc(opts.ProcessMetrics, "runtime", ReportRuntime, monitoring.Report)
+	monitoring.NewFunc(opts.ProcessMetrics, "info", infoReporter(opts.Name, opts.Version, opts.EphemeralID), monitoring.Report)
 
-	setupPlatformSpecificMetrics(logger, processStats, systemMetrics, processMetrics)
+	setupPlatformSpecificMetrics(log, processStats, opts.SystemMetrics, opts.ProcessMetrics)
 
 	return nil
 }
