@@ -22,7 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/elastic/elastic-agent-libs/logp"
+	"github.com/elastic/elastic-agent-libs/logp/logptest"
 )
 
 func TestGetCPU(t *testing.T) {
@@ -38,7 +38,7 @@ func TestGetCPU(t *testing.T) {
 }
 
 func TestNumCPU(t *testing.T) {
-	cpuCount := NumCPU(logp.NewNopLogger())
+	cpuCount := NumCPU(logptest.NewTestingLogger(t, ""))
 	assert.NotEqual(t, -1, cpuCount)
 	t.Logf("CPU Count: %d", cpuCount)
 }

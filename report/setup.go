@@ -55,11 +55,11 @@ func SetupMetrics(logger *logp.Logger, name, version string) error {
 
 // SetupMetricsOptions performs creation of metrics handlers using specified options.
 func SetupMetricsOptions(opts MetricOptions) error {
-	log := logp.NewLogger("")
-	if opts.Logger != nil {
-		log = opts.Logger
+	if opts.Logger == nil {
+		opts.Logger = logp.NewLogger("")
 	}
-	monitoring.NewFunc(opts.SystemMetrics, "cpu", ReportSystemCPUUsage(log), monitoring.Report)
+
+	monitoring.NewFunc(opts.SystemMetrics, "cpu", ReportSystemCPUUsage(opts.Logger), monitoring.Report)
 
 	opts.Name = processName(opts.Name)
 	processStats = &process.Stats{
@@ -76,12 +76,12 @@ func SetupMetricsOptions(opts MetricOptions) error {
 		return fmt.Errorf("failed to init process stats for agent: %w", err)
 	}
 
-	monitoring.NewFunc(opts.ProcessMetrics, "memstats", MemStatsReporter(log, processStats), monitoring.Report)
-	monitoring.NewFunc(opts.ProcessMetrics, "cpu", InstanceCPUReporter(log, processStats), monitoring.Report)
+	monitoring.NewFunc(opts.ProcessMetrics, "memstats", MemStatsReporter(opts.Logger, processStats), monitoring.Report)
+	monitoring.NewFunc(opts.ProcessMetrics, "cpu", InstanceCPUReporter(opts.Logger, processStats), monitoring.Report)
 	monitoring.NewFunc(opts.ProcessMetrics, "runtime", ReportRuntime, monitoring.Report)
 	monitoring.NewFunc(opts.ProcessMetrics, "info", infoReporter(opts.Name, opts.Version, opts.EphemeralID), monitoring.Report)
 
-	setupPlatformSpecificMetrics(log, processStats, opts.SystemMetrics, opts.ProcessMetrics)
+	setupPlatformSpecificMetrics(opts.Logger, processStats, opts.SystemMetrics, opts.ProcessMetrics)
 
 	return nil
 }
