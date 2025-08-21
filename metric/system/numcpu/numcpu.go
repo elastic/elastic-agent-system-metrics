@@ -31,6 +31,7 @@ import (
 // this number will not reflect the system config.
 // Because this is drop-in, it will not return an error.
 // if it can't fetch the CPU count the "correct" way, it'll fallback to runtime.NumCPU().
+//
 // Deprecated: use NumCPUWithLogger
 func NumCPU() int {
 	return NumCPUWithLogger(logp.NewLogger(""))
