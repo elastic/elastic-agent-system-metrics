@@ -65,7 +65,7 @@ func (m *LoadMetrics) Averages() LoadAverages {
 // NormalizedAverages return the CPU load averages normalized by the NumCPU.
 // These values should range from 0 to 1.
 func (m *LoadMetrics) NormalizedAverages() LoadAverages {
-	cpus := numcpu.NumCPU(m.logger)
+	cpus := numcpu.NumCPUWithLogger(m.logger)
 	return LoadAverages{
 		OneMinute:     metric.Round(m.sample.Load1 / float64(cpus)),
 		FiveMinute:    metric.Round(m.sample.Load5 / float64(cpus)),

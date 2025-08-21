@@ -21,7 +21,6 @@ import (
 	"math"
 	"time"
 
-	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-libs/transform/typeconv"
 	"github.com/elastic/elastic-agent-system-metrics/metric"
@@ -91,7 +90,7 @@ func GetProcCPUPercentage(s0, s1 ProcState) ProcState {
 	if math.IsNaN(pct) {
 		return s1
 	}
-	normalizedPct := pct / float64(numcpu.NumCPU(logp.NewLogger("")))
+	normalizedPct := pct / float64(numcpu.NumCPU())
 
 	s1.CPU.Total.Norm.Pct = opt.FloatWith(metric.Round(normalizedPct))
 	s1.CPU.Total.Pct = opt.FloatWith(metric.Round(pct))

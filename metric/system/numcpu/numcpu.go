@@ -31,7 +31,12 @@ import (
 // this number will not reflect the system config.
 // Because this is drop-in, it will not return an error.
 // if it can't fetch the CPU count the "correct" way, it'll fallback to runtime.NumCPU().
-func NumCPU(logger *logp.Logger) int {
+// Deprecated: use NumCPUWithLogger
+func NumCPU() int {
+	return NumCPUWithLogger(logp.NewLogger(""))
+}
+
+func NumCPUWithLogger(logger *logp.Logger) int {
 	count, exists, err := getCPU()
 	if err != nil {
 		logger.Debugf("Error fetching CPU count: %v", err)

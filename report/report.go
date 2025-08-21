@@ -157,7 +157,7 @@ func ReportSystemCPUUsage(logger *logp.Logger) func(monitoring.Mode, monitoring.
 		V.OnRegistryStart()
 		defer V.OnRegistryFinished()
 
-		monitoring.ReportInt(V, "cores", int64(numcpu.NumCPU(logger)))
+		monitoring.ReportInt(V, "cores", int64(numcpu.NumCPUWithLogger(logger)))
 	}
 }
 
