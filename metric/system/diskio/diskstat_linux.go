@@ -40,7 +40,7 @@ func GetCLKTCK() uint32 {
 }
 
 // IOCounters should map functionality to disk package for linux os.
-func IOCounters(names ...string) (map[string]disk.IOCountersStat, error) {
+func IOCounters(_ *logp.Logger, names ...string) (map[string]disk.IOCountersStat, error) {
 	return disk.IOCounters(names...)
 }
 
