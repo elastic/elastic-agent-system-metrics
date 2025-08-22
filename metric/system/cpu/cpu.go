@@ -30,7 +30,19 @@ import (
 
 // Load returns CPU load information for the previous 1, 5, and 15 minute
 // periods.
+// Deprecated: use LoadWithLogger
 func Load(logger *logp.Logger) (*LoadMetrics, error) {
+	avg, err := load.Avg()
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoadMetrics{avg, logp.NewLogger("")}, nil
+}
+
+// LoadWithLogger returns CPU load information for the previous 1, 5, and 15 minute
+// periods.
+func LoadWithLogger(logger *logp.Logger) (*LoadMetrics, error) {
 	avg, err := load.Avg()
 	if err != nil {
 		return nil, err

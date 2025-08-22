@@ -133,7 +133,7 @@ func ReportSystemLoadAverage(logger *logp.Logger) func(monitoring.Mode, monitori
 		V.OnRegistryStart()
 		defer V.OnRegistryFinished()
 
-		load, err := cpu.Load(logger)
+		load, err := cpu.LoadWithLogger(logger)
 		if err != nil {
 			logger.Errorf("Error retrieving load average: %v", err)
 			return
