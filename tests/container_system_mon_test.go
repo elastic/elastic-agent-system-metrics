@@ -20,7 +20,6 @@ package tests
 import (
 	"context"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -103,7 +102,6 @@ func TestProcessMetricsElevatedPerms(t *testing.T) {
 		Verbose:           true,
 		Privileged:        true,
 		Testname:          "TestSystemHostFromContainer",
-		CreateHostProcess: exec.Command("sleep", "240"),
 		FatalLogMessages:  []string{"Error fetching PID info for", "Non-fatal error fetching"},
 	}
 
@@ -121,7 +119,6 @@ func TestProcessAllSettings(t *testing.T) {
 		Verbose:           false,
 		Privileged:        true,
 		Testname:          "TestSystemHostFromContainer",
-		CreateHostProcess: exec.Command("sleep", "480"),
 		FatalLogMessages:  []string{"Error fetching PID info for"},
 	}
 
