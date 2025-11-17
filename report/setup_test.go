@@ -58,8 +58,13 @@ func TestProcessName(t *testing.T) {
 	for _, tt := range tableTests {
 		t.Run(tt.name, func(t *testing.T) {
 			name := processName(tt.input)
+			expected := tt.expected
+			if isWindows() {
+				// on Windows, no truncation is performed
+				expected = tt.input
+			}
 			require.Truef(t, utf8.ValidString(name), "process name is invalid utf8: %q", name)
-			require.Equal(t, tt.expected, name)
+			require.Equal(t, expected, name)
 		})
 	}
 }
