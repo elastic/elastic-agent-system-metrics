@@ -37,7 +37,7 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           # golangci-lint v2 is required for v2 config format
-          version: v2.1.6
+          version: v2.6.2
 
           # Give the job more time to execute.
           # Regarding `--whole-files`, the linter is supposed to support linting of changed a patch only but,
@@ -72,7 +72,7 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           # golangci-lint v2 is required for v2 config format
-          version: v2.1.6
+          version: v2.6.2
 
           # Give the job more time to execute.
           # Regarding `--whole-files`, the linter is supposed to support linting of changed a patch only but,
