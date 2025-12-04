@@ -27,6 +27,11 @@ import (
 	"github.com/elastic/elastic-agent-libs/logp"
 )
 
+// IOStat carries disk statistics for all devices
+type IOStat struct {
+	lastDiskIOCounters map[string]disk.IOCountersStat
+}
+
 // NewDiskIOStat :init DiskIOStat object.
 func NewDiskIOStat() *IOStat {
 	return &IOStat{

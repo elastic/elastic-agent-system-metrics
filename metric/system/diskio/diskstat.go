@@ -19,11 +19,6 @@
 
 package diskio
 
-import (
-	"github.com/shirou/gopsutil/v4/cpu"
-	"github.com/shirou/gopsutil/v4/disk"
-)
-
 // IOMetric contains mapping fields which are outputted by `iostat -x` on linux
 //
 // Device:         rrqm/s   wrqm/s     r/s     w/s   rsec/s   wsec/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
@@ -43,11 +38,4 @@ type IOMetric struct {
 	AvgWriteAwaitTime float64 `json:"w_await"`
 	AvgServiceTime    float64 `json:"svctm"`
 	BusyPct           float64 `json:"busy"`
-}
-
-// IOStat carries disk statistics for all devices
-type IOStat struct {
-	lastDiskIOCounters map[string]disk.IOCountersStat
-	lastCPU            cpu.TimesStat
-	curCPU             cpu.TimesStat
 }

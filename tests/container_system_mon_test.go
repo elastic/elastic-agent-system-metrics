@@ -73,7 +73,7 @@ func TestKernelProc(t *testing.T) {
 	}
 
 	t.Logf("monitoring kernel proc %d", testPid)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute*5)
 	defer cancel()
 
 	runner := systemtests.DockerTestRunner{
@@ -94,7 +94,7 @@ func TestKernelProc(t *testing.T) {
 }
 
 func TestProcessMetricsElevatedPerms(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute*5)
 	defer cancel()
 	// runs test cases where we do not expect any kind of permissions errors
 	baseRunner := systemtests.DockerTestRunner{
@@ -112,7 +112,7 @@ func TestProcessMetricsElevatedPerms(t *testing.T) {
 }
 
 func TestProcessAllSettings(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute*5)
 	defer cancel()
 	// runs test cases where we do not expect any kind of permissions errors
 	baseRunner := systemtests.DockerTestRunner{
@@ -132,7 +132,7 @@ func TestProcessAllSettings(t *testing.T) {
 }
 
 func TestContainerProcess(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute*5)
 	defer cancel()
 	// Make sure that monitoring container procs from within the container still works
 	baseRunner := systemtests.DockerTestRunner{
@@ -151,7 +151,7 @@ func TestContainerProcess(t *testing.T) {
 }
 
 func TestFilesystem(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute*5)
 	defer cancel()
 
 	// TODO: once https://github.com/elastic/elastic-agent-system-metrics/issues/141 is fixed, add a FatalLogMessages check for

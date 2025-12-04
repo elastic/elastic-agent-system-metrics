@@ -21,7 +21,6 @@ package process
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -702,7 +701,7 @@ func runThreads(t *testing.T) *exec.Cmd { //nolint:unused // needed by other pla
 	}
 
 	var b bytes.Buffer
-	cmd := exec.CommandContext(context.Background(), threads)
+	cmd := exec.CommandContext(t.Context(), threads)
 	cmd.Stdout = &b
 	cmd.Stderr = &b
 

@@ -31,6 +31,13 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/numcpu"
 )
 
+// IOStat carries disk statistics for all devices
+type IOStat struct {
+	lastDiskIOCounters map[string]disk.IOCountersStat
+	lastCPU            cpu.TimesStat
+	curCPU             cpu.TimesStat
+}
+
 // GetCLKTCK emulates the _SC_CLK_TCK syscall
 func GetCLKTCK() uint32 {
 	// return uint32(C.sysconf(C._SC_CLK_TCK))
