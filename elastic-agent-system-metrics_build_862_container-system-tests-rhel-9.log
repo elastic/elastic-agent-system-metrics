@@ -1,0 +1,677 @@
+_bk;t=1765358171642~~~ Running agent environment hook
+_bk;t=1765358171647[90m$[0m /opt/buildkite-agent/hooks/environment
+_bk;t=1765358171841The detected node type is: gcp
+_bk;t=1765358172008Downloading worker-telemetry-emitter from https://storage.googleapis.com/ci-systems-ci-layer-prod/worker-telemetry-emitter/worker-telemetry-emitter-linux-x86_64.
+_bk;t=1765358172116Running worker-telemetry-emitter.
+_bk;t=1765358172140[38;5;48m2025-12-10 09:16:12 INFO  [0m [0mReading secrets from (stdin) for redaction[0m
+_bk;t=1765358172149{"buildkite":{"agent":{"id":"019b078b-f3c0-49a2-b097-c2d523d15dba"}},"event":{"created":"2025-12-10T09:16:12.149616531Z","dataset":"buildkite.worker"},"instance":{"hostname":"bk-agent-prod-gcp-1765357934492679865","id":"1654496507297302401","local-ipv4":"10.224.1.9","provider":"gcp","region":"us-central1","type":"projects/543704608146/machineTypes/n1-standard-4","zone":"us-central1-a","os":"linux","architecture":"amd64"}}
+_bk;t=1765358172442🤔 Attempting to log into Vault with AppRole role_id (36 chars) and secret_id (36 chars)
+_bk;t=1765358172579Using HTTPS for repository checkout
+_bk;t=1765358172895[90m# VAULT_GITHUB_TOKEN added[0m
+_bk;t=1765358172895[90m# TOP_PID added[0m
+_bk;t=1765358172895[90m# VAULT_ADDR added[0m
+_bk;t=1765358172895[90m# WORKER_TELEMETRY_EMITTER_TOKEN added[0m
+_bk;t=1765358172895[90m# VAULT_TOKEN added[0m
+_bk;t=1765358172895~~~ Preparing working directory
+_bk;t=1765358172895[90m# Creating "/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics"[0m
+_bk;t=1765358172896[90m$[0m cd /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358172911Pseudo-terminal will not be allocated because stdin is not a terminal.
+_bk;t=1765358172971# github.com:22 SSH-2.0-1e748d5
+_bk;t=1765358173089# github.com:22 SSH-2.0-1e748d5
+_bk;t=1765358173212# github.com:22 SSH-2.0-1e748d5
+_bk;t=1765358173327# github.com:22 SSH-2.0-1e748d5
+_bk;t=1765358173352# github.com:22 SSH-2.0-1e748d5
+_bk;t=1765358173378[90m# Added host "github.com" to known hosts at "/opt/buildkite-agent/.ssh/known_hosts"[0m
+_bk;t=1765358173378[90m# Skipping update and using existing mirror for repository git@github.com:elastic/elastic-agent-system-metrics.git at /opt/git-mirrors/git-github-com-elastic-elastic-agent-system-metrics-git.[0m
+_bk;t=1765358173378[90m# No existing mirror found for repository git@github.com:elastic/elastic-agent-system-metrics.git at /opt/git-mirrors/git-github-com-elastic-elastic-agent-system-metrics-git.[0m
+_bk;t=1765358173378[90m$[0m git clone -v -- git@github.com:elastic/elastic-agent-system-metrics.git .
+_bk;t=1765358173381Cloning into '.'...
+_bk;t=1765358173521POST git-upload-pack (175 bytes)
+_bk;t=1765358173562POST git-upload-pack (gzip 4502 to 2231 bytes)
+_bk;t=1765358173613remote: Enumerating objects: 239538, done.[K_bk;t=1765358173613
+_bk;t=1765358173613remote: Counting objects:   0% (1/335)[K_bk;t=1765358173613remote: Counting objects:   1% (4/335)[K_bk;t=1765358173613remote: Counting objects:   2% (7/335)[K_bk;t=1765358173613remote: Counting objects:   3% (11/335)[K_bk;t=1765358173613remote: Counting objects:   4% (14/335)[K_bk;t=1765358173613remote: Counting objects:   5% (17/335)[K_bk;t=1765358173613remote: Counting objects:   6% (21/335)[K_bk;t=1765358173613remote: Counting objects:   7% (24/335)[K_bk;t=1765358173613remote: Counting objects:   8% (27/335)[K_bk;t=1765358173613remote: Counting objects:   9% (31/335)[K_bk;t=1765358173613remote: Counting objects:  10% (34/335)[K_bk;t=1765358173613remote: Counting objects:  11% (37/335)[K_bk;t=1765358173613remote: Counting objects:  12% (41/335)[K_bk;t=1765358173613remote: Counting objects:  13% (44/335)[K_bk;t=1765358173613remote: Counting objects:  14% (47/335)[K_bk;t=1765358173613remote: Counting objects:  15% (51/335)[K_bk;t=1765358173613remote: Counting objects:  16% (54/335)[K_bk;t=1765358173613remote: Counting objects:  17% (57/335)[K_bk;t=1765358173613remote: Counting objects:  18% (61/335)[K_bk;t=1765358173613remote: Counting objects:  19% (64/335)[K_bk;t=1765358173613remote: Counting objects:  20% (67/335)[K_bk;t=1765358173613remote: Counting objects:  21% (71/335)[K_bk;t=1765358173613remote: Counting objects:  22% (74/335)[K_bk;t=1765358173613remote: Counting objects:  23% (78/335)[K_bk;t=1765358173613remote: Counting objects:  24% (81/335)[K_bk;t=1765358173613remote: Counting objects:  25% (84/335)[K_bk;t=1765358173613remote: Counting objects:  26% (88/335)[K_bk;t=1765358173613remote: Counting objects:  27% (91/335)[K_bk;t=1765358173613remote: Counting objects:  28% (94/335)[K_bk;t=1765358173613remote: Counting objects:  29% (98/335)[K_bk;t=1765358173613remote: Counting objects:  30% (101/335)[K_bk;t=1765358173613remote: Counting objects:  31% (104/335)[K_bk;t=1765358173613remote: Counting objects:  32% (108/335)[K_bk;t=1765358173613remote: Counting objects:  33% (111/335)[K_bk;t=1765358173613remote: Counting objects:  34% (114/335)[K_bk;t=1765358173613remote: Counting objects:  35% (118/335)[K_bk;t=1765358173613remote: Counting objects:  36% (121/335)[K_bk;t=1765358173613remote: Counting objects:  37% (124/335)[K_bk;t=1765358173613remote: Counting objects:  38% (128/335)[K_bk;t=1765358173613remote: Counting objects:  39% (131/335)[K_bk;t=1765358173613remote: Counting objects:  40% (134/335)[K_bk;t=1765358173613remote: Counting objects:  41% (138/335)[K_bk;t=1765358173613remote: Counting objects:  42% (141/335)[K_bk;t=1765358173613remote: Counting objects:  43% (145/335)[K_bk;t=1765358173613remote: Counting objects:  44% (148/335)[K_bk;t=1765358173613remote: Counting objects:  45% (151/335)[K_bk;t=1765358173613remote: Counting objects:  46% (155/335)[K_bk;t=1765358173613remote: Counting objects:  47% (158/335)[K_bk;t=1765358173613remote: Counting objects:  48% (161/335)[K_bk;t=1765358173613remote: Counting objects:  49% (165/335)[K_bk;t=1765358173613remote: Counting objects:  50% (168/335)[K_bk;t=1765358173613remote: Counting objects:  51% (171/335)[K_bk;t=1765358173613remote: Counting objects:  52% (175/335)[K_bk;t=1765358173613remote: Counting objects:  53% (178/335)[K_bk;t=1765358173613remote: Counting objects:  54% (181/335)[K_bk;t=1765358173613remote: Counting objects:  55% (185/335)[K_bk;t=1765358173613remote: Counting objects:  56% (188/335)[K_bk;t=1765358173613remote: Counting objects:  57% (191/335)[K_bk;t=1765358173613remote: Counting objects:  58% (195/335)[K_bk;t=1765358173613remote: Counting objects:  59% (198/335)[K_bk;t=1765358173613remote: Counting objects:  60% (201/335)[K_bk;t=1765358173613remote: Counting objects:  61% (205/335)[K_bk;t=1765358173613remote: Counting objects:  62% (208/335)[K_bk;t=1765358173613remote: Counting objects:  63% (212/335)[K_bk;t=1765358173613remote: Counting objects:  64% (215/335)[K_bk;t=1765358173613remote: Counting objects:  65% (218/335)[K_bk;t=1765358173613remote: Counting objects:  66% (222/335)[K_bk;t=1765358173613remote: Counting objects:  67% (225/335)[K_bk;t=1765358173613remote: Counting objects:  68% (228/335)[K_bk;t=1765358173613remote: Counting objects:  69% (232/335)[K_bk;t=1765358173613remote: Counting objects:  70% (235/335)[K_bk;t=1765358173613remote: Counting objects:  71% (238/335)[K_bk;t=1765358173613remote: Counting objects:  72% (242/335)[K_bk;t=1765358173613remote: Counting objects:  73% (245/335)[K_bk;t=1765358173613remote: Counting objects:  74% (248/335)[K_bk;t=1765358173613remote: Counting objects:  75% (252/335)[K_bk;t=1765358173613remote: Counting objects:  76% (255/335)[K_bk;t=1765358173613remote: Counting objects:  77% (258/335)[K_bk;t=1765358173613remote: Counting objects:  78% (262/335)[K_bk;t=1765358173613remote: Counting objects:  79% (265/335)[K_bk;t=1765358173613remote: Counting objects:  80% (268/335)[K_bk;t=1765358173613remote: Counting objects:  81% (272/335)[K_bk;t=1765358173613remote: Counting objects:  82% (275/335)[K_bk;t=1765358173613remote: Counting objects:  83% (279/335)[K_bk;t=1765358173613remote: Counting objects:  84% (282/335)[K_bk;t=1765358173613remote: Counting objects:  85% (285/335)[K_bk;t=1765358173613remote: Counting objects:  86% (289/335)[K_bk;t=1765358173613remote: Counting objects:  87% (292/335)[K_bk;t=1765358173613remote: Counting objects:  88% (295/335)[K_bk;t=1765358173613remote: Counting objects:  89% (299/335)[K_bk;t=1765358173613remote: Counting objects:  90% (302/335)[K_bk;t=1765358173613remote: Counting objects:  91% (305/335)[K_bk;t=1765358173613remote: Counting objects:  92% (309/335)[K_bk;t=1765358173613remote: Counting objects:  93% (312/335)[K_bk;t=1765358173613remote: Counting objects:  94% (315/335)[K_bk;t=1765358173613remote: Counting objects:  95% (319/335)[K_bk;t=1765358173613remote: Counting objects:  96% (322/335)[K_bk;t=1765358173613remote: Counting objects:  97% (325/335)[K_bk;t=1765358173613remote: Counting objects:  98% (329/335)[K_bk;t=1765358173613remote: Counting objects:  99% (332/335)[K_bk;t=1765358173613remote: Counting objects: 100% (335/335)[K_bk;t=1765358173613remote: Counting objects: 100% (335/335), done.[K_bk;t=1765358173613
+_bk;t=1765358173613remote: Compressing objects:   0% (1/160)[K_bk;t=1765358173613remote: Compressing objects:   1% (2/160)[K_bk;t=1765358173613remote: Compressing objects:   2% (4/160)[K_bk;t=1765358173614remote: Compressing objects:   3% (5/160)[K_bk;t=1765358173627remote: Compressing objects:   4% (7/160)[K_bk;t=1765358173627remote: Compressing objects:   5% (8/160)[K_bk;t=1765358173627remote: Compressing objects:   6% (10/160)[K_bk;t=1765358173627remote: Compressing objects:   7% (12/160)[K_bk;t=1765358173627remote: Compressing objects:   8% (13/160)[K_bk;t=1765358173627remote: Compressing objects:   9% (15/160)[K_bk;t=1765358173627remote: Compressing objects:  10% (16/160)[K_bk;t=1765358173627remote: Compressing objects:  11% (18/160)[K_bk;t=1765358173627remote: Compressing objects:  12% (20/160)[K_bk;t=1765358173627remote: Compressing objects:  13% (21/160)[K_bk;t=1765358173627remote: Compressing objects:  14% (23/160)[K_bk;t=1765358173627remote: Compressing objects:  15% (24/160)[K_bk;t=1765358173627remote: Compressing objects:  16% (26/160)[K_bk;t=1765358173628remote: Compressing objects:  17% (28/160)[K_bk;t=1765358173629remote: Compressing objects:  18% (29/160)[K_bk;t=1765358173638remote: Compressing objects:  19% (31/160)[K_bk;t=1765358173638remote: Compressing objects:  20% (32/160)[K_bk;t=1765358173638remote: Compressing objects:  21% (34/160)[K_bk;t=1765358173638remote: Compressing objects:  22% (36/160)[K_bk;t=1765358173638remote: Compressing objects:  23% (37/160)[K_bk;t=1765358173638remote: Compressing objects:  24% (39/160)[K_bk;t=1765358173638remote: Compressing objects:  25% (40/160)[K_bk;t=1765358173638remote: Compressing objects:  26% (42/160)[K_bk;t=1765358173638remote: Compressing objects:  27% (44/160)[K_bk;t=1765358173638remote: Compressing objects:  28% (45/160)[K_bk;t=1765358173638remote: Compressing objects:  29% (47/160)[K_bk;t=1765358173638remote: Compressing objects:  30% (48/160)[K_bk;t=1765358173638remote: Compressing objects:  31% (50/160)[K_bk;t=1765358173638remote: Compressing objects:  32% (52/160)[K_bk;t=1765358173638remote: Compressing objects:  33% (53/160)[K_bk;t=1765358173638remote: Compressing objects:  34% (55/160)[K_bk;t=1765358173638remote: Compressing objects:  35% (56/160)[K_bk;t=1765358173638remote: Compressing objects:  36% (58/160)[K_bk;t=1765358173638remote: Compressing objects:  37% (60/160)[K_bk;t=1765358173638remote: Compressing objects:  38% (61/160)[K_bk;t=1765358173638remote: Compressing objects:  39% (63/160)[K_bk;t=1765358173638remote: Compressing objects:  40% (64/160)[K_bk;t=1765358173638remote: Compressing objects:  41% (66/160)[K_bk;t=1765358173638remote: Compressing objects:  42% (68/160)[K_bk;t=1765358173638remote: Compressing objects:  43% (69/160)[K_bk;t=1765358173638remote: Compressing objects:  44% (71/160)[K_bk;t=1765358173638remote: Compressing objects:  45% (72/160)[K_bk;t=1765358173638remote: Compressing objects:  46% (74/160)[K_bk;t=1765358173638remote: Compressing objects:  47% (76/160)[K_bk;t=1765358173638remote: Compressing objects:  48% (77/160)[K_bk;t=1765358173638remote: Compressing objects:  49% (79/160)[K_bk;t=1765358173638remote: Compressing objects:  50% (80/160)[K_bk;t=1765358173638remote: Compressing objects:  51% (82/160)[K_bk;t=1765358173638remote: Compressing objects:  52% (84/160)[K_bk;t=1765358173638remote: Compressing objects:  53% (85/160)[K_bk;t=1765358173638remote: Compressing objects:  54% (87/160)[K_bk;t=1765358173638remote: Compressing objects:  55% (88/160)[K_bk;t=1765358173638remote: Compressing objects:  56% (90/160)[K_bk;t=1765358173638remote: Compressing objects:  57% (92/160)[K_bk;t=1765358173638remote: Compressing objects:  58% (93/160)[K_bk;t=1765358173639remote: Compressing objects:  59% (95/160)[K_bk;t=1765358173639remote: Compressing objects:  60% (96/160)[K_bk;t=1765358173639remote: Compressing objects:  61% (98/160)[K_bk;t=1765358173639remote: Compressing objects:  62% (100/160)[K_bk;t=1765358173639remote: Compressing objects:  63% (101/160)[K_bk;t=1765358173639remote: Compressing objects:  64% (103/160)[K_bk;t=1765358173639remote: Compressing objects:  65% (104/160)[K_bk;t=1765358173639remote: Compressing objects:  66% (106/160)[K_bk;t=1765358173639remote: Compressing objects:  67% (108/160)[K_bk;t=1765358173639remote: Compressing objects:  68% (109/160)[K_bk;t=1765358173639remote: Compressing objects:  69% (111/160)[K_bk;t=1765358173639remote: Compressing objects:  70% (112/160)[K_bk;t=1765358173639remote: Compressing objects:  71% (114/160)[K_bk;t=1765358173639remote: Compressing objects:  72% (116/160)[K_bk;t=1765358173639remote: Compressing objects:  73% (117/160)[K_bk;t=1765358173639remote: Compressing objects:  74% (119/160)[K_bk;t=1765358173639remote: Compressing objects:  75% (120/160)[K_bk;t=1765358173639remote: Compressing objects:  76% (122/160)[K_bk;t=1765358173639remote: Compressing objects:  77% (124/160)[K_bk;t=1765358173639remote: Compressing objects:  78% (125/160)[K_bk;t=1765358173639remote: Compressing objects:  79% (127/160)[K_bk;t=1765358173639remote: Compressing objects:  80% (128/160)[K_bk;t=1765358173639remote: Compressing objects:  81% (130/160)[K_bk;t=1765358173639remote: Compressing objects:  82% (132/160)[K_bk;t=1765358173639remote: Compressing objects:  83% (133/160)[K_bk;t=1765358173639remote: Compressing objects:  84% (135/160)[K_bk;t=1765358173639remote: Compressing objects:  85% (136/160)[K_bk;t=1765358173639remote: Compressing objects:  86% (138/160)[K_bk;t=1765358173639remote: Compressing objects:  87% (140/160)[K_bk;t=1765358173639remote: Compressing objects:  88% (141/160)[K_bk;t=1765358173639remote: Compressing objects:  89% (143/160)[K_bk;t=1765358173639remote: Compressing objects:  90% (144/160)[K_bk;t=1765358173639remote: Compressing objects:  91% (146/160)[K_bk;t=1765358173639remote: Compressing objects:  92% (148/160)[K_bk;t=1765358173639remote: Compressing objects:  93% (149/160)[K_bk;t=1765358173639remote: Compressing objects:  94% (151/160)[K_bk;t=1765358173639remote: Compressing objects:  95% (152/160)[K_bk;t=1765358173639remote: Compressing objects:  96% (154/160)[K_bk;t=1765358173639remote: Compressing objects:  97% (156/160)[K_bk;t=1765358173639remote: Compressing objects:  98% (157/160)[K_bk;t=1765358173639remote: Compressing objects:  99% (159/160)[K_bk;t=1765358173639remote: Compressing objects: 100% (160/160)[K_bk;t=1765358173639remote: Compressing objects: 100% (160/160), done.[K_bk;t=1765358173639
+_bk;t=1765358173639Receiving objects:   0% (1/239538)Receiving objects:   1% (2396/239538)Receiving objects:   2% (4791/239538)Receiving objects:   3% (7187/239538)Receiving objects:   4% (9582/239538)Receiving objects:   5% (11977/239538)Receiving objects:   6% (14373/239538)Receiving objects:   7% (16768/239538)_bk;t=1765358174640Receiving objects:   7% (18882/239538), 9.01 MiB | 18.01 MiB/sReceiving objects:   8% (19164/239538), 29.28 MiB | 29.27 MiB/sReceiving objects:   9% (21559/239538), 29.28 MiB | 29.27 MiB/sReceiving objects:  10% (23954/239538), 29.28 MiB | 29.27 MiB/s_bk;t=1765358175640Receiving objects:  10% (25245/239538), 62.19 MiB | 31.09 MiB/sReceiving objects:  11% (26350/239538), 62.19 MiB | 31.09 MiB/sReceiving objects:  12% (28745/239538), 82.39 MiB | 32.95 MiB/s_bk;t=1765358176640Receiving objects:  12% (28922/239538), 92.09 MiB | 30.69 MiB/sReceiving objects:  13% (31140/239538), 92.09 MiB | 30.69 MiB/sReceiving objects:  14% (33536/239538), 92.09 MiB | 30.69 MiB/sReceiving objects:  15% (35931/239538), 92.09 MiB | 30.69 MiB/sReceiving objects:  16% (38327/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  17% (40722/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  18% (43117/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  19% (45513/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  20% (47908/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  21% (50303/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  22% (52699/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  23% (55094/239538), 107.51 MiB | 30.71 MiB/sReceiving objects:  23% (55401/239538), 107.51 MiB | 30.71 MiB/s_bk;t=1765358177663Receiving objects:  24% (57490/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  25% (59885/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  26% (62280/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  27% (64676/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  28% (67071/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  29% (69467/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  30% (71862/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  31% (74257/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  32% (76653/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  33% (79048/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  34% (81443/239538), 121.31 MiB | 30.33 MiB/sReceiving objects:  35% (83839/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  36% (86234/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  37% (88630/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  38% (91025/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  39% (93420/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  40% (95816/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  41% (98211/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  42% (100606/239538), 137.04 MiB | 30.46 MiB/sReceiving objects:  42% (100641/239538), 137.04 MiB | 30.46 MiB/s_bk;t=1765358178776Receiving objects:  43% (103002/239538), 149.44 MiB | 31.21 MiB/sReceiving objects:  44% (105397/239538), 149.44 MiB | 31.21 MiB/sReceiving objects:  45% (107793/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  46% (110188/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  47% (112583/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  48% (114979/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  49% (117374/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  50% (119769/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  51% (122165/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  52% (124560/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  53% (126956/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  53% (128274/239538), 159.10 MiB | 28.86 MiB/sReceiving objects:  54% (129351/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  55% (131746/239538), 173.01 MiB | 28.59 MiB/s_bk;t=1765358179802Receiving objects:  56% (134142/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  57% (136537/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  58% (138933/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  59% (141328/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  60% (143723/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  61% (146119/239538), 173.01 MiB | 28.59 MiB/sReceiving objects:  62% (148514/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  63% (150909/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  64% (153305/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  65% (155700/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  66% (158096/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  67% (160491/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  68% (162886/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  69% (165282/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  70% (167677/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  71% (170072/239538), 187.39 MiB | 27.83 MiB/sReceiving objects:  71% (170841/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  72% (172468/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  73% (174863/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  74% (177259/239538), 205.01 MiB | 27.25 MiB/s_bk;t=1765358180814Receiving objects:  75% (179654/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  76% (182049/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  77% (184445/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  78% (186840/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  79% (189236/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  80% (191631/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  81% (194026/239538), 205.01 MiB | 27.25 MiB/sReceiving objects:  82% (196422/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  83% (198817/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  84% (201212/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  85% (203608/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  86% (206003/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  87% (208399/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  88% (210794/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  89% (213189/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  89% (214556/239538), 221.42 MiB | 28.75 MiB/sReceiving objects:  90% (215585/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  91% (217980/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  92% (220375/239538), 235.89 MiB | 28.53 MiB/s_bk;t=1765358181829Receiving objects:  93% (222771/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  94% (225166/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  95% (227562/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  96% (229957/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  97% (232352/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  98% (234748/239538), 235.89 MiB | 28.53 MiB/sReceiving objects:  99% (237143/239538), 250.24 MiB | 28.66 MiB/sremote: Total 239538 (delta 288), reused 177 (delta 174), pack-reused 239203 (from 3)[K_bk;t=1765358182398
+_bk;t=1765358182404Receiving objects: 100% (239538/239538), 250.24 MiB | 28.66 MiB/sReceiving objects: 100% (239538/239538), 256.47 MiB | 29.26 MiB/s, done.
+_bk;t=1765358182426Resolving deltas:   0% (0/162368)_bk;t=1765358183427Resolving deltas:   0% (635/162368)Resolving deltas:   1% (1624/162368)Resolving deltas:   2% (3248/162368)Resolving deltas:   2% (3717/162368)_bk;t=1765358184640Resolving deltas:   3% (4872/162368)Resolving deltas:   4% (6495/162368)Resolving deltas:   5% (8119/162368)Resolving deltas:   6% (9743/162368)Resolving deltas:   7% (11366/162368)Resolving deltas:   7% (12147/162368)Resolving deltas:   8% (12990/162368)Resolving deltas:   9% (14614/162368)Resolving deltas:  10% (16237/162368)_bk;t=1765358185714Resolving deltas:  11% (17861/162368)Resolving deltas:  12% (19485/162368)Resolving deltas:  13% (21108/162368)Resolving deltas:  14% (22732/162368)Resolving deltas:  15% (24356/162368)Resolving deltas:  16% (25979/162368)Resolving deltas:  17% (27603/162368)Resolving deltas:  18% (29227/162368)Resolving deltas:  19% (30850/162368)Resolving deltas:  19% (32361/162368)Resolving deltas:  20% (32474/162368)Resolving deltas:  21% (34098/162368)_bk;t=1765358186729Resolving deltas:  22% (35722/162368)Resolving deltas:  23% (37345/162368)Resolving deltas:  24% (38969/162368)Resolving deltas:  25% (40592/162368)Resolving deltas:  26% (42216/162368)Resolving deltas:  27% (43840/162368)Resolving deltas:  28% (45464/162368)Resolving deltas:  29% (47087/162368)Resolving deltas:  30% (48711/162368)Resolving deltas:  31% (50335/162368)Resolving deltas:  32% (51958/162368)Resolving deltas:  33% (53582/162368)Resolving deltas:  33% (53901/162368)Resolving deltas:  34% (55206/162368)Resolving deltas:  35% (56829/162368)Resolving deltas:  36% (58453/162368)Resolving deltas:  37% (60077/162368)Resolving deltas:  38% (61700/162368)Resolving deltas:  39% (63324/162368)_bk;t=1765358187754Resolving deltas:  40% (64948/162368)Resolving deltas:  41% (66571/162368)Resolving deltas:  42% (68195/162368)Resolving deltas:  43% (69819/162368)Resolving deltas:  44% (71442/162368)Resolving deltas:  45% (73066/162368)Resolving deltas:  46% (74690/162368)Resolving deltas:  47% (76313/162368)Resolving deltas:  48% (77937/162368)Resolving deltas:  49% (79561/162368)Resolving deltas:  50% (81184/162368)Resolving deltas:  51% (82808/162368)Resolving deltas:  52% (84432/162368)Resolving deltas:  53% (86056/162368)Resolving deltas:  53% (86878/162368)Resolving deltas:  54% (87680/162368)Resolving deltas:  55% (89303/162368)Resolving deltas:  56% (90928/162368)Resolving deltas:  57% (92550/162368)Resolving deltas:  58% (94174/162368)_bk;t=1765358188826Resolving deltas:  59% (95798/162368)Resolving deltas:  60% (97422/162368)Resolving deltas:  61% (99045/162368)Resolving deltas:  62% (100669/162368)Resolving deltas:  63% (102292/162368)Resolving deltas:  64% (103916/162368)Resolving deltas:  65% (105541/162368)Resolving deltas:  66% (107163/162368)Resolving deltas:  67% (108787/162368)Resolving deltas:  68% (110411/162368)Resolving deltas:  68% (110461/162368)Resolving deltas:  69% (112034/162368)Resolving deltas:  70% (113658/162368)Resolving deltas:  71% (115282/162368)Resolving deltas:  72% (116905/162368)Resolving deltas:  73% (118529/162368)Resolving deltas:  74% (120153/162368)Resolving deltas:  75% (121776/162368)Resolving deltas:  76% (123400/162368)Resolving deltas:  77% (125024/162368)Resolving deltas:  78% (126648/162368)Resolving deltas:  79% (128271/162368)Resolving deltas:  80% (129895/162368)Resolving deltas:  81% (131519/162368)Resolving deltas:  82% (133142/162368)_bk;t=1765358189834Resolving deltas:  83% (134768/162368)Resolving deltas:  84% (136390/162368)Resolving deltas:  85% (138013/162368)Resolving deltas:  86% (139637/162368)Resolving deltas:  87% (141261/162368)Resolving deltas:  88% (142884/162368)Resolving deltas:  89% (144508/162368)Resolving deltas:  90% (146132/162368)Resolving deltas:  91% (147755/162368)Resolving deltas:  92% (149379/162368)Resolving deltas:  93% (151003/162368)Resolving deltas:  94% (152626/162368)Resolving deltas:  95% (154250/162368)Resolving deltas:  96% (155874/162368)Resolving deltas:  97% (157497/162368)Resolving deltas:  98% (159121/162368)Resolving deltas:  99% (160745/162368)Resolving deltas: 100% (162368/162368)Resolving deltas: 100% (162368/162368), done.
+_bk;t=1765358190653[90m$[0m git clean -ffxdq
+_bk;t=1765358190658[90m# Fetch and checkout pull request head from GitHub[0m
+_bk;t=1765358190658[90m$[0m git fetch -v --prune -- origin refs/pull/273/head f0125b87a63c9eacff4bf3adaa4328ea50c7f553
+_bk;t=1765358190803POST git-upload-pack (389 bytes)
+_bk;t=1765358190845POST git-upload-pack (993 bytes)
+_bk;t=1765358190900remote: Enumerating objects: 21, done.[K_bk;t=1765358190900
+_bk;t=1765358190900remote: Counting objects:   4% (1/21)[K_bk;t=1765358190900remote: Counting objects:   9% (2/21)[K_bk;t=1765358190900remote: Counting objects:  14% (3/21)[K_bk;t=1765358190900remote: Counting objects:  19% (4/21)[K_bk;t=1765358190900remote: Counting objects:  23% (5/21)[K_bk;t=1765358190900remote: Counting objects:  28% (6/21)[K_bk;t=1765358190900remote: Counting objects:  33% (7/21)[K_bk;t=1765358190900remote: Counting objects:  38% (8/21)[K_bk;t=1765358190900remote: Counting objects:  42% (9/21)[K_bk;t=1765358190900remote: Counting objects:  47% (10/21)[K_bk;t=1765358190900remote: Counting objects:  52% (11/21)[K_bk;t=1765358190900remote: Counting objects:  57% (12/21)[K_bk;t=1765358190900remote: Counting objects:  61% (13/21)[K_bk;t=1765358190900remote: Counting objects:  66% (14/21)[K_bk;t=1765358190900remote: Counting objects:  71% (15/21)[K_bk;t=1765358190900remote: Counting objects:  76% (16/21)[K_bk;t=1765358190900remote: Counting objects:  80% (17/21)[K_bk;t=1765358190900remote: Counting objects:  85% (18/21)[K_bk;t=1765358190900remote: Counting objects:  90% (19/21)[K_bk;t=1765358190900remote: Counting objects:  95% (20/21)[K_bk;t=1765358190900remote: Counting objects: 100% (21/21)[K_bk;t=1765358190900remote: Counting objects: 100% (21/21), done.[K_bk;t=1765358190900
+_bk;t=1765358190900remote: Compressing objects:   9% (1/11)[K_bk;t=1765358190900remote: Compressing objects:  18% (2/11)[K_bk;t=1765358190900remote: Compressing objects:  27% (3/11)[K_bk;t=1765358190900remote: Compressing objects:  36% (4/11)[K_bk;t=1765358190900remote: Compressing objects:  45% (5/11)[K_bk;t=1765358190900remote: Compressing objects:  54% (6/11)[K_bk;t=1765358190900remote: Compressing objects:  63% (7/11)[K_bk;t=1765358190900remote: Compressing objects:  72% (8/11)[K_bk;t=1765358190900remote: Compressing objects:  81% (9/11)[K_bk;t=1765358190900remote: Compressing objects:  90% (10/11)[K_bk;t=1765358190900remote: Compressing objects: 100% (11/11)[K_bk;t=1765358190900remote: Compressing objects: 100% (11/11), done.[K_bk;t=1765358190900
+_bk;t=1765358190908remote: Total 21 (delta 11), reused 20 (delta 10), pack-reused 0 (from 0)[K_bk;t=1765358190908
+_bk;t=1765358190912Unpacking objects:   4% (1/21)Unpacking objects:   9% (2/21)Unpacking objects:  14% (3/21)Unpacking objects:  19% (4/21)Unpacking objects:  23% (5/21)Unpacking objects:  28% (6/21)Unpacking objects:  33% (7/21)Unpacking objects:  38% (8/21)Unpacking objects:  42% (9/21)Unpacking objects:  47% (10/21)Unpacking objects:  52% (11/21)Unpacking objects:  57% (12/21)Unpacking objects:  61% (13/21)Unpacking objects:  66% (14/21)Unpacking objects:  71% (15/21)Unpacking objects:  76% (16/21)Unpacking objects:  80% (17/21)Unpacking objects:  85% (18/21)Unpacking objects:  90% (19/21)Unpacking objects:  95% (20/21)Unpacking objects: 100% (21/21)Unpacking objects: 100% (21/21), 7.47 KiB | 956.00 KiB/s, done.
+_bk;t=1765358190927From https://github.com/elastic/elastic-agent-system-metrics
+_bk;t=1765358190927 * branch                refs/pull/273/head -> FETCH_HEAD
+_bk;t=1765358190927 * branch                f0125b87a63c9eacff4bf3adaa4328ea50c7f553 -> FETCH_HEAD
+_bk;t=1765358190936[90m# FETCH_HEAD is now `f0125b87a63c9eacff4bf3adaa4328ea50c7f553`[0m
+_bk;t=1765358190936[90m$[0m git checkout -f f0125b87a63c9eacff4bf3adaa4328ea50c7f553
+_bk;t=1765358190964Note: switching to 'f0125b87a63c9eacff4bf3adaa4328ea50c7f553'.
+_bk;t=1765358190964
+_bk;t=1765358190964You are in 'detached HEAD' state. You can look around, make experimental
+_bk;t=1765358190964changes and commit them, and you can discard any commits you make in this
+_bk;t=1765358190964state without impacting any branches by switching back to a branch.
+_bk;t=1765358190964
+_bk;t=1765358190964If you want to create a new branch to retain commits you create, you may
+_bk;t=1765358190964do so (now or later) by using -c with the switch command. Example:
+_bk;t=1765358190964
+_bk;t=1765358190964  git switch -c <new-branch-name>
+_bk;t=1765358190964
+_bk;t=1765358190964Or undo this operation with:
+_bk;t=1765358190964
+_bk;t=1765358190964  git switch -
+_bk;t=1765358190964
+_bk;t=1765358190964Turn off this advice by setting config variable advice.detachedHead to false
+_bk;t=1765358190964
+_bk;t=1765358190964HEAD is now at f0125b87a improve debugging
+_bk;t=1765358190965[90m# Cleaning again to catch any post-checkout changes[0m
+_bk;t=1765358190965[90m$[0m git clean -ffxdq
+_bk;t=1765358190970[90m# Checking to see if git commit information needs to be sent to Buildkite...[0m
+_bk;t=1765358190970[90m# BUILDKITE_COMMIT is already resolved and meta-data populated, skipping[0m
+_bk;t=1765358190970~~~ Running repository post-checkout hook
+_bk;t=1765358190970[90m$[0m .buildkite/hooks/post-checkout
+_bk;t=1765358191110POST git-upload-pack (305 bytes)
+_bk;t=1765358191157From https://github.com/elastic/elastic-agent-system-metrics
+_bk;t=1765358191157 * branch                main       -> FETCH_HEAD
+_bk;t=1765358191157 = [up to date]          main       -> origin/main
+_bk;t=1765358191180Warning: you are leaving 3 commits behind, not connected to
+_bk;t=1765358191180any of your branches:
+_bk;t=1765358191180
+_bk;t=1765358191180  f0125b87a improve debugging
+_bk;t=1765358191180  a9d9493f5 Skip broken test
+_bk;t=1765358191180  1ea618b39 ci: update gvm to v0.6.0 to fix Go download failures
+_bk;t=1765358191180
+_bk;t=1765358191180If you want to keep them by creating a new branch, this may be a good time
+_bk;t=1765358191180to do so with:
+_bk;t=1765358191180
+_bk;t=1765358191180 git branch <new-branch-name> f0125b87a
+_bk;t=1765358191180
+_bk;t=1765358191181HEAD is now at 8da89ce56 fix(report): prevent corrupted utf8 when computing process name (#269)
+_bk;t=1765358191185Current branch: HEAD
+_bk;t=1765358191189Switched to a new branch 'pr_merge_273'
+_bk;t=1765358191193New branch created: pr_merge_273
+_bk;t=1765358191202Updating 8da89ce56..f0125b87a
+_bk;t=1765358191205Fast-forward
+_bk;t=1765358191209 .buildkite/pipeline.yml                         |  2 [32m+[m[31m-[m
+_bk;t=1765358191209 .buildkite/scripts/run-win-tests.ps1            |  2 [32m+[m[31m-[m
+_bk;t=1765358191209 dev-tools/systemtests/testResolve.go            |  2 [32m+[m[31m-[m
+_bk;t=1765358191209 metric/system/process/process_container_test.go | 38 [32m++++++++++++++++++++++++[m[31m--------------[m
+_bk;t=1765358191209 4 files changed, 27 insertions(+), 17 deletions(-)
+_bk;t=1765358191210Commit information
+_bk;t=1765358191212improve debugging
+_bk;t=1765358191212
+_bk;t=1765358191213
+_bk;t=1765358191239~~~ Running agent pre-command hook
+_bk;t=1765358191240[90m$[0m /opt/buildkite-agent/hooks/pre-command
+_bk;t=1765358191264--- initialize asdf, asdf is available!
+_bk;t=1765358191266--- listing available asdf tools
+_bk;t=1765358191297gh
+_bk;t=1765358191360  2.62.0
+_bk;t=1765358191360  2.83.1
+_bk;t=1765358191362golang
+_bk;t=1765358191429  1.24.10
+_bk;t=1765358191429  1.24.4
+_bk;t=1765358191429  1.24.9
+_bk;t=1765358191429  1.25.4
+_bk;t=1765358191431mage
+_bk;t=1765358191493  1.14.0
+_bk;t=1765358191493  1.15.0
+_bk;t=1765358191495python
+_bk;t=1765358191555  3.10.9
+_bk;t=1765358191555  3.9.13
+_bk;t=1765358191557terraform
+_bk;t=1765358191620  1.0.2
+_bk;t=1765358191620  1.9.3
+_bk;t=1765358191664--- golang version 1.24.7 is missing; installing.
+_bk;t=1765358191755[32mPlatform 'linux' supported![39m
+_bk;t=1765358192004  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+_bk;t=1765358192004                                 Dload  Upload   Total   Spent    Left  Speed
+_bk;t=1765358192004  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0 74.9M    0 50962    0     0  53757      0  0:24:21 --:--:--  0:24:21 53700_bk;t=1765358193271100 74.9M  100 74.9M    0     0  59.1M      0  0:00:01  0:00:01 --:--:-- 59.1M
+_bk;t=1765358193280  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+_bk;t=1765358193281                                 Dload  Upload   Total   Spent    Left  Speed
+_bk;t=1765358193281  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    64  100    64    0     0     65      0 --:--:-- --:--:-- --:--:--    65100    64  100    64    0     0     65      0 --:--:-- --:--:-- --:--:--    65
+_bk;t=1765358194258verifying checksum
+_bk;t=1765358194502/opt/buildkite-agent/.asdf/downloads/golang/1.24.7/archive.tar.gz: OK
+_bk;t=1765358194503[32mchecksum verified[39m
+_bk;t=1765358196928
+_bk;t=1765358196928Installing [33mgithub.com/elastic/go-licenser[39m go pkg... go: downloading github.com/elastic/go-licenser v0.4.2
+_bk;t=1765358204426[32mSUCCESS[39m
+_bk;t=1765358204430
+_bk;t=1765358204430Installing [33mgolang.org/x/tools/cmd/goimports[39m go pkg... go: downloading golang.org/x/tools v0.40.0
+_bk;t=1765358204948go: downloading golang.org/x/telemetry v0.0.0-20251203150158-8fff8a5912fc
+_bk;t=1765358204958go: downloading golang.org/x/mod v0.31.0
+_bk;t=1765358204981go: downloading golang.org/x/sync v0.19.0
+_bk;t=1765358210945[32mSUCCESS[39m
+_bk;t=1765358210949
+_bk;t=1765358210949Installing [33mgithub.com/jstemmer/go-junit-report[39m go pkg... go: downloading github.com/jstemmer/go-junit-report v1.0.0
+_bk;t=1765358211639[32mSUCCESS[39m
+_bk;t=1765358211643
+_bk;t=1765358211643Installing [33mgotest.tools/gotestsum[39m go pkg... go: downloading gotest.tools/gotestsum v1.13.0
+_bk;t=1765358211711go: downloading gotest.tools v2.2.0+incompatible
+_bk;t=1765358211752go: downloading github.com/dnephin/pflag v1.0.7
+_bk;t=1765358211753go: downloading golang.org/x/tools v0.36.0
+_bk;t=1765358211754go: downloading github.com/fatih/color v1.18.0
+_bk;t=1765358211756go: downloading github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+_bk;t=1765358211794go: downloading github.com/bitfield/gotestdox v0.2.2
+_bk;t=1765358211794go: downloading golang.org/x/sync v0.17.0
+_bk;t=1765358211795go: downloading golang.org/x/term v0.35.0
+_bk;t=1765358211820go: downloading github.com/fsnotify/fsnotify v1.9.0
+_bk;t=1765358211820go: downloading golang.org/x/sys v0.36.0
+_bk;t=1765358211839go: downloading github.com/mattn/go-colorable v0.1.13
+_bk;t=1765358211860go: downloading github.com/mattn/go-isatty v0.0.20
+_bk;t=1765358211877go: downloading golang.org/x/text v0.17.0
+_bk;t=1765358212399go: downloading golang.org/x/mod v0.27.0
+_bk;t=1765358218590[32mSUCCESS[39m
+_bk;t=1765358218800--- loaded .go-version (1.24.7)
+_bk;t=1765358219990[90m# OLDPWD added[0m
+_bk;t=1765358219990[90m# ASDF_GOLANG_VERSION added[0m
+_bk;t=1765358219990[90m# ASDF_DIR added[0m
+_bk;t=1765358219990[90m# GOPATH added[0m
+_bk;t=1765358219990[90m# ASDF_GOLANG_DEFAULT_PACKAGES_FILE added[0m
+_bk;t=1765358219990[90m# GOROOT added[0m
+_bk;t=1765358219990[90m# PATH changed[0m
+_bk;t=1765358219990~~~ Running repository pre-command hook
+_bk;t=1765358219990[90m$[0m .buildkite/hooks/pre-command
+_bk;t=1765358220043[90m# GO_VERSION added[0m
+_bk;t=1765358220043~~~ Running script
+_bk;t=1765358220043[90m$[0m ./.buildkite/scripts/system-container-tests.sh
+_bk;t=1765358220221go: downloading github.com/magefile/mage v1.15.0
+_bk;t=1765358223690go: downloading github.com/docker/docker v26.1.5+incompatible
+_bk;t=1765358223690go: downloading github.com/stretchr/testify v1.9.0
+_bk;t=1765358224489go: downloading github.com/elastic/elastic-agent-libs v0.21.6
+_bk;t=1765358224496go: downloading github.com/docker/go-connections v0.4.0
+_bk;t=1765358224502go: downloading github.com/docker/go-units v0.5.0
+_bk;t=1765358224512go: downloading github.com/moby/docker-image-spec v1.3.1
+_bk;t=1765358224517go: downloading github.com/distribution/reference v0.6.0
+_bk;t=1765358224519go: downloading github.com/opencontainers/go-digest v1.0.0
+_bk;t=1765358224531go: downloading github.com/opencontainers/image-spec v1.0.2
+_bk;t=1765358224532go: downloading github.com/pkg/errors v0.9.1
+_bk;t=1765358224542go: downloading go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0
+_bk;t=1765358224559go: downloading go.opentelemetry.io/otel/trace v1.28.0
+_bk;t=1765358224563go: downloading github.com/davecgh/go-spew v1.1.1
+_bk;t=1765358224571go: downloading go.opentelemetry.io/otel v1.28.0
+_bk;t=1765358224581go: downloading github.com/pmezard/go-difflib v1.0.0
+_bk;t=1765358224588go: downloading gopkg.in/yaml.v3 v3.0.1
+_bk;t=1765358224649go: downloading golang.org/x/net v0.38.0
+_bk;t=1765358224649go: downloading github.com/felixge/httpsnoop v1.0.4
+_bk;t=1765358224774go: downloading go.opentelemetry.io/otel/metric v1.28.0
+_bk;t=1765358224787go: downloading go.elastic.co/ecszap v1.0.2
+_bk;t=1765358224788go: downloading go.uber.org/zap v1.27.0
+_bk;t=1765358224841go: downloading github.com/gogo/protobuf v1.3.2
+_bk;t=1765358224845go: downloading github.com/go-logr/logr v1.4.2
+_bk;t=1765358224857go: downloading golang.org/x/sys v0.31.0
+_bk;t=1765358224876go: downloading go.uber.org/multierr v1.11.0
+_bk;t=1765358224891go: downloading github.com/go-logr/stdr v1.2.2
+_bk;t=1765358239446=== RUN   TestKernelProc
+_bk;t=1765358239447    container_system_mon_test.go:75: monitoring kernel proc 3
+_bk;t=1765358239903{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358240265{"status":"Pulling fs layer","progressDetail":{},"id":"4f4fb700ef54"}
+_bk;t=1765358240265{"status":"Pulling fs layer","progressDetail":{},"id":"d80e74d593b6"}
+_bk;t=1765358240265{"status":"Pulling fs layer","progressDetail":{},"id":"014e56e61396"}
+_bk;t=1765358240265{"status":"Pulling fs layer","progressDetail":{},"id":"2d6da02310d1"}
+_bk;t=1765358240265{"status":"Pulling fs layer","progressDetail":{},"id":"5c445a0e108b"}
+_bk;t=1765358240362{"status":"Already exists","progressDetail":{"hidecounts":true},"id":"4f4fb700ef54"}
+_bk;t=1765358240545{"status":"Pull complete","progressDetail":{"hidecounts":true},"id":"4f4fb700ef54"}
+_bk;t=1765358240546{"status":"Download complete","progressDetail":{"hidecounts":true},"id":"d80e74d593b6"}
+_bk;t=1765358240547{"status":"Download complete","progressDetail":{"hidecounts":true},"id":"340eb631e291"}
+_bk;t=1765358240547{"status":"Download complete","progressDetail":{"hidecounts":true},"id":"d70ab9b92cde"}
+_bk;t=1765358240548{"status":"Download complete","progressDetail":{"hidecounts":true},"id":"2d6da02310d1"}
+_bk;t=1765358240561{"status":"Downloading","progressDetail":{"current":1048576,"total":3859315},"id":"014e56e61396"}
+_bk;t=1765358240659{"status":"Download complete","progressDetail":{"hidecounts":true},"id":"014e56e61396"}
+_bk;t=1765358240659{"status":"Downloading","progressDetail":{"current":5242880,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358240677{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"014e56e61396"}
+_bk;t=1765358240759{"status":"Downloading","progressDetail":{"current":10485760,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358240785{"status":"Pull complete","progressDetail":{"hidecounts":true},"id":"014e56e61396"}
+_bk;t=1765358240859{"status":"Downloading","progressDetail":{"current":19570688,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358240868{"status":"Pull complete","progressDetail":{"hidecounts":true},"id":"d80e74d593b6"}
+_bk;t=1765358240959{"status":"Downloading","progressDetail":{"current":26214400,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241059{"status":"Downloading","progressDetail":{"current":31457280,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241159{"status":"Downloading","progressDetail":{"current":37748736,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241259{"status":"Downloading","progressDetail":{"current":46137344,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241359{"status":"Downloading","progressDetail":{"current":54525952,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241460{"status":"Downloading","progressDetail":{"current":60151314,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241559{"status":"Downloading","progressDetail":{"current":60151314,"total":60151314},"id":"5c445a0e108b"}
+_bk;t=1765358241659{"status":"Download complete","progressDetail":{"hidecounts":true},"id":"5c445a0e108b"}
+_bk;t=1765358241672{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358241774{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358241872{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358241971{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242070{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242172{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242271{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242372{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242470{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242570{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242671{"status":"Extracting","progressDetail":{"current":1,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242771{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242872{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358242972{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243071{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243169{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243270{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243375{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243473{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243572{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243670{"status":"Extracting","progressDetail":{"current":2,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243768{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243871{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358243970{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244070{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244170{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244269{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244371{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244472{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244569{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244670{"status":"Extracting","progressDetail":{"current":3,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244768{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244872{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358244971{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245071{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245170{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245272{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245373{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245468{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245570{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245670{"status":"Extracting","progressDetail":{"current":4,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245768{"status":"Extracting","progressDetail":{"current":5,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245870{"status":"Extracting","progressDetail":{"current":5,"units":"s"},"id":"5c445a0e108b"}
+_bk;t=1765358245937{"status":"Pull complete","progressDetail":{"hidecounts":true},"id":"2d6da02310d1"}
+_bk;t=1765358245942{"status":"Pull complete","progressDetail":{"hidecounts":true},"id":"5c445a0e108b"}
+_bk;t=1765358245942{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358245942{"status":"Status: Downloaded newer image for golang:alpine"}
+_bk;t=1765358245950    logger.go:146: 2025-12-10T09:17:25.949Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358248442    logger.go:146: 2025-12-10T09:17:28.442Z	INFO	running test...
+_bk;t=1765358278767stderr: go: downloading github.com/elastic/go-sysinfo v1.14.1
+_bk;t=1765358278767go: downloading github.com/shirou/gopsutil/v4 v4.24.7
+_bk;t=1765358278767go: downloading github.com/elastic/go-structform v0.0.9
+_bk;t=1765358278767go: downloading github.com/elastic/go-ucfg v0.8.8
+_bk;t=1765358278767go: downloading github.com/tklauser/go-sysconf v0.3.12
+_bk;t=1765358278767go: downloading howett.net/plist v1.0.1
+_bk;t=1765358278767go: downloading github.com/prometheus/procfs v0.13.0
+_bk;t=1765358278767go: downloading gopkg.in/yaml.v2 v2.4.0
+_bk;t=1765358278767go: downloading github.com/tklauser/numcpus v0.6.1
+_bk;t=1765358278767
+_bk;t=1765358278767stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358278767    logger.go:146: 2025-12-10T09:17:58.026Z	INFO	Using /hostfs for container tests
+_bk;t=1765358278767    logger.go:146: 2025-12-10T09:17:58.026Z	INFO	Using /hostfs for container tests
+_bk;t=1765358278767    logger.go:146: 2025-12-10T09:17:58.029Z	DEBUG	cgroup for process 3 contains a relative cgroup path (/../..), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete
+_bk;t=1765358278767--- PASS: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358278767PASS
+_bk;t=1765358278767ok  	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.010s
+_bk;t=1765358278767
+_bk;t=1765358278767--- PASS: TestKernelProc (39.32s)
+_bk;t=1765358278767=== RUN   TestProcessMetricsElevatedPerms
+_bk;t=1765358278768    container.go:127: Running 2 tests
+_bk;t=1765358278768=== RUN   TestProcessMetricsElevatedPerms/nsmode:host_priv:true_user:
+_bk;t=1765358278769    logger.go:146: 2025-12-10T09:17:58.769Z	INFO	Creating test Process...
+_bk;t=1765358278770    logger.go:146: 2025-12-10T09:17:58.770Z	INFO	Monitoring pid 13317
+_bk;t=1765358279026{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358279221{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358279221{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358279228    logger.go:146: 2025-12-10T09:17:59.228Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358279291    logger.go:146: 2025-12-10T09:17:59.290Z	INFO	running test...
+_bk;t=1765358309636stderr: 
+_bk;t=1765358309636stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358309636    logger.go:146: 2025-12-10T09:18:28.902Z	INFO	Using /hostfs for container tests
+_bk;t=1765358309636    logger.go:146: 2025-12-10T09:18:28.903Z	INFO	Using /hostfs for container tests
+_bk;t=1765358309636--- PASS: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358309636PASS
+_bk;t=1765358309636ok  	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.011s
+_bk;t=1765358309636
+_bk;t=1765358309636=== RUN   TestProcessMetricsElevatedPerms/nsmode:private_priv:true_user:
+_bk;t=1765358309934{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358310124{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358310124{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358310132    logger.go:146: 2025-12-10T09:18:30.132Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358310202    logger.go:146: 2025-12-10T09:18:30.202Z	INFO	running test...
+_bk;t=1765358340853    container.go:183: 
+_bk;t=1765358340853        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358340853        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358340853        	Error:      	Not equal: 
+_bk;t=1765358340853        	            	expected: 0
+_bk;t=1765358340853        	            	actual  : 1
+_bk;t=1765358340853        	Test:       	TestProcessMetricsElevatedPerms/nsmode:private_priv:true_user:
+_bk;t=1765358340853        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358340853        	            	    logger.go:146: 2025-12-10T09:19:00.101Z	INFO	Using /hostfs for container tests
+_bk;t=1765358340853        	            	    logger.go:146: 2025-12-10T09:19:00.102Z	INFO	Using /hostfs for container tests
+_bk;t=1765358340853        	            	    logger.go:146: 2025-12-10T09:19:00.105Z	DEBUG	cgroup for process 13317 contains a relative cgroup path (/../../user.slice/user-1003.slice/session-c4.scope), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete
+_bk;t=1765358340853        	            	    logger.go:146: 2025-12-10T09:19:00.105Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 13317, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/4080b8ebd22d0d03cde8df02a9bc830c14f9988af04c000e41da3f81eeed94e2/sys/fs/cgroup' and path line '0::/../../user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/4080b8ebd22d0d03cde8df02a9bc830c14f9988af04c000e41da3f81eeed94e2/sys/user.slice/user-1003.slice/session-c4.scope: no such file or directory
+_bk;t=1765358340853        	            	    process_container_test.go:184: 
+_bk;t=1765358340853        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358340853        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358340853        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358340853        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358340853        	            	        	Messages:   	privileged=true userID=0 result={"args":["sleep","240"],"cmdline":"sleep 240","cpu":{"start_time":"2025-12-10T09:17:58.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"cwd":"/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/tests","exe":"/usr/bin/sleep","fd":{"limit":{"hard":500000,"soft":500000},"open":3},"io":{"cancelled_write_bytes":0,"read_bytes":36864,"read_char":7206,"read_ops":12,"write_bytes":0,"write_char":0,"write_ops":0},"memory":{"rss":{"bytes":2019328},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":13317,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358340853        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358340853        	            	FAIL
+_bk;t=1765358340853        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.011s
+_bk;t=1765358340853        	            	FAIL
+_bk;t=1765358340853        	            	 
+_bk;t=1765358340853        	            	stderr: 
+_bk;t=1765358340853--- FAIL: TestProcessMetricsElevatedPerms (62.08s)
+_bk;t=1765358340853    --- PASS: TestProcessMetricsElevatedPerms/nsmode:host_priv:true_user: (30.87s)
+_bk;t=1765358340853    --- FAIL: TestProcessMetricsElevatedPerms/nsmode:private_priv:true_user: (31.22s)
+_bk;t=1765358340853=== RUN   TestProcessAllSettings
+_bk;t=1765358340853    container.go:127: Running 8 tests
+_bk;t=1765358340853=== RUN   TestProcessAllSettings/nsmode:host_priv:true_user:nobody
+_bk;t=1765358340853    logger.go:146: 2025-12-10T09:19:00.853Z	INFO	Creating test Process...
+_bk;t=1765358340854    logger.go:146: 2025-12-10T09:19:00.853Z	INFO	Monitoring pid 21633
+_bk;t=1765358341106{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358341319{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358341319{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358341326    logger.go:146: 2025-12-10T09:19:01.326Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358341394    logger.go:146: 2025-12-10T09:19:01.394Z	INFO	running test...
+_bk;t=1765358372029    container.go:183: 
+_bk;t=1765358372029        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358372029        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358372029        	Error:      	Not equal: 
+_bk;t=1765358372029        	            	expected: 0
+_bk;t=1765358372029        	            	actual  : 1
+_bk;t=1765358372029        	Test:       	TestProcessAllSettings/nsmode:host_priv:true_user:nobody
+_bk;t=1765358372029        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358372029        	            	    logger.go:146: 2025-12-10T09:19:31.281Z	INFO	Using /hostfs for container tests
+_bk;t=1765358372029        	            	    logger.go:146: 2025-12-10T09:19:31.281Z	INFO	Using /hostfs for container tests
+_bk;t=1765358372029        	            	    logger.go:146: 2025-12-10T09:19:31.283Z	DEBUG	non fatal error; reporting partial metrics: /io unavailable; if running inside a container, use SYS_PTRACE: error fetching IO metrics: open /hostfs/proc/21633/io: permission denied
+_bk;t=1765358372030        	            	    logger.go:146: 2025-12-10T09:19:31.283Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 21633, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/a52e6408f18fff13210df1d42116b9322b2c0da3711e79d19f301eea18f83556/sys/fs/cgroup' and path line '0::/user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/a52e6408f18fff13210df1d42116b9322b2c0da3711e79d19f301eea18f83556/sys/fs/cgroup/user.slice/user-1003.slice/session-c4.scope: permission denied
+_bk;t=1765358372030        	            	    process_container_test.go:184: 
+_bk;t=1765358372030        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358372030        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358372030        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358372030        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358372030        	            	        	Messages:   	privileged=true userID=65534 result={"args":["sleep","480"],"cmdline":"sleep 480","cpu":{"start_time":"2025-12-10T09:19:00.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"fd":{"limit":{"hard":500000,"soft":500000}},"io":null,"memory":{"rss":{"bytes":2023424},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":21633,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358372030        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358372030        	            	FAIL
+_bk;t=1765358372030        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.010s
+_bk;t=1765358372030        	            	FAIL
+_bk;t=1765358372030        	            	 
+_bk;t=1765358372030        	            	stderr: 
+_bk;t=1765358372030=== RUN   TestProcessAllSettings/nsmode:host_priv:false_user:nobody
+_bk;t=1765358372284{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358372470{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358372470{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358372477    logger.go:146: 2025-12-10T09:19:32.477Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358372544    logger.go:146: 2025-12-10T09:19:32.544Z	INFO	running test...
+_bk;t=1765358403398    container.go:183: 
+_bk;t=1765358403398        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358403398        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358403398        	Error:      	Not equal: 
+_bk;t=1765358403398        	            	expected: 0
+_bk;t=1765358403398        	            	actual  : 1
+_bk;t=1765358403398        	Test:       	TestProcessAllSettings/nsmode:host_priv:false_user:nobody
+_bk;t=1765358403398        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358403398        	            	    logger.go:146: 2025-12-10T09:20:02.643Z	INFO	Using /hostfs for container tests
+_bk;t=1765358403398        	            	    logger.go:146: 2025-12-10T09:20:02.643Z	INFO	Using /hostfs for container tests
+_bk;t=1765358403398        	            	    logger.go:146: 2025-12-10T09:20:02.645Z	DEBUG	non fatal error; reporting partial metrics: /io unavailable; if running inside a container, use SYS_PTRACE: error fetching IO metrics: open /hostfs/proc/21633/io: permission denied
+_bk;t=1765358403398        	            	    logger.go:146: 2025-12-10T09:20:02.645Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 21633, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/a8604bce75150fb67a1a43d9500fd3a193c6e0b93d9de355941bd84af816bd6f/sys/fs/cgroup' and path line '0::/user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/a8604bce75150fb67a1a43d9500fd3a193c6e0b93d9de355941bd84af816bd6f/sys/fs/cgroup/user.slice/user-1003.slice/session-c4.scope: permission denied
+_bk;t=1765358403398        	            	    process_container_test.go:184: 
+_bk;t=1765358403398        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358403398        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358403398        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358403398        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358403398        	            	        	Messages:   	privileged=false userID=65534 result={"args":["sleep","480"],"cmdline":"sleep 480","cpu":{"start_time":"2025-12-10T09:19:00.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"fd":{"limit":{"hard":500000,"soft":500000}},"io":null,"memory":{"rss":{"bytes":2023424},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":21633,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358403398        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358403398        	            	FAIL
+_bk;t=1765358403398        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.009s
+_bk;t=1765358403398        	            	FAIL
+_bk;t=1765358403398        	            	 
+_bk;t=1765358403398        	            	stderr: 
+_bk;t=1765358403398=== RUN   TestProcessAllSettings/nsmode:host_priv:true_user:
+_bk;t=1765358403650{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358403826{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358403826{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358403834    logger.go:146: 2025-12-10T09:20:03.834Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358403902    logger.go:146: 2025-12-10T09:20:03.902Z	INFO	running test...
+_bk;t=1765358434895=== RUN   TestProcessAllSettings/nsmode:host_priv:false_user:
+_bk;t=1765358435161{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358435332{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358435332{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358435341    logger.go:146: 2025-12-10T09:20:35.340Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358435414    logger.go:146: 2025-12-10T09:20:35.413Z	INFO	running test...
+_bk;t=1765358467129=== RUN   TestProcessAllSettings/nsmode:private_priv:true_user:nobody
+_bk;t=1765358467379{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358467548{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358467548{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358467557    logger.go:146: 2025-12-10T09:21:07.557Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358467629    logger.go:146: 2025-12-10T09:21:07.629Z	INFO	running test...
+_bk;t=1765358498906    container.go:183: 
+_bk;t=1765358498906        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358498906        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358498906        	Error:      	Not equal: 
+_bk;t=1765358498906        	            	expected: 0
+_bk;t=1765358498906        	            	actual  : 1
+_bk;t=1765358498906        	Test:       	TestProcessAllSettings/nsmode:private_priv:true_user:nobody
+_bk;t=1765358498906        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358498906        	            	    logger.go:146: 2025-12-10T09:21:38.155Z	INFO	Using /hostfs for container tests
+_bk;t=1765358498906        	            	    logger.go:146: 2025-12-10T09:21:38.156Z	INFO	Using /hostfs for container tests
+_bk;t=1765358498906        	            	    logger.go:146: 2025-12-10T09:21:38.157Z	DEBUG	could not fetch cgroup path inside container: %!w(*fmt.wrapError=&{error traversing paths to find cgroup: lstat /hostfs/var/lib/docker/rootfs/overlayfs/eb7f8b6ce1e2a452f9b418cda0e1f797e5ebaafe76919c8d42ff825610b3d4da/sys/fs/cgroup: permission denied 0xc0002811d0})
+_bk;t=1765358498906        	            	    logger.go:146: 2025-12-10T09:21:38.157Z	DEBUG	non fatal error; reporting partial metrics: /io unavailable; if running inside a container, use SYS_PTRACE: error fetching IO metrics: open /hostfs/proc/21633/io: permission denied
+_bk;t=1765358498906        	            	    logger.go:146: 2025-12-10T09:21:38.158Z	DEBUG	cgroup for process 21633 contains a relative cgroup path (/../../user.slice/user-1003.slice/session-c4.scope), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete
+_bk;t=1765358498906        	            	    logger.go:146: 2025-12-10T09:21:38.158Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 21633, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/eb7f8b6ce1e2a452f9b418cda0e1f797e5ebaafe76919c8d42ff825610b3d4da/sys/fs/cgroup' and path line '0::/../../user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/eb7f8b6ce1e2a452f9b418cda0e1f797e5ebaafe76919c8d42ff825610b3d4da/sys/user.slice/user-1003.slice/session-c4.scope: permission denied
+_bk;t=1765358498906        	            	    process_container_test.go:184: 
+_bk;t=1765358498906        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358498906        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358498906        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358498906        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358498906        	            	        	Messages:   	privileged=true userID=65534 result={"args":["sleep","480"],"cmdline":"sleep 480","cpu":{"start_time":"2025-12-10T09:19:00.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"fd":{"limit":{"hard":500000,"soft":500000}},"io":null,"memory":{"rss":{"bytes":2023424},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":21633,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358498906        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358498906        	            	FAIL
+_bk;t=1765358498906        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.010s
+_bk;t=1765358498906        	            	FAIL
+_bk;t=1765358498906        	            	 
+_bk;t=1765358498906        	            	stderr: 
+_bk;t=1765358498906=== RUN   TestProcessAllSettings/nsmode:private_priv:false_user:nobody
+_bk;t=1765358499190{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358499407{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358499407{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358499415    logger.go:146: 2025-12-10T09:21:39.415Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358499485    logger.go:146: 2025-12-10T09:21:39.485Z	INFO	running test...
+_bk;t=1765358531115    container.go:183: 
+_bk;t=1765358531115        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358531115        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358531115        	Error:      	Not equal: 
+_bk;t=1765358531115        	            	expected: 0
+_bk;t=1765358531115        	            	actual  : 1
+_bk;t=1765358531115        	Test:       	TestProcessAllSettings/nsmode:private_priv:false_user:nobody
+_bk;t=1765358531115        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358531115        	            	    logger.go:146: 2025-12-10T09:22:10.337Z	INFO	Using /hostfs for container tests
+_bk;t=1765358531115        	            	    logger.go:146: 2025-12-10T09:22:10.337Z	INFO	Using /hostfs for container tests
+_bk;t=1765358531115        	            	    logger.go:146: 2025-12-10T09:22:10.339Z	DEBUG	could not fetch cgroup path inside container: %!w(*fmt.wrapError=&{error traversing paths to find cgroup: lstat /hostfs/var/lib/docker/rootfs/overlayfs/fec81f33a78061dc9c6ee34333508f57c8818a22cc9f5d71958065501becfc73/sys/fs/cgroup: permission denied 0xc00026c930})
+_bk;t=1765358531115        	            	    logger.go:146: 2025-12-10T09:22:10.340Z	DEBUG	non fatal error; reporting partial metrics: /io unavailable; if running inside a container, use SYS_PTRACE: error fetching IO metrics: open /hostfs/proc/21633/io: permission denied
+_bk;t=1765358531115        	            	    logger.go:146: 2025-12-10T09:22:10.340Z	DEBUG	cgroup for process 21633 contains a relative cgroup path (/../../user.slice/user-1003.slice/session-c4.scope), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete
+_bk;t=1765358531115        	            	    logger.go:146: 2025-12-10T09:22:10.340Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 21633, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/fec81f33a78061dc9c6ee34333508f57c8818a22cc9f5d71958065501becfc73/sys/fs/cgroup' and path line '0::/../../user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/fec81f33a78061dc9c6ee34333508f57c8818a22cc9f5d71958065501becfc73/sys/user.slice/user-1003.slice/session-c4.scope: permission denied
+_bk;t=1765358531115        	            	    process_container_test.go:184: 
+_bk;t=1765358531115        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358531115        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358531115        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358531115        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358531115        	            	        	Messages:   	privileged=false userID=65534 result={"args":["sleep","480"],"cmdline":"sleep 480","cpu":{"start_time":"2025-12-10T09:19:00.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"fd":{"limit":{"hard":500000,"soft":500000}},"io":null,"memory":{"rss":{"bytes":2023424},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":21633,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358531115        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358531115        	            	FAIL
+_bk;t=1765358531115        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.011s
+_bk;t=1765358531115        	            	FAIL
+_bk;t=1765358531115        	            	 
+_bk;t=1765358531115        	            	stderr: 
+_bk;t=1765358531115=== RUN   TestProcessAllSettings/nsmode:private_priv:true_user:
+_bk;t=1765358531382{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358531572{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358531572{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358531581    logger.go:146: 2025-12-10T09:22:11.581Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358531657    logger.go:146: 2025-12-10T09:22:11.657Z	INFO	running test...
+_bk;t=1765358563214    container.go:183: 
+_bk;t=1765358563214        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358563214        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358563214        	Error:      	Not equal: 
+_bk;t=1765358563214        	            	expected: 0
+_bk;t=1765358563214        	            	actual  : 1
+_bk;t=1765358563214        	Test:       	TestProcessAllSettings/nsmode:private_priv:true_user:
+_bk;t=1765358563214        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358563214        	            	    logger.go:146: 2025-12-10T09:22:42.445Z	INFO	Using /hostfs for container tests
+_bk;t=1765358563214        	            	    logger.go:146: 2025-12-10T09:22:42.445Z	INFO	Using /hostfs for container tests
+_bk;t=1765358563214        	            	    logger.go:146: 2025-12-10T09:22:42.448Z	DEBUG	cgroup for process 21633 contains a relative cgroup path (/../../user.slice/user-1003.slice/session-c4.scope), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete
+_bk;t=1765358563214        	            	    logger.go:146: 2025-12-10T09:22:42.448Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 21633, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/e1e7edf71b05e0b64a0be114b105d730505e785107f77ea256f829f34fcdbd0f/sys/fs/cgroup' and path line '0::/../../user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/e1e7edf71b05e0b64a0be114b105d730505e785107f77ea256f829f34fcdbd0f/sys/user.slice/user-1003.slice/session-c4.scope: no such file or directory
+_bk;t=1765358563214        	            	    process_container_test.go:184: 
+_bk;t=1765358563214        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358563214        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358563214        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358563214        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358563214        	            	        	Messages:   	privileged=true userID=0 result={"args":["sleep","480"],"cmdline":"sleep 480","cpu":{"start_time":"2025-12-10T09:19:00.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"cwd":"/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/tests","exe":"/usr/bin/sleep","fd":{"limit":{"hard":500000,"soft":500000},"open":3},"io":{"cancelled_write_bytes":0,"read_bytes":0,"read_char":7206,"read_ops":12,"write_bytes":0,"write_char":0,"write_ops":0},"memory":{"rss":{"bytes":2023424},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":21633,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358563214        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358563214        	            	FAIL
+_bk;t=1765358563214        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.011s
+_bk;t=1765358563214        	            	FAIL
+_bk;t=1765358563214        	            	 
+_bk;t=1765358563214        	            	stderr: 
+_bk;t=1765358563214=== RUN   TestProcessAllSettings/nsmode:private_priv:false_user:
+_bk;t=1765358563460{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358563628{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358563628{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358563636    logger.go:146: 2025-12-10T09:22:43.636Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358563712    logger.go:146: 2025-12-10T09:22:43.712Z	INFO	running test...
+_bk;t=1765358595435    container.go:183: 
+_bk;t=1765358595435        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:183
+_bk;t=1765358595435        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358595435        	Error:      	Not equal: 
+_bk;t=1765358595435        	            	expected: 0
+_bk;t=1765358595435        	            	actual  : 1
+_bk;t=1765358595435        	Test:       	TestProcessAllSettings/nsmode:private_priv:false_user:
+_bk;t=1765358595435        	Messages:   	got bad docker return code. stdout: === RUN   TestSystemHostFromContainer
+_bk;t=1765358595435        	            	    logger.go:146: 2025-12-10T09:23:14.675Z	INFO	Using /hostfs for container tests
+_bk;t=1765358595435        	            	    logger.go:146: 2025-12-10T09:23:14.676Z	INFO	Using /hostfs for container tests
+_bk;t=1765358595435        	            	    logger.go:146: 2025-12-10T09:23:14.678Z	DEBUG	non fatal error; reporting partial metrics: /io unavailable; if running inside a container, use SYS_PTRACE: error fetching IO metrics: read /hostfs/proc/21633/io: permission denied
+_bk;t=1765358595435        	            	    logger.go:146: 2025-12-10T09:23:14.678Z	DEBUG	cgroup for process 21633 contains a relative cgroup path (/../../user.slice/user-1003.slice/session-c4.scope), but we were not able to find a root cgroup. Cgroup monitoring for this PID may be incomplete
+_bk;t=1765358595435        	            	    logger.go:146: 2025-12-10T09:23:14.678Z	DEBUG	Non-fatal error fetching cgroups metrics for pid 21633, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/6bd548f43d9afbef5f4087f084eb8e7dab3bd9b82068388e5fc04b321bb23223/sys/fs/cgroup' and path line '0::/../../user.slice/user-1003.slice/session-c4.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/6bd548f43d9afbef5f4087f084eb8e7dab3bd9b82068388e5fc04b321bb23223/sys/user.slice/user-1003.slice/session-c4.scope: no such file or directory
+_bk;t=1765358595435        	            	    process_container_test.go:184: 
+_bk;t=1765358595435        	            	        	Error Trace:	/app/metric/system/process/process_container_test.go:184
+_bk;t=1765358595435        	            	        	            				/app/metric/system/process/process_container_test.go:134
+_bk;t=1765358595435        	            	        	Error:      	Expected value not to be nil.
+_bk;t=1765358595435        	            	        	Test:       	TestSystemHostFromContainer
+_bk;t=1765358595435        	            	        	Messages:   	privileged=false userID=0 result={"args":["sleep","480"],"cmdline":"sleep 480","cpu":{"start_time":"2025-12-10T09:19:00.000Z","system":{"ticks":0},"total":{"ticks":0,"value":0},"user":{"ticks":0}},"fd":{"limit":{"hard":500000,"soft":500000},"open":3},"io":null,"memory":{"rss":{"bytes":2023424},"share":1892352,"size":5734400},"name":"sleep","num_threads":1,"pgid":5852,"pid":21633,"ppid":9090,"state":"sleeping","username":"1003"}
+_bk;t=1765358595435        	            	--- FAIL: TestSystemHostFromContainer (0.00s)
+_bk;t=1765358595435        	            	FAIL
+_bk;t=1765358595435        	            	FAIL	github.com/elastic/elastic-agent-system-metrics/metric/system/process	0.010s
+_bk;t=1765358595435        	            	FAIL
+_bk;t=1765358595435        	            	 
+_bk;t=1765358595435        	            	stderr: 
+_bk;t=1765358595435--- FAIL: TestProcessAllSettings (254.58s)
+_bk;t=1765358595435    --- FAIL: TestProcessAllSettings/nsmode:host_priv:true_user:nobody (31.18s)
+_bk;t=1765358595435    --- FAIL: TestProcessAllSettings/nsmode:host_priv:false_user:nobody (31.37s)
+_bk;t=1765358595435    --- PASS: TestProcessAllSettings/nsmode:host_priv:true_user: (31.50s)
+_bk;t=1765358595435    --- PASS: TestProcessAllSettings/nsmode:host_priv:false_user: (32.23s)
+_bk;t=1765358595435    --- FAIL: TestProcessAllSettings/nsmode:private_priv:true_user:nobody (31.78s)
+_bk;t=1765358595435    --- FAIL: TestProcessAllSettings/nsmode:private_priv:false_user:nobody (32.21s)
+_bk;t=1765358595435    --- FAIL: TestProcessAllSettings/nsmode:private_priv:true_user: (32.10s)
+_bk;t=1765358595435    --- FAIL: TestProcessAllSettings/nsmode:private_priv:false_user: (32.22s)
+_bk;t=1765358595435=== RUN   TestContainerProcess
+_bk;t=1765358595435    container.go:127: Running 8 tests
+_bk;t=1765358595435=== RUN   TestContainerProcess/nsmode:host_priv:true_user:nobody
+_bk;t=1765358595684{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358595878{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358595878{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358595886    logger.go:146: 2025-12-10T09:23:15.886Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358595957    logger.go:146: 2025-12-10T09:23:15.957Z	INFO	running test...
+_bk;t=1765358626654    container.go:194: 
+_bk;t=1765358626654        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:194
+_bk;t=1765358626654        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358626654        	Error:      	"    logger.go:146: 2025-12-10T09:23:45.871Z\tDEBUG\tNon-fatal error fetching cgroups metrics for pid 59110, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/585ad79d844612aa4ed0704e9b74e5b45252cd81eba136ebfe320ff5e06d367b/sys/fs/cgroup' and path line '0::/system.slice/docker-585ad79d844612aa4ed0704e9b74e5b45252cd81eba136ebfe320ff5e06d367b.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/585ad79d844612aa4ed0704e9b74e5b45252cd81eba136ebfe320ff5e06d367b/sys/fs/cgroup/system.slice/docker-585ad79d844612aa4ed0704e9b74e5b45252cd81eba136ebfe320ff5e06d367b.scope: permission denied" should not contain "error"
+_bk;t=1765358626654        	Test:       	TestContainerProcess/nsmode:host_priv:true_user:nobody
+_bk;t=1765358626654=== RUN   TestContainerProcess/nsmode:host_priv:false_user:nobody
+_bk;t=1765358626911{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358627084{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358627084{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358627092    logger.go:146: 2025-12-10T09:23:47.092Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358627155    logger.go:146: 2025-12-10T09:23:47.154Z	INFO	running test...
+_bk;t=1765358657391    container.go:194: 
+_bk;t=1765358657391        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:194
+_bk;t=1765358657391        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358657391        	Error:      	"    logger.go:146: 2025-12-10T09:24:16.642Z\tDEBUG\tNon-fatal error fetching cgroups metrics for pid 63250, metrics are valid but partial: error fetching cgroupV2 controllers for cgroup location '/hostfs/var/lib/docker/rootfs/overlayfs/9a48ca7bcd6f2b7d6ed77281107d5289cb4d2a7b5ed3c19af7308a380cae4a48/sys/fs/cgroup' and path line '0::/system.slice/docker-9a48ca7bcd6f2b7d6ed77281107d5289cb4d2a7b5ed3c19af7308a380cae4a48.scope': open /hostfs/var/lib/docker/rootfs/overlayfs/9a48ca7bcd6f2b7d6ed77281107d5289cb4d2a7b5ed3c19af7308a380cae4a48/sys/fs/cgroup/system.slice/docker-9a48ca7bcd6f2b7d6ed77281107d5289cb4d2a7b5ed3c19af7308a380cae4a48.scope: permission denied" should not contain "error"
+_bk;t=1765358657391        	Test:       	TestContainerProcess/nsmode:host_priv:false_user:nobody
+_bk;t=1765358657391=== RUN   TestContainerProcess/nsmode:host_priv:true_user:
+_bk;t=1765358657645{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358657815{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358657815{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358657824    logger.go:146: 2025-12-10T09:24:17.823Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358657887    logger.go:146: 2025-12-10T09:24:17.887Z	INFO	running test...
+_bk;t=1765358688191=== RUN   TestContainerProcess/nsmode:host_priv:false_user:
+_bk;t=1765358688431{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358688595{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358688595{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358688603    logger.go:146: 2025-12-10T09:24:48.603Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358688671    logger.go:146: 2025-12-10T09:24:48.671Z	INFO	running test...
+_bk;t=1765358719056=== RUN   TestContainerProcess/nsmode:private_priv:true_user:nobody
+_bk;t=1765358719310{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358719477{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358719477{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358719486    logger.go:146: 2025-12-10T09:25:19.485Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358719551    logger.go:146: 2025-12-10T09:25:19.551Z	INFO	running test...
+_bk;t=1765358750055    container.go:194: 
+_bk;t=1765358750055        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:194
+_bk;t=1765358750055        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358750055        	Error:      	"    logger.go:146: 2025-12-10T09:25:49.286Z\tDEBUG\tcould not fetch cgroup path inside container: %!w(*fmt.wrapError=&{error traversing paths to find cgroup: lstat /hostfs/var/lib/docker/rootfs/overlayfs/1d6943b12b555631273c597059f0f99abcc36c102e8349093150680ba55fe4cf/sys/fs/cgroup: permission denied 0xc0002811d0})" should not contain "error"
+_bk;t=1765358750055        	Test:       	TestContainerProcess/nsmode:private_priv:true_user:nobody
+_bk;t=1765358750055=== RUN   TestContainerProcess/nsmode:private_priv:false_user:nobody
+_bk;t=1765358750304{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358750476{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358750476{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358750484    logger.go:146: 2025-12-10T09:25:50.484Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358750557    logger.go:146: 2025-12-10T09:25:50.557Z	INFO	running test...
+_bk;t=1765358781163    container.go:194: 
+_bk;t=1765358781163        	Error Trace:	/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:194
+_bk;t=1765358781163        	            				/opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics/dev-tools/systemtests/container.go:141
+_bk;t=1765358781163        	Error:      	"    logger.go:146: 2025-12-10T09:26:20.399Z\tDEBUG\tcould not fetch cgroup path inside container: %!w(*fmt.wrapError=&{error traversing paths to find cgroup: lstat /hostfs/var/lib/docker/rootfs/overlayfs/557a27c76a8310c58211e781dffd4bac9e12840b065e1bedbf0dd2e88748062f/sys/fs/cgroup: permission denied 0xc000281260})" should not contain "error"
+_bk;t=1765358781163        	Test:       	TestContainerProcess/nsmode:private_priv:false_user:nobody
+_bk;t=1765358781163=== RUN   TestContainerProcess/nsmode:private_priv:true_user:
+_bk;t=1765358781411{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358781597{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358781597{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358781605    logger.go:146: 2025-12-10T09:26:21.604Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358781670    logger.go:146: 2025-12-10T09:26:21.670Z	INFO	running test...
+_bk;t=1765358812177=== RUN   TestContainerProcess/nsmode:private_priv:false_user:
+_bk;t=1765358812440{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358812614{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358812614{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358812622    logger.go:146: 2025-12-10T09:26:52.621Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358812688    logger.go:146: 2025-12-10T09:26:52.688Z	INFO	running test...
+_bk;t=1765358843349--- FAIL: TestContainerProcess (247.91s)
+_bk;t=1765358843349    --- FAIL: TestContainerProcess/nsmode:host_priv:true_user:nobody (31.22s)
+_bk;t=1765358843349    --- FAIL: TestContainerProcess/nsmode:host_priv:false_user:nobody (30.74s)
+_bk;t=1765358843349    --- PASS: TestContainerProcess/nsmode:host_priv:true_user: (30.80s)
+_bk;t=1765358843349    --- PASS: TestContainerProcess/nsmode:host_priv:false_user: (30.86s)
+_bk;t=1765358843349    --- FAIL: TestContainerProcess/nsmode:private_priv:true_user:nobody (31.00s)
+_bk;t=1765358843349    --- FAIL: TestContainerProcess/nsmode:private_priv:false_user:nobody (31.11s)
+_bk;t=1765358843349    --- PASS: TestContainerProcess/nsmode:private_priv:true_user: (31.01s)
+_bk;t=1765358843349    --- PASS: TestContainerProcess/nsmode:private_priv:false_user: (31.17s)
+_bk;t=1765358843349=== RUN   TestFilesystem
+_bk;t=1765358843604{"status":"Pulling from library/golang","id":"alpine"}
+_bk;t=1765358843778{"status":"Digest: sha256:26111811bc967321e7b6f852e914d14bede324cd1accb7f81811929a6a57fea9"}
+_bk;t=1765358843778{"status":"Status: Image is up to date for golang:alpine"}
+_bk;t=1765358843787    logger.go:146: 2025-12-10T09:27:23.787Z	INFO	using cwd: /opt/buildkite-agent/builds/bk-agent-prod-gcp-1765357934492679865/elastic/elastic-agent-system-metrics
+_bk;t=1765358843853    logger.go:146: 2025-12-10T09:27:23.852Z	INFO	running test...
+_bk;t=1765358869937stderr: 
+_bk;t=1765358869937stdout: === RUN   TestFileSystemList
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.289Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937--- PASS: TestFileSystemList (0.03s)
+_bk;t=1765358869937=== RUN   TestFileSystemListFiltering
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.321Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.321Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.321Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.322Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.322Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.322Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937    logger.go:146: 2025-12-10T09:27:49.322Z	INFO	Using /hostfs for container tests
+_bk;t=1765358869937--- PASS: TestFileSystemListFiltering (0.00s)
+_bk;t=1765358869937=== RUN   TestFilter
+_bk;t=1765358869937--- PASS: TestFilter (0.00s)
+_bk;t=1765358869937PASS
+_bk;t=1765358869937ok  	github.com/elastic/elastic-agent-system-metrics/metric/system/filesystem	0.040s
+_bk;t=1765358869937
+_bk;t=1765358869937--- PASS: TestFilesystem (26.59s)
+_bk;t=1765358869937FAIL
+_bk;t=1765358869938FAIL	github.com/elastic/elastic-agent-system-metrics/tests	630.498s
+_bk;t=1765358869940FAIL
+_bk;t=1765358869978^^^ +++
+_bk;t=1765358869978[31m🚨 Error: The command exited with status 1[0m
+_bk;t=1765358869978^^^ +++
+_bk;t=1765358869978user command error: exit status 1

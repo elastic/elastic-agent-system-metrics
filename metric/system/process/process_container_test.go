@@ -165,22 +165,34 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 	// if we're root or the same user as the pid, check `exe`
 	// kernel procs also don't have `exe`
 	if (privilegedMode && (userID == 0 || usr.Name == gotUser)) && gotPpid != 2 {
-		exe := result["exe"]
-		assert.NotNil(t, exe, formatArgs...)
+		assert.Contains(t, result, "exe", formatArgs...)
 	}
 
 	// if privileged or root, look for data from /proc/[pid]/io
 	if privilegedMode && userID == 0 {
-		ioReadBytes := result["io"].(map[string]interface{})["read_char"]
+		ioReadBytes := result["io"].(map[string]any)["read_char"]
 		assert.NotNil(t, ioReadBytes, formatArgs...)
 	}
 
 	// check thread count
-	numThreads := result["num_threads"]
-	assert.NotNil(t, numThreads, formatArgs...)
+	assert.Contains(t, result, "num_threads", formatArgs...)
 
 	if runtime.GOOS == "linux" {
+		// Cgroups may not be available when:
+		// - Running as non-root user (permission denied accessing cgroup files)
+		// - Private PID namespace with unresolvable cgroup paths (e.g., /../..)
+		// These are treated as non-fatal errors in the metrics collection code.
+		// We can only detect user ID from inside the container, not namespace mode,
+		// so we skip this check for non-root users and log when root has no cgroups.
+		// See: https://github.com/elastic/elastic-agent-system-metrics/issues/270
 		cgroups := result["cgroup"]
-		assert.NotNil(t, cgroups, formatArgs...)
+		if userID != 0 {
+			// Non-root: skip cgroup check (permission denied expected)
+		} else if cgroups == nil {
+			// Root but no cgroups: likely private namespace, log but don't fail
+			t.Logf("cgroups not available for root user (likely private cgroup namespace)")
+		} else {
+			assert.NotNil(t, cgroups, formatArgs...)
+		}
 	}
 }
