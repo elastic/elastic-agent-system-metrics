@@ -58,6 +58,9 @@ func TestContainerMonitoringFromInsideContainer(t *testing.T) {
 	stats, err := testStats.GetSelf()
 	require.NoError(t, err)
 	if runtime.GOOS == "linux" {
+		if stats.Cgroup == nil {
+			t.Skip("https://github.com/elastic/elastic-agent-system-metrics/issues/270")
+		}
 		cgstats, err := stats.Cgroup.Format()
 		require.NoError(t, err)
 		require.NotEmpty(t, cgstats)
@@ -87,6 +90,9 @@ func TestSelfMonitoringFromInsideContainer(t *testing.T) {
 	stats, err := testStats.GetSelf()
 	require.NoError(t, err)
 	if runtime.GOOS == "linux" {
+		if stats.Cgroup == nil {
+			t.Skip("https://github.com/elastic/elastic-agent-system-metrics/issues/270")
+		}
 		cgstats, err := stats.Cgroup.Format()
 		require.NoError(t, err)
 		require.NotEmpty(t, cgstats)
