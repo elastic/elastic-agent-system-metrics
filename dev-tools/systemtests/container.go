@@ -59,8 +59,6 @@ type DockerTestRunner struct {
 	// CgroupNSMode sets the cgroup namespace for the container. Newer versions of docker
 	// will default to a private namespace. Unexpected namespace values have resulted in bugs.
 	CgroupNSMode container.CgroupnsMode
-	// Verbose enables debug-level logging
-	Verbose bool
 	// FatalLogMessages  will fail the test if a given string appears in the log output for the test.
 	// Useful for turning non-fatal errors into fatal errors.
 	// These are just passed to strings.Contains(). I.e. []string{"Non-fatal error"}
@@ -181,11 +179,8 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context, apiClient *cli
 	// check for failures
 
 	require.Equal(tr.Runner, int64(0), result.ReturnCode, "got bad docker return code. stdout: %s \nstderr: %s", result.Stdout, result.Stderr)
-
-	if tr.Verbose {
-		fmt.Fprintf(os.Stdout, "stderr: %s\n", result.Stderr)
-		fmt.Fprintf(os.Stdout, "stdout: %s\n", result.Stdout)
-	}
+	tr.Runner.Logf("stdout: %s", result.Stdout)
+	tr.Runner.Logf("stderr: %s", result.Stderr)
 
 	// iterate by lines to make this easier to read
 	if len(tr.FatalLogMessages) > 0 {
@@ -236,6 +231,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 	if tr.Privileged {
 		containerEnv = append(containerEnv, "PRIVILEGED=1")
 	}
+	containerEnv = append(containerEnv, fmt.Sprintf("CGROUPNSMODE=%s", tr.CgroupNSMode))
 
 	if tr.MonitorPID != 0 {
 		containerEnv = append(containerEnv, fmt.Sprintf("MONITOR_PID=%d", tr.MonitorPID))

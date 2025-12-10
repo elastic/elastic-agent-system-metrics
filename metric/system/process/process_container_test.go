@@ -148,10 +148,11 @@ func TestSystemHostFromContainer(t *testing.T) {
 // failures related to past bugs, common issues, etc, etc
 func validateProcResult(t *testing.T, result mapstr.M) {
 	_, privilegedMode := os.LookupEnv("PRIVILEGED")
+	cgroupNSMode := os.Getenv("CGROUPNSMODE")
 	userID := os.Getuid()
 	formatArgs := []any{
-		"privileged=%t userID=%d result=%s",
-		privilegedMode, userID, result.String(),
+		"privileged=%t userID=%d cgroupNSMode=%s result=%s ",
+		privilegedMode, userID, cgroupNSMode, result.String(),
 	}
 
 	usr, err := user.Current()
@@ -184,7 +185,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 		// These are treated as non-fatal errors in the metrics collection code.
 		// TODO: fix this
 		// See: https://github.com/elastic/elastic-agent-system-metrics/issues/270
-		if userID == 0 || privilegedMode {
+		if cgroupNSMode == "host" {
 			assert.Contains(t, result, "cgroup", formatArgs...)
 		} else {
 			t.Log("WARN: skipping 'cgroup' check, this is because of known issue https://github.com/elastic/elastic-agent-system-metrics/issues/270")
