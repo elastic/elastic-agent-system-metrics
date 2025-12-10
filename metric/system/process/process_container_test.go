@@ -185,7 +185,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 		// TODO: fix this
 		// See: https://github.com/elastic/elastic-agent-system-metrics/issues/270
 		if userID == 0 || privilegedMode {
-			assert.Contains(t, result, "cgroup")
+			assert.Contains(t, result, "cgroup", formatArgs...)
 		} else {
 			t.Log("WARN: skipping 'cgroup' check, this is because of known issue https://github.com/elastic/elastic-agent-system-metrics/issues/270")
 			t.Logf(formatArgs[0].(string), formatArgs[1:]...)
