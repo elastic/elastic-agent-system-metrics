@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/logp/logptest"
@@ -125,7 +126,7 @@ func TestSystemHostFromContainer(t *testing.T) {
 	// 1) if the runner specified a PID, use that, check for validity
 	// 2) if no PID specified, just fetch all PIDs, let the test use the logs to decide if we failed
 
-	if userPid, found := os.LookupEnv("MONITOR_PID"); found && userPid != "" {
+	if userPid := os.Getenv("MONITOR_PID"); userPid != "" {
 		intPid, err := strconv.ParseInt(userPid, 10, 32)
 		require.NoError(t, err, "error parsing MONITOR_PID")
 		result, err := testStats.GetOne(int(intPid))
@@ -146,37 +147,40 @@ func TestSystemHostFromContainer(t *testing.T) {
 // these are largely heuristic-based, and will check for
 // failures related to past bugs, common issues, etc, etc
 func validateProcResult(t *testing.T, result mapstr.M) {
-	// uncomment if you're trying to figure out what to check
-	//t.Logf("got: %s", result.StringToPrint())
-
 	_, privilegedMode := os.LookupEnv("PRIVILEGED")
-	user, err := user.Current()
-	require.NoError(t, err)
+	userID := os.Getuid()
+	formatArgs := []any{
+		"privileged=%t userID=%d result=%s",
+		privilegedMode, userID, result.String(),
+	}
+
+	usr, err := user.Current()
+	require.NoError(t, err, formatArgs...)
+
 	gotUser, _ := result["username"].(string)
 
 	gotPpid, ok := result["ppid"].(int)
-	require.True(t, ok)
+	assert.True(t, ok, formatArgs...)
 
 	// if we're root or the same user as the pid, check `exe`
 	// kernel procs also don't have `exe`
-	if (privilegedMode && (os.Getuid() == 0 || user.Name == gotUser)) && gotPpid != 2 {
+	if (privilegedMode && (userID == 0 || usr.Name == gotUser)) && gotPpid != 2 {
 		exe := result["exe"]
-		require.NotNil(t, exe)
+		assert.NotNil(t, exe, formatArgs...)
 	}
 
 	// if privileged or root, look for data from /proc/[pid]/io
-	if privilegedMode && os.Getuid() == 0 {
+	if privilegedMode && userID == 0 {
 		ioReadBytes := result["io"].(map[string]interface{})["read_char"]
-		require.NotNil(t, ioReadBytes)
+		assert.NotNil(t, ioReadBytes, formatArgs...)
 	}
 
 	// check thread count
 	numThreads := result["num_threads"]
-	require.NotNil(t, numThreads)
+	assert.NotNil(t, numThreads, formatArgs...)
 
 	if runtime.GOOS == "linux" {
 		cgroups := result["cgroup"]
-		require.NotNil(t, cgroups)
+		assert.NotNil(t, cgroups, formatArgs...)
 	}
-
 }
