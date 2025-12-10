@@ -182,8 +182,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 		// - Running as non-root user (permission denied accessing cgroup files)
 		// - Private PID namespace with unresolvable cgroup paths (e.g., /../..)
 		// These are treated as non-fatal errors in the metrics collection code.
-		// We can only detect user ID from inside the container, not namespace mode,
-		// so we skip this check for non-root users and log when root has no cgroups.
+		// TODO: fix this
 		// See: https://github.com/elastic/elastic-agent-system-metrics/issues/270
 		if userID == 0 || privilegedMode {
 			assert.Contains(t, result, "cgroup")
