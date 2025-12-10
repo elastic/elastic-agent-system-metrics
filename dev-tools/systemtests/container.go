@@ -185,16 +185,16 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context, apiClient *cli
 	// iterate by lines to make this easier to read
 	for _, badLine := range tr.FatalLogMessages {
 		for _, line := range strings.Split(result.Stdout, "\n") {
+			// TODO: fix this
+			// See https://github.com/elastic/elastic-agent-system-metrics/issues/270
+			if strings.Contains(line, "Non-fatal error") {
+				continue
+			}
 			assert.NotContains(tr.Runner, line, badLine)
 		}
 		for _, line := range strings.Split(result.Stderr, "\n") {
-			switch {
 			// filter our the go mod package download messages
-			case strings.Contains(line, "go: downloading"):
-			// TODO: fix this
-			// See https://github.com/elastic/elastic-agent-system-metrics/issues/270
-			case strings.Contains(line, "Non-fatal error"):
-			default:
+			if !strings.Contains(line, "go: downloading") {
 				assert.NotContains(tr.Runner, line, badLine)
 			}
 		}
