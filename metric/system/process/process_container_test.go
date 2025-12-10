@@ -185,14 +185,8 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 		// We can only detect user ID from inside the container, not namespace mode,
 		// so we skip this check for non-root users and log when root has no cgroups.
 		// See: https://github.com/elastic/elastic-agent-system-metrics/issues/270
-		cgroups := result["cgroup"]
-		if userID != 0 {
-			// Non-root: skip cgroup check (permission denied expected)
-		} else if cgroups == nil {
-			// Root but no cgroups: likely private namespace, log but don't fail
-			t.Logf("cgroups not available for root user (likely private cgroup namespace)")
-		} else {
-			assert.NotNil(t, cgroups, formatArgs...)
+		if userID == 0 || privilegedMode {
+			assert.Contains(t, result, "cgroup")
 		}
 	}
 }
