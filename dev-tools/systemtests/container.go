@@ -177,28 +177,23 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context, apiClient *cli
 	result := tr.runContainerTest(ctx, apiClient, resp)
 
 	// check for failures
-
-	require.Equal(tr.Runner, int64(0), result.ReturnCode, "got bad docker return code. stdout: %s \nstderr: %s", result.Stdout, result.Stderr)
+	assert.Equal(tr.Runner, int64(0), result.ReturnCode, "got bad docker return code")
+	// will be logged on failure or with -v
 	tr.Runner.Logf("stdout: %s", result.Stdout)
 	tr.Runner.Logf("stderr: %s", result.Stderr)
 
 	// iterate by lines to make this easier to read
-	if len(tr.FatalLogMessages) > 0 {
-		for _, badLine := range tr.FatalLogMessages {
-			for _, line := range strings.Split(result.Stdout, "\n") {
-				require.NotContains(tr.Runner, line, badLine)
-			}
-			for _, line := range strings.Split(result.Stderr, "\n") {
-				// filter our the go mod package download messages
-				if !strings.Contains(line, "go: downloading") {
-					require.NotContains(tr.Runner, line, badLine)
-				}
-
+	for _, badLine := range tr.FatalLogMessages {
+		for _, line := range strings.Split(result.Stdout, "\n") {
+			assert.NotContains(tr.Runner, line, badLine)
+		}
+		for _, line := range strings.Split(result.Stderr, "\n") {
+			// filter our the go mod package download messages
+			if !strings.Contains(line, "go: downloading") {
+				assert.NotContains(tr.Runner, line, badLine)
 			}
 		}
-
 	}
-
 }
 
 // createTestContainer creates a container with the given test path and test name
