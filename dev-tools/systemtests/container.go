@@ -188,8 +188,13 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context, apiClient *cli
 			assert.NotContains(tr.Runner, line, badLine)
 		}
 		for _, line := range strings.Split(result.Stderr, "\n") {
+			switch {
 			// filter our the go mod package download messages
-			if !strings.Contains(line, "go: downloading") {
+			case strings.Contains(line, "go: downloading"):
+			// TODO: fix this
+			// See https://github.com/elastic/elastic-agent-system-metrics/issues/270
+			case strings.Contains(line, "Non-fatal error"):
+			default:
 				assert.NotContains(tr.Runner, line, badLine)
 			}
 		}

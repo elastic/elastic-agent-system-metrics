@@ -102,12 +102,7 @@ func TestProcessMetricsElevatedPerms(t *testing.T) {
 		Privileged:        true,
 		Testname:          "TestSystemHostFromContainer",
 		CreateHostProcess: exec.Command("sleep", "240"),
-		FatalLogMessages: []string{
-			"Error fetching PID info for",
-			// TODO: re-enable:
-			// "Non-fatal error fetching",
-			// See https://github.com/elastic/elastic-agent-system-metrics/issues/270
-		},
+		FatalLogMessages:  []string{"Error fetching PID info for", "Non-fatal error fetching"},
 	}
 
 	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
