@@ -185,7 +185,7 @@ func validateProcResult(t *testing.T, result mapstr.M) {
 		// These are treated as non-fatal errors in the metrics collection code.
 		// TODO: fix this
 		// See: https://github.com/elastic/elastic-agent-system-metrics/issues/270
-		if cgroupNSMode == "host" {
+		if cgroupNSMode == "host" && userID == 0 {
 			assert.Contains(t, result, "cgroup", formatArgs...)
 		} else {
 			t.Log("WARN: skipping 'cgroup' check, this is because of known issue https://github.com/elastic/elastic-agent-system-metrics/issues/270")
