@@ -129,8 +129,6 @@ func TestProcessAllSettings(t *testing.T) {
 }
 
 func TestContainerProcess(t *testing.T) {
-	ctx, cancel := context.WithTimeout(t.Context(), time.Minute*5)
-	defer cancel()
 	// Make sure that monitoring container procs from within the container still works
 	baseRunner := systemtests.DockerTestRunner{
 		Runner:           t,
@@ -142,7 +140,7 @@ func TestContainerProcess(t *testing.T) {
 
 	// pick a user that has permission for its own home and GOMODCACHE dir
 	// 'nobody' has id 65534 on golang:alpine and has the same GOMODCACHE as root (/go/pkg/mod)
-	baseRunner.CreateAndRunPermissionMatrix(ctx, []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
+	baseRunner.CreateAndRunPermissionMatrix(t.Context(), []container.CgroupnsMode{container.CgroupnsModeHost, container.CgroupnsModePrivate},
 		[]bool{true, false}, []string{"nobody", ""})
 }
 
