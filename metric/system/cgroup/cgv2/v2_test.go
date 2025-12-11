@@ -24,7 +24,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgcommon"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/testhelpers"
 )
 
@@ -196,8 +198,21 @@ func TestGetMem(t *testing.T) {
 func TestGetCPU(t *testing.T) {
 	cpu := CPUSubsystem{}
 	err := cpu.Get(v2Path)
-	assert.NoError(t, err, "error in Get")
+	require.NoError(t, err, "error in Get")
 
 	assert.Equal(t, uint64(26772130245), cpu.Stats.Usage.NS)
 	assert.Equal(t, uint64(5793060316), cpu.Stats.System.NS)
+}
+
+func TestGetCPUEmpty(t *testing.T) {
+	cpu := CPUSubsystem{}
+	err := cpu.Get(t.TempDir())
+	require.NoError(t, err, "error in Get")
+
+	assert.EqualValues(t, CPUSubsystem{
+		ID:       "",
+		Path:     "",
+		Pressure: map[string]cgcommon.Pressure{},
+		Stats:    CPUStats{},
+	}, cpu)
 }
