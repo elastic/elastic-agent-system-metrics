@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgcommon"
@@ -222,11 +223,11 @@ func TestGetMemPressure(t *testing.T) {
 full avg10=0.80 avg60=1.20 avg300=0.40 total=78901
 `
 	err := os.WriteFile(tempDir+"/memory.pressure", []byte(pressureContent), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Create minimal required memory files
 	err = os.WriteFile(tempDir+"/memory.stat", []byte("anon 0\n"), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	mem := MemorySubsystem{}
 	err = mem.Get(tempDir)
@@ -255,7 +256,7 @@ func TestGetMemNoPressure(t *testing.T) {
 
 	// Create minimal required memory files but NOT memory.pressure
 	err := os.WriteFile(tempDir+"/memory.stat", []byte("anon 0\n"), 0644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	mem := MemorySubsystem{}
 	err = mem.Get(tempDir)
