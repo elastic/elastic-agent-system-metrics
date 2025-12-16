@@ -311,6 +311,12 @@ func getEnvData(hostfs resolve.Resolver, pid int, filter func(string) bool) (map
 func getMemData(hostfs resolve.Resolver, pid int) (ProcMemInfo, error) {
 	// Memory data
 	state := ProcMemInfo{}
+	swap, err := getSwapData(pid)
+	if err == nil {
+		state.Swap = swap
+	} else {
+		// @TODO treat error as not critical
+	}
 	path := hostfs.Join("proc", strconv.Itoa(pid), "statm")
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -537,4 +543,30 @@ func getProcState(b byte) PidState {
 
 func FillMetricsRequiringMoreAccess(_ int, state ProcState) (ProcState, error) {
 	return state, nil
+}
+
+func getSwapData(pid int) (opt.Uint, error) {
+	path := hostfs.Join("proc", strconv.Itoa(pid), "status")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return state, fmt.Errorf("error opening file %s: %w", path, err)
+	}
+	fields := strings.Fields(string(data))
+	foundIdx := -1
+	for idx, field := range fields {
+		if field == "VmSwap" {
+			foundIdx = idx
+			break
+		}
+	}
+	if foundIdx == -1 {
+		// No data on swap memory usage found
+		return opt.Uint{}, errors.New("no swap data found")
+	}
+
+	rss, err := strconv.ParseUint(fields[foundIdx], 10, 64)
+	if err != nil {
+		return opt.Uint{}, fmt.Errorf("error parsing memory swap %s: %w", fields[foundIdx], err)
+	}
+	return opt.UintWith(rss << 10), nil
 }
