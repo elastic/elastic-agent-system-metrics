@@ -241,3 +241,56 @@ func TestParseIO(t *testing.T) {
 
 	require.Equal(t, good, data)
 }
+
+func Test_getSwapData(t *testing.T) {
+	path := resolve.NewTestResolver("testdata/")
+	swap, err := getSwapData(path, 42)
+	require.NoError(t, err)
+	assert.Equal(t, opt.UintWith(80896), swap)
+}
+
+func Test_parseSwapData(t *testing.T) {
+	tests := []struct {
+		name             string
+		mockData         []byte
+		expectedErrorMsg string
+		expected         opt.Uint
+	}{
+		{
+			name:     "success",
+			mockData: []byte("VmSwap:       79 kB"),
+			expected: opt.UintWith(80896), // 79 kB in bytes
+		},
+		{
+			name:             "no swap data found",
+			mockData:         []byte("no swap data in this file"),
+			expected:         opt.NewUintNone(),
+			expectedErrorMsg: "no swap data found",
+		},
+		{
+			name:             "invalid line format (too many colons",
+			mockData:         []byte("VmSwap:       :79 kB"),
+			expected:         opt.NewUintNone(),
+			expectedErrorMsg: "error parsing memory swap :79: strconv.ParseUint: parsing \":79\": invalid syntax",
+		},
+		{
+			name:             "invalid line format (no colons",
+			mockData:         []byte("VmSwap       79 kB"),
+			expected:         opt.NewUintNone(),
+			expectedErrorMsg: "error parsing line VmSwap       79 kB",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			swap, err := parseSwapData(tt.mockData)
+			if tt.expectedErrorMsg == "" {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, swap)
+			} else {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErrorMsg)
+			}
+		})
+	}
+}
