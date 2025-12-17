@@ -20,6 +20,7 @@
 package process
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -311,7 +312,7 @@ func getEnvData(hostfs resolve.Resolver, pid int, filter func(string) bool) (map
 func getMemData(hostfs resolve.Resolver, pid int) (ProcMemInfo, error) {
 	// Memory data
 	state := ProcMemInfo{}
-	swap, err := getSwapData(pid)
+	swap, err := getSwapData(hostfs, pid)
 	if err == nil {
 		state.Swap = swap
 	} else {
@@ -545,28 +546,33 @@ func FillMetricsRequiringMoreAccess(_ int, state ProcState) (ProcState, error) {
 	return state, nil
 }
 
-func getSwapData(pid int) (opt.Uint, error) {
+func getSwapData(hostfs resolve.Resolver, pid int) (opt.Uint, error) {
 	path := hostfs.Join("proc", strconv.Itoa(pid), "status")
-	data, err := os.ReadFile(path)
+	file, err := os.Open(path)
 	if err != nil {
-		return state, fmt.Errorf("error opening file %s: %w", path, err)
+		return opt.Uint{}, fmt.Errorf("error opening file %s: %w", path, err)
 	}
-	fields := strings.Fields(string(data))
-	foundIdx := -1
-	for idx, field := range fields {
-		if field == "VmSwap" {
-			foundIdx = idx
-			break
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if !strings.HasPrefix(line, "VmSwap") {
+			continue
 		}
-	}
-	if foundIdx == -1 {
-		// No data on swap memory usage found
-		return opt.Uint{}, errors.New("no swap data found")
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			return opt.Uint{}, fmt.Errorf("error parsing line %s: %w", line, err)
+		}
+		swapStr := strings.TrimSpace(parts[1])
+		swapParts := strings.SplitN(swapStr, " ", 2)
+		if len(swapParts) != 2 {
+			return opt.Uint{}, fmt.Errorf("error parsing swap value %s: %w", swapStr, err)
+		}
+		swapKb, err := strconv.ParseUint(swapParts[0], 10, 64)
+		if err != nil {
+			return opt.Uint{}, fmt.Errorf("error parsing memory swap %s: %w", swapParts[0], err)
+		}
+		return opt.UintWith(swapKb << 10), nil
 	}
 
-	rss, err := strconv.ParseUint(fields[foundIdx], 10, 64)
-	if err != nil {
-		return opt.Uint{}, fmt.Errorf("error parsing memory swap %s: %w", fields[foundIdx], err)
-	}
-	return opt.UintWith(rss << 10), nil
+	return opt.Uint{}, fmt.Errorf("no swap found in file %s: %w", path, err)
 }
