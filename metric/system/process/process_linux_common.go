@@ -20,6 +20,7 @@
 package process
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -311,6 +312,11 @@ func getEnvData(hostfs resolve.Resolver, pid int, filter func(string) bool) (map
 func getMemData(hostfs resolve.Resolver, pid int) (ProcMemInfo, error) {
 	// Memory data
 	state := ProcMemInfo{}
+	swap, err := getSwapData(hostfs, pid)
+	// error of getting swap memory data shouldn't prevent collection of other data
+	if err == nil {
+		state.Swap = swap
+	}
 	path := hostfs.Join("proc", strconv.Itoa(pid), "statm")
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -537,4 +543,42 @@ func getProcState(b byte) PidState {
 
 func FillMetricsRequiringMoreAccess(_ int, state ProcState) (ProcState, error) {
 	return state, nil
+}
+
+func getSwapData(hostfs resolve.Resolver, pid int) (opt.Uint, error) {
+	path := hostfs.Join("proc", strconv.Itoa(pid), "status")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return opt.Uint{}, fmt.Errorf("error opening file %s: %w", path, err)
+	}
+
+	return parseSwapData(data)
+}
+
+func parseSwapData(data []byte) (opt.Uint, error) {
+	reader := bytes.NewReader(data)
+	scanner := bufio.NewScanner(reader)
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if !strings.HasPrefix(line, "VmSwap") {
+			continue
+		}
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) != 2 {
+			return opt.NewUintNone(), fmt.Errorf("error parsing line %s", line)
+		}
+		swapStr := strings.TrimSpace(parts[1])
+		swapParts := strings.SplitN(swapStr, " ", 2)
+		if len(swapParts) != 2 {
+			return opt.NewUintNone(), fmt.Errorf("error parsing swap value %s", swapStr)
+		}
+		swapKb, err := strconv.ParseUint(swapParts[0], 10, 64)
+		if err != nil {
+			return opt.Uint{}, fmt.Errorf("error parsing memory swap %s: %w", swapParts[0], err)
+		}
+		return opt.UintWith(swapKb << 10), nil // the bit shift converts value from kB to bytes
+	}
+
+	return opt.Uint{}, fmt.Errorf("no swap data found")
 }
