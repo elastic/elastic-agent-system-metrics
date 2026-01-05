@@ -550,9 +550,22 @@ func getSwapData(hostfs resolve.Resolver, pid int) (opt.Uint, error) {
 		return opt.Uint{}, fmt.Errorf("error getting process status(PID %d): %w", pid, err)
 	}
 
-	if swapKb, ok := statusMap["VmSwap"]; ok {
-		return opt.UintWith(swapKb << 10), nil // the bit shift converts value from kB to bytes
+	if swapStr, ok := statusMap["VmSwap"]; ok {
+		return parseSwapData(swapStr)
 	}
 
 	return opt.Uint{}, fmt.Errorf("no swap data found for PID: %d", pid)
+}
+
+func parseSwapData(data string) (opt.Uint, error) {
+	// Extracting a numerical part from value like "79 kB"
+	swapParts := strings.SplitN(data, " ", 2)
+	if len(swapParts) != 2 {
+		return opt.NewUintNone(), fmt.Errorf("error parsing swap value: %s", data)
+	}
+	swapKb, err := strconv.ParseUint(swapParts[0], 10, 64)
+	if err != nil {
+		return opt.Uint{}, fmt.Errorf("error parsing memory swap %s: %w", swapParts[0], err)
+	}
+	return opt.UintWith(swapKb << 10), nil // the bit shift converts value from kB to bytes
 }

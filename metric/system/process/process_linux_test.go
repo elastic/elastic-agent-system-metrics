@@ -248,3 +248,37 @@ func Test_getSwapData(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, opt.UintWith(80896), swap)
 }
+
+func Test_parseSwapData(t *testing.T) {
+	tests := []struct {
+		name             string
+		mockData         string
+		expectedErrorMsg string
+		expected         opt.Uint
+	}{
+		{
+			name:     "success",
+			mockData: "79 kB",
+			expected: opt.UintWith(80896), // 79 kB in bytes
+		},
+		{
+			name:             "empty swap data read in status file",
+			mockData:         "",
+			expected:         opt.NewUintNone(),
+			expectedErrorMsg: "error parsing swap value: ",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			swap, err := parseSwapData(tt.mockData)
+			if tt.expectedErrorMsg == "" {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expected, swap)
+			} else {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErrorMsg)
+			}
+		})
+	}
+}
