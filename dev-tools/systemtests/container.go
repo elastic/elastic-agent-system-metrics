@@ -217,7 +217,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 	cwd := strings.TrimSpace(string(wdPath))
 	logger.Infof("using cwd: %s", cwd)
 
-	testRunCmd := []string{"go", "test", "-v", tr.Basepath}
+	testRunCmd := []string{"go", "test", "-v", "-race", tr.Basepath}
 	if tr.Testname != "" {
 		testRunCmd = append(testRunCmd, "-run", tr.Testname)
 	}
