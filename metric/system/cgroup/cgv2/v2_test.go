@@ -272,7 +272,7 @@ func TestGetCPU(t *testing.T) {
 	}{
 		{
 			name: "v2 path with pressure",
-			setup: func(t *testing.T) string {
+			setup: func(*testing.T) string {
 				return v2Path
 			},
 			expected: CPUSubsystem{
