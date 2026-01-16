@@ -83,3 +83,10 @@ func TestLsassFound(t *testing.T) {
 		}
 	}
 }
+
+func Test_procSwap(t *testing.T) {
+	swap, err := procSwap(8612)
+	assert.NoError(t, err)
+	t.Logf("SWAP: %d", swap)
+	t.Fail()
+}

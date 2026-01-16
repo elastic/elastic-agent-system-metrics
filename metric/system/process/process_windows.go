@@ -32,6 +32,7 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	gowindows "github.com/elastic/go-windows"
 	"github.com/elastic/gosigar/sys/windows"
+	"github.com/yusufpapurcu/wmi"
 )
 
 var (
@@ -462,4 +463,29 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	state.CPU.Total.Ticks = opt.UintWith(uint64(idle / 1e6))
 	state.CPU.Total.Value = opt.FloatWith(idle)
 	return state, nil
+}
+
+type Win32_PerfRawData_PerfProc_Process struct {
+	PrivateBytes      uint64
+	WorkingSetPrivate uint64
+}
+
+func procSwap(pid int) (uint64, error) {
+	var dst []Win32_PerfRawData_PerfProc_Process
+
+	query := fmt.Sprintf("SELECT PrivateBytes, WorkingSetPrivate FROM Win32_PerfRawData_PerfProc_Process WHERE IDProcess = %d", pid)
+
+	err := wmi.Query(query, &dst)
+	if err != nil {
+		return 0, fmt.Errorf("WMI query failed: %w", err)
+	}
+	if len(dst) == 0 {
+		return 0, fmt.Errorf("process not found in WMI")
+	}
+
+	if dst[0].PrivateBytes > dst[0].WorkingSetPrivate {
+		return dst[0].PrivateBytes - dst[0].WorkingSetPrivate, nil
+	}
+
+	return 0, nil
 }
