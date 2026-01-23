@@ -19,6 +19,7 @@ package process
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -85,8 +86,19 @@ func TestLsassFound(t *testing.T) {
 }
 
 func Test_procSwap(t *testing.T) {
-	swap, err := procSwap(8612)
-	assert.NoError(t, err)
-	t.Logf("SWAP: %d", swap)
-	t.Fail()
+	pid := os.Getpid()
+
+	// Happy Path: Query a valid, running PID
+	swap, err := procSwap(pid)
+	require.NoError(t, err, "procSwap should not return an error for a valid running process")
+
+	// Note: We cannot strictly assert swap > 0 because a fresh test process
+	// might be fully resident in RAM (swap = 0). We simply verify the call succeeds.
+	t.Logf("Swap usage for PID %d: %d bytes", pid, swap)
+
+	// Sad Path: Query a non-existent PID
+	// -1 is a safe invalid PID for Windows WMI queries
+	_, err = procSwap(-1)
+	require.Error(t, err, "procSwap should return an error for a non-existent PID")
+	assert.Contains(t, err.Error(), "procSwap: WMI query failed: Exception occurred. (Invalid query )", "error message should indicate process was missing")
 }
