@@ -163,6 +163,12 @@ func FillPidMetrics(_ resolve.Resolver, pid int, state ProcState, _ func(string)
 	if err != nil {
 		return state, fmt.Errorf("error fetching memory: %w", err)
 	}
+
+	swap, err := procSwap(pid)
+	// No need to stop metrics fetching procedure if fetching process swap usage failed
+	if err == nil {
+		state.Memory.Swap = opt.UintWith(swap)
+	}
 	state.Memory.Rss.Bytes = opt.UintWith(wss)
 	state.Memory.Size = opt.UintWith(size)
 
@@ -470,6 +476,22 @@ type Win32_PerfRawData_PerfProc_Process struct {
 	WorkingSetPrivate uint64
 }
 
+// procSwap calculates the estimated amount of memory paged to disk (swap) for the given PID.
+//
+// HOW IT WORKS:
+// Windows does not provide a direct counter for per-process swap usage. This function derives
+// the value by querying the Win32_PerfRawData_PerfProc_Process WMI class and applying the formula:
+//
+//	Swap = PrivateBytes - WorkingSetPrivate
+//
+// WHY:
+//   - PrivateBytes: Represents the total private memory the process has committed,
+//     which includes memory stored in both physical RAM and the pagefile (disk).
+//   - WorkingSetPrivate: Represents the portion of that private memory currently
+//     resident in physical RAM.
+//
+// Therefore, the difference between the Total Committed (PrivateBytes) and the
+// Resident in RAM (WorkingSetPrivate) is the amount sitting in the pagefile.
 func procSwap(pid int) (uint64, error) {
 	var dst []Win32_PerfRawData_PerfProc_Process
 
@@ -477,12 +499,14 @@ func procSwap(pid int) (uint64, error) {
 
 	err := wmi.Query(query, &dst)
 	if err != nil {
-		return 0, fmt.Errorf("WMI query failed: %w", err)
+		return 0, fmt.Errorf("procSwap: WMI query failed: %w", err)
 	}
 	if len(dst) == 0 {
-		return 0, fmt.Errorf("process not found in WMI")
+		return 0, fmt.Errorf("procSwap: process not found in WMI")
 	}
 
+	// If the process is fully resident in RAM (or if WMI reports inconsistent data), it returns 0
+	// to prevent integer underflow on the uint64 return.
 	if dst[0].PrivateBytes > dst[0].WorkingSetPrivate {
 		return dst[0].PrivateBytes - dst[0].WorkingSetPrivate, nil
 	}
