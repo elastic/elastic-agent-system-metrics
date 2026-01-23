@@ -26,8 +26,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	xsyswindows "golang.org/x/sys/windows"
 	"github.com/yusufpapurcu/wmi"
+	xsyswindows "golang.org/x/sys/windows"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
