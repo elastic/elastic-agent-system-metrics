@@ -14,6 +14,7 @@ require (
 	github.com/magefile/mage v1.15.0
 	github.com/shirou/gopsutil/v4 v4.24.7
 	github.com/stretchr/testify v1.9.0
+	github.com/yusufpapurcu/wmi v1.2.4
 	go.elastic.co/go-licence-detector v0.6.1
 	golang.org/x/sys v0.31.0
 )
@@ -53,7 +54,6 @@ require (
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
-	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.elastic.co/ecszap v1.0.2 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
 	go.opentelemetry.io/otel v1.28.0 // indirect
