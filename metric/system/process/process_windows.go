@@ -27,12 +27,12 @@ import (
 	"unsafe"
 
 	xsyswindows "golang.org/x/sys/windows"
+	"github.com/yusufpapurcu/wmi"
 
 	"github.com/elastic/elastic-agent-libs/opt"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 	gowindows "github.com/elastic/go-windows"
 	"github.com/elastic/gosigar/sys/windows"
-	"github.com/yusufpapurcu/wmi"
 )
 
 var (
@@ -471,7 +471,7 @@ func fillIdleProcess(state ProcState) (ProcState, error) {
 	return state, nil
 }
 
-type Win32_PerfRawData_PerfProc_Process struct {
+type Win32PerfRawDataPerfProcProcess struct {
 	PrivateBytes      uint64
 	WorkingSetPrivate uint64
 }
@@ -493,7 +493,7 @@ type Win32_PerfRawData_PerfProc_Process struct {
 // Therefore, the difference between the Total Committed (PrivateBytes) and the
 // Resident in RAM (WorkingSetPrivate) is the amount sitting in the pagefile.
 func procSwap(pid int) (uint64, error) {
-	var dst []Win32_PerfRawData_PerfProc_Process
+	var dst []Win32PerfRawDataPerfProcProcess
 
 	query := fmt.Sprintf("SELECT PrivateBytes, WorkingSetPrivate FROM Win32_PerfRawData_PerfProc_Process WHERE IDProcess = %d", pid)
 
