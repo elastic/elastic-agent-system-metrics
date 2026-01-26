@@ -104,7 +104,7 @@ func TestActualMemPercentage(t *testing.T) {
 func TestMeminfoParse(t *testing.T) {
 	// Make sure we're manually calculating Actual correctly on linux
 	if runtime.GOOS == "linux" {
-		mem, err := Get(resolve.NewTestResolver("./oldkern"))
+		mem, err := Get(resolve.NewTestResolver("./testdata/oldkern"))
 		assert.NoError(t, err)
 
 		assert.Equal(t, uint64(27307106304), mem.Cached.ValueOr(0))
@@ -115,9 +115,40 @@ func TestMeminfoParse(t *testing.T) {
 
 func TestMeminfoPct(t *testing.T) {
 	if runtime.GOOS == "linux" {
-		memRaw, err := Get(resolve.NewTestResolver("./oldkern"))
+		memRaw, err := Get(resolve.NewTestResolver("./testdata/oldkern"))
 		assert.NoError(t, err)
 		assert.Equal(t, float64(0.1606), memRaw.Actual.Used.Pct.ValueOr(0))
 		assert.Equal(t, float64(0.5933), memRaw.Used.Pct.ValueOr(0))
 	}
+}
+
+func TestMeminfoZswapParse(t *testing.T) {
+	if runtime.GOOS == "linux" {
+		mem, err := Get(resolve.NewTestResolver("./testdata/oldkern"))
+		assert.NoError(t, err)
+
+		// Zswap: 2952192 kB = 3023044608 bytes
+		assert.True(t, mem.Zswap.Compressed.Exists())
+		assert.Equal(t, uint64(3023044608), mem.Zswap.Compressed.ValueOr(0))
+
+		// Zswapped: 4335680 kB = 4439736320 bytes
+		assert.True(t, mem.Zswap.Uncompressed.Exists())
+		assert.Equal(t, uint64(4439736320), mem.Zswap.Uncompressed.ValueOr(0))
+	}
+}
+
+func TestZswapMetricsIsZero(t *testing.T) {
+	z := ZswapMetrics{}
+	assert.True(t, z.IsZero())
+
+	z.Compressed = opt.UintWith(100)
+	assert.False(t, z.IsZero())
+
+	z = ZswapMetrics{Uncompressed: opt.UintWith(200)}
+	assert.False(t, z.IsZero())
+
+	// Test with nested debug metrics
+	z = ZswapMetrics{}
+	z.Debug.StoredPages = opt.UintWith(50)
+	assert.False(t, z.IsZero())
 }

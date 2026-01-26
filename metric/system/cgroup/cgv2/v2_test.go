@@ -222,15 +222,11 @@ func TestGetMemPressure(t *testing.T) {
 	pressureContent := `some avg10=1.50 avg60=2.30 avg300=0.75 total=123456
 full avg10=0.80 avg60=1.20 avg300=0.40 total=78901
 `
-	err := os.WriteFile(tempDir+"/memory.pressure", []byte(pressureContent), 0644)
-	require.NoError(t, err)
-
-	// Create minimal required memory files
-	err = os.WriteFile(tempDir+"/memory.stat", []byte("anon 0\n"), 0644)
-	require.NoError(t, err)
+	writeFile(t, tempDir+"/memory.pressure", pressureContent)
+	writeFile(t, tempDir+"/memory.stat", "anon 0\n")
 
 	mem := MemorySubsystem{}
-	err = mem.Get(tempDir)
+	err := mem.Get(tempDir)
 	assert.NoError(t, err, "error in Get")
 
 	expectedPressure := map[string]cgcommon.Pressure{
@@ -255,11 +251,10 @@ func TestGetMemNoPressure(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create minimal required memory files but NOT memory.pressure
-	err := os.WriteFile(tempDir+"/memory.stat", []byte("anon 0\n"), 0644)
-	require.NoError(t, err)
+	writeFile(t, tempDir+"/memory.stat", "anon 0\n")
 
 	mem := MemorySubsystem{}
-	err = mem.Get(tempDir)
+	err := mem.Get(tempDir)
 	assert.NoError(t, err, "error in Get - should not fail if memory.pressure is missing")
 	assert.Empty(t, mem.Pressure, "Pressure should be empty when memory.pressure file doesn't exist")
 }
@@ -358,4 +353,36 @@ func TestGetCPU(t *testing.T) {
 			assert.EqualValues(t, test.expected, cpu)
 		})
 	}
+}
+
+func TestFillStatStructZswap(t *testing.T) {
+	statContent := `anon 1234567890
+file 9876543210
+zswap 129476127
+zswapped 361033728
+zswpin 390473
+zswpout 635017
+zswpwb 11073`
+
+	tmpDir := t.TempDir()
+	writeFile(t, filepath.Join(tmpDir, "memory.stat"), statContent)
+
+	stats, err := fillStatStruct(tmpDir)
+	require.NoError(t, err)
+
+	expected := MemoryStat{
+		Anon:     opt.Bytes{Bytes: 1234567890},
+		File:     opt.Bytes{Bytes: 9876543210},
+		Zswap:    opt.Bytes{Bytes: 129476127},
+		Zswapped: opt.Bytes{Bytes: 361033728},
+		Zswpin:   390473,
+		Zswpout:  635017,
+		Zswpwb:   11073,
+	}
+	assert.Equal(t, expected, stats)
+}
+
+func writeFile(t testing.TB, path, content string) {
+	t.Helper()
+	require.NoError(t, os.WriteFile(path, []byte(content), 0644))
 }

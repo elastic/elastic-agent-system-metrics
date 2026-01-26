@@ -181,6 +181,7 @@ func (tr *DockerTestRunner) RunTestsOnDocker(ctx context.Context, apiClient *cli
 	// will be logged on failure or with -v
 	tr.Runner.Logf("stdout: %s", result.Stdout)
 	tr.Runner.Logf("stderr: %s", result.Stderr)
+	assert.NotContains(tr.Runner, result.Stdout, "no tests to run")
 
 	// iterate by lines to make this easier to read
 	for _, badLine := range tr.FatalLogMessages {
