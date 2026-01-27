@@ -21,7 +21,7 @@ cat /sys/module/zswap/parameters/enabled 2>/dev/null || echo "zswap module not l
 sudo grep -r . /sys/kernel/debug/zswap/ 2>/dev/null || echo "debugfs zswap not accessible"
 mount
 head -1 /sys/fs/cgroup/memory.stat 2>/dev/null && grep -i zswp /sys/fs/cgroup/memory.stat 2>/dev/null || echo "cgroup v2 not available or no zswap fields"
-cat /proc/config.gz | gunzip | grep -i swap
+cat /proc/config.gz | gunzip | grep -i swap || true
 set +x
 
 go test -timeout 20m -v ./tests
