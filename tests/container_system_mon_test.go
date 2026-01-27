@@ -173,12 +173,11 @@ func TestMemoryZswap(t *testing.T) {
 
 	// Run memory integration tests from a container monitoring the host
 	// Tests zswap metrics from /proc/meminfo and optionally /sys/kernel/debug/zswap
-	// Pattern matches: TestMemoryFromContainer, TestZswapMetricsFromContainer, TestZswapDebugMetricsFromContainer
 	baseRunner := systemtests.DockerTestRunner{
 		Runner:     t,
 		Basepath:   "./metric/memory",
 		Privileged: true, // Needed for debugfs access
-		Testname:   "FromContainer",
+		Testname:   "TestMemoryFromContainer",
 	}
 
 	apiClient, err := client.NewClientWithOpts(client.WithAPIVersionNegotiation())
