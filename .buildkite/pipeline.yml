@@ -33,8 +33,9 @@ steps:
     key: linux-container-test-u2004
     command: ".buildkite/scripts/system-container-tests.sh"
     env:
+      # Ubuntu 20.04: older kernel, no Zswap in /proc/meminfo but debugfs IS accessible
       EXPECT_ZSWAP: "missing"
-      EXPECT_ZSWAP_DEBUG: "missing"
+      EXPECT_ZSWAP_DEBUG: "exists"
     agents:
       image: "family/platform-ingest-beats-ubuntu-2004"
       provider: "gcp"

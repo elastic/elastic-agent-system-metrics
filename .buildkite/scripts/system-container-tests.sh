@@ -14,6 +14,9 @@ install_go_dependencies
 # sudo sh ./get-docker.sh --version $DOCKER_VERSION
 
 # TODO: remove this
+set -x
 sudo grep -r . /sys/kernel/debug/zswap/ || echo 'Failed to get debugfs'
+mount
+set +x
 
 go test -timeout 20m -v ./tests
