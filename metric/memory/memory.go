@@ -81,24 +81,24 @@ type ZswapMetrics struct {
 // ZswapDebugMetrics contains detailed zswap statistics from /sys/kernel/debug/zswap.
 // These metrics are optional and require debugfs to be mounted and accessible (typically requires root).
 type ZswapDebugMetrics struct {
-	// StoredPages is the number of pages currently stored in zswap
-	StoredPages opt.Uint `struct:"stored_pages,omitempty"`
-	// PoolTotalSize is the total size of the zswap pool in bytes
-	PoolTotalSize opt.Uint `struct:"pool_total_size,omitempty"`
-	// WrittenBackPages is the number of pages written back from zswap to swap
-	WrittenBackPages opt.Uint `struct:"written_back_pages,omitempty"`
-	// RejectCompressPoor is the number of pages rejected due to poor compression ratio
-	RejectCompressPoor opt.Uint `struct:"reject_compress_poor,omitempty"`
-	// RejectCompressFail is the number of pages rejected due to compression failure
-	RejectCompressFail opt.Uint `struct:"reject_compress_fail,omitempty"`
-	// RejectKmemcacheFail is the number of pages rejected due to kmemcache allocation failure
-	RejectKmemcacheFail opt.Uint `struct:"reject_kmemcache_fail,omitempty"`
-	// RejectAllocFail is the number of pages rejected due to zpool allocation failure
-	RejectAllocFail opt.Uint `struct:"reject_alloc_fail,omitempty"`
-	// RejectReclaimFail is the number of pages rejected due to reclaim failure
-	RejectReclaimFail opt.Uint `struct:"reject_reclaim_fail,omitempty"`
 	// PoolLimitHit is the number of times the pool limit was reached
 	PoolLimitHit opt.Uint `struct:"pool_limit_hit,omitempty"`
+	// PoolTotalSize is the total size of the zswap pool in bytes
+	PoolTotalSize opt.Uint `struct:"pool_total_size,omitempty"`
+	// RejectAllocFail is the number of pages rejected due to zpool allocation failure
+	RejectAllocFail opt.Uint `struct:"reject_alloc_fail,omitempty"`
+	// RejectCompressFail is the number of pages rejected due to compression failure
+	RejectCompressFail opt.Uint `struct:"reject_compress_fail,omitempty"`
+	// RejectCompressPoor is the number of pages rejected due to poor compression ratio
+	RejectCompressPoor opt.Uint `struct:"reject_compress_poor,omitempty"`
+	// RejectKmemcacheFail is the number of pages rejected due to kmemcache allocation failure
+	RejectKmemcacheFail opt.Uint `struct:"reject_kmemcache_fail,omitempty"`
+	// RejectReclaimFail is the number of pages rejected due to reclaim failure
+	RejectReclaimFail opt.Uint `struct:"reject_reclaim_fail,omitempty"`
+	// StoredPages is the number of pages currently stored in zswap
+	StoredPages opt.Uint `struct:"stored_pages,omitempty"`
+	// WrittenBackPages is the number of pages written back from zswap to swap
+	WrittenBackPages opt.Uint `struct:"written_back_pages,omitempty"`
 }
 
 // IsZero implements the zeroer interface for structform's folders

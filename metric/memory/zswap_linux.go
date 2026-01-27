@@ -35,26 +35,25 @@ const zswapDebugPath = "/sys/kernel/debug/zswap"
 // This function returns an empty struct (not an error) if the debug path is not accessible,
 // as these metrics are optional and require debugfs to be mounted with appropriate permissions.
 func getZswapDebugMetrics(rootfs resolve.Resolver) ZswapDebugMetrics {
-	metrics := ZswapDebugMetrics{}
 	basePath := rootfs.ResolveHostFS(zswapDebugPath)
 
 	// Check if the debug path exists and is accessible
 	if _, err := os.Stat(basePath); err != nil {
-		return metrics
+		return ZswapDebugMetrics{}
 	}
 
 	// Read each metric file, ignoring errors for individual files
-	metrics.StoredPages = readUintFromFile(filepath.Join(basePath, "stored_pages"))
-	metrics.PoolTotalSize = readUintFromFile(filepath.Join(basePath, "pool_total_size"))
-	metrics.WrittenBackPages = readUintFromFile(filepath.Join(basePath, "written_back_pages"))
-	metrics.RejectCompressPoor = readUintFromFile(filepath.Join(basePath, "reject_compress_poor"))
-	metrics.RejectCompressFail = readUintFromFile(filepath.Join(basePath, "reject_compress_fail"))
-	metrics.RejectKmemcacheFail = readUintFromFile(filepath.Join(basePath, "reject_kmemcache_fail"))
-	metrics.RejectAllocFail = readUintFromFile(filepath.Join(basePath, "reject_alloc_fail"))
-	metrics.RejectReclaimFail = readUintFromFile(filepath.Join(basePath, "reject_reclaim_fail"))
-	metrics.PoolLimitHit = readUintFromFile(filepath.Join(basePath, "pool_limit_hit"))
-
-	return metrics
+	return ZswapDebugMetrics{
+		PoolLimitHit:        readUintFromFile(filepath.Join(basePath, "pool_limit_hit")),
+		PoolTotalSize:       readUintFromFile(filepath.Join(basePath, "pool_total_size")),
+		RejectAllocFail:     readUintFromFile(filepath.Join(basePath, "reject_alloc_fail")),
+		RejectCompressFail:  readUintFromFile(filepath.Join(basePath, "reject_compress_fail")),
+		RejectCompressPoor:  readUintFromFile(filepath.Join(basePath, "reject_compress_poor")),
+		RejectKmemcacheFail: readUintFromFile(filepath.Join(basePath, "reject_kmemcache_fail")),
+		RejectReclaimFail:   readUintFromFile(filepath.Join(basePath, "reject_reclaim_fail")),
+		StoredPages:         readUintFromFile(filepath.Join(basePath, "stored_pages")),
+		WrittenBackPages:    readUintFromFile(filepath.Join(basePath, "written_back_pages")),
+	}
 }
 
 // readUintFromFile reads a uint64 value from a file, returning an empty opt.Uint on any error.
