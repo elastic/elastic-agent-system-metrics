@@ -20,6 +20,7 @@
 package memory
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,6 +29,10 @@ import (
 	"github.com/elastic/elastic-agent-libs/logp/logptest"
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 )
+
+// Environment variables for controlling test expectations in CI:
+// - EXPECT_ZSWAP: "exists" (zswap fields in /proc/meminfo), "missing", or empty (don't enforce)
+// - EXPECT_ZSWAP_DEBUG: "exists" (debugfs accessible), "missing", or empty (don't enforce)
 
 // TestMemoryFromContainer tests memory metric collection from inside a container
 // monitoring the host via /hostfs mount
@@ -46,33 +51,52 @@ func TestMemoryFromContainer(t *testing.T) {
 
 	t.Logf("Total: %d, Free: %d, Used: %d", mem.Total.ValueOr(0), mem.Free.ValueOr(0), mem.Used.Bytes.ValueOr(0))
 
-	// Zswap availability depends on kernel configuration (CONFIG_ZSWAP=y)
-	// and whether zswap is enabled. We only verify parsing correctness,
-	// not that zswap is available on the system.
-	if mem.Zswap.Compressed.Exists() {
-		t.Logf("Zswap is available: Compressed=%d bytes, Uncompressed=%d bytes",
-			mem.Zswap.Compressed.ValueOr(0), mem.Zswap.Uncompressed.ValueOr(0))
+	// Test zswap metrics based on environment expectations
+	expectZswap := os.Getenv("EXPECT_ZSWAP")
+	expectDebug := os.Getenv("EXPECT_ZSWAP_DEBUG")
 
-		// If compressed exists, uncompressed should also exist
-		assert.True(t, mem.Zswap.Uncompressed.Exists(), "Zswapped should exist when Zswap exists")
-	} else {
-		t.Skip("Zswap is not available on this system")
+	zswapExists := mem.Zswap.Compressed.Exists()
+	debugExists := !mem.Zswap.Debug.IsZero()
+
+	t.Logf("Zswap exists: %v, Debug exists: %v (EXPECT_ZSWAP=%q, EXPECT_ZSWAP_DEBUG=%q)",
+		zswapExists, debugExists, expectZswap, expectDebug)
+
+	switch expectZswap {
+	case "exists":
+		assert.True(t, zswapExists, "EXPECT_ZSWAP=exists but zswap metrics not found in /proc/meminfo")
+		if zswapExists {
+			assert.True(t, mem.Zswap.Uncompressed.Exists(), "Zswapped should exist when Zswap exists")
+			t.Logf("Zswap: Compressed=%d bytes, Uncompressed=%d bytes",
+				mem.Zswap.Compressed.ValueOr(0), mem.Zswap.Uncompressed.ValueOr(0))
+		}
+	case "missing":
+		assert.False(t, zswapExists, "EXPECT_ZSWAP=missing but zswap metrics found")
+	default:
+		// Empty or unset: don't enforce, just log
+		if zswapExists {
+			t.Logf("Zswap: Compressed=%d bytes, Uncompressed=%d bytes",
+				mem.Zswap.Compressed.ValueOr(0), mem.Zswap.Uncompressed.ValueOr(0))
+		} else {
+			t.Log("Zswap is not available on this system")
+		}
 	}
 
-	debug := mem.Zswap.Debug
-	if debug.IsZero() {
-		return
-	}
-
-	// If we got metrics, validate them
-	t.Logf("Zswap debug metrics available:")
-	if debug.StoredPages.Exists() {
-		t.Logf("  StoredPages: %d", debug.StoredPages.ValueOr(0))
-	}
-	if debug.PoolTotalSize.Exists() {
-		t.Logf("  PoolTotalSize: %d bytes", debug.PoolTotalSize.ValueOr(0))
-	}
-	if debug.WrittenBackPages.Exists() {
-		t.Logf("  WrittenBackPages: %d", debug.WrittenBackPages.ValueOr(0))
+	switch expectDebug {
+	case "exists":
+		assert.True(t, debugExists, "EXPECT_ZSWAP_DEBUG=exists but debug metrics not accessible")
+		if debugExists {
+			t.Logf("Zswap debug: StoredPages=%d, PoolTotalSize=%d",
+				mem.Zswap.Debug.StoredPages.ValueOr(0), mem.Zswap.Debug.PoolTotalSize.ValueOr(0))
+		}
+	case "missing":
+		assert.False(t, debugExists, "EXPECT_ZSWAP_DEBUG=missing but debug metrics found")
+	default:
+		// Empty or unset: don't enforce, just log
+		if debugExists {
+			t.Logf("Zswap debug: StoredPages=%d, PoolTotalSize=%d",
+				mem.Zswap.Debug.StoredPages.ValueOr(0), mem.Zswap.Debug.PoolTotalSize.ValueOr(0))
+		} else {
+			t.Log("Zswap debug metrics not accessible (expected without elevated permissions)")
+		}
 	}
 }
