@@ -238,11 +238,9 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 		containerEnv = append(containerEnv, fmt.Sprintf("MONITOR_PID=%d", tr.MonitorPID))
 	}
 
-	// Propagate test expectation environment variables for zswap tests
-	for _, envVar := range []string{"EXPECT_ZSWAP", "EXPECT_ZSWAP_DEBUG"} {
-		if val := os.Getenv(envVar); val != "" {
-			containerEnv = append(containerEnv, fmt.Sprintf("%s=%s", envVar, val))
-		}
+	// Propagate BUILDKITE_STEP_KEY for CI test expectations
+	if val := os.Getenv("BUILDKITE_STEP_KEY"); val != "" {
+		containerEnv = append(containerEnv, fmt.Sprintf("BUILDKITE_STEP_KEY=%s", val))
 	}
 
 	gomodcacheCmd := exec.CommandContext(ctx, "go", "env", "GOMODCACHE")

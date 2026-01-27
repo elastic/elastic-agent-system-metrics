@@ -30,9 +30,19 @@ import (
 	"github.com/elastic/elastic-agent-system-metrics/dev-tools/systemtests"
 )
 
-// Environment variables for controlling test expectations in CI:
-// - EXPECT_ZSWAP: "exists" (zswap fields in /proc/meminfo), "missing", or empty (don't enforce)
-// - EXPECT_ZSWAP_DEBUG: "exists" (debugfs accessible), "missing", or empty (don't enforce)
+// zswapExpectation defines expected zswap behavior for a CI environment
+type zswapExpectation struct {
+	zswapExists bool // Whether Zswap/Zswapped fields exist in /proc/meminfo
+	debugExists bool // Whether /sys/kernel/debug/zswap is accessible
+}
+
+// ciExpectations maps BUILDKITE_STEP_KEY to expected zswap behavior.
+// Keys must match the `key` field in .buildkite/pipeline.yml
+var ciExpectations = map[string]zswapExpectation{
+	"linux-container-test-rhel9": {zswapExists: true, debugExists: false}, // RHEL 9: modern kernel, zswap in meminfo, no debugfs
+	"linux-container-test-u2004": {zswapExists: false, debugExists: true}, // Ubuntu 20.04: older kernel, no meminfo but debugfs accessible
+	"linux-container-test":       {zswapExists: true, debugExists: false}, // Ubuntu 22.04: modern kernel, zswap in meminfo, no debugfs
+}
 
 // TestMemoryFromContainer tests memory metric collection from inside a container
 // monitoring the host via /hostfs mount
@@ -51,52 +61,53 @@ func TestMemoryFromContainer(t *testing.T) {
 
 	t.Logf("Total: %d, Free: %d, Used: %d", mem.Total.ValueOr(0), mem.Free.ValueOr(0), mem.Used.Bytes.ValueOr(0))
 
-	// Test zswap metrics based on environment expectations
-	expectZswap := os.Getenv("EXPECT_ZSWAP")
-	expectDebug := os.Getenv("EXPECT_ZSWAP_DEBUG")
-
 	zswapExists := mem.Zswap.Compressed.Exists()
 	debugExists := !mem.Zswap.Debug.IsZero()
 
-	t.Logf("Zswap exists: %v, Debug exists: %v (EXPECT_ZSWAP=%q, EXPECT_ZSWAP_DEBUG=%q)",
-		zswapExists, debugExists, expectZswap, expectDebug)
+	stepKey := os.Getenv("BUILDKITE_STEP_KEY")
+	t.Logf("Zswap exists: %v, Debug exists: %v (BUILDKITE_STEP_KEY=%q)", zswapExists, debugExists, stepKey)
 
-	switch expectZswap {
-	case "exists":
-		assert.True(t, zswapExists, "EXPECT_ZSWAP=exists but zswap metrics not found in /proc/meminfo")
-		if zswapExists {
-			assert.True(t, mem.Zswap.Uncompressed.Exists(), "Zswapped should exist when Zswap exists")
-			t.Logf("Zswap: Compressed=%d bytes, Uncompressed=%d bytes",
-				mem.Zswap.Compressed.ValueOr(0), mem.Zswap.Uncompressed.ValueOr(0))
-		}
-	case "missing":
-		assert.False(t, zswapExists, "EXPECT_ZSWAP=missing but zswap metrics found")
-	default:
-		// Empty or unset: don't enforce, just log
-		if zswapExists {
-			t.Logf("Zswap: Compressed=%d bytes, Uncompressed=%d bytes",
-				mem.Zswap.Compressed.ValueOr(0), mem.Zswap.Uncompressed.ValueOr(0))
-		} else {
-			t.Log("Zswap is not available on this system")
-		}
+	logZswapStatus(t, mem, zswapExists, debugExists)
+	if stepKey == "" {
+		// Not in CI or step key not set: fallback to non-enforcing behavior
+		return
 	}
 
-	switch expectDebug {
-	case "exists":
-		assert.True(t, debugExists, "EXPECT_ZSWAP_DEBUG=exists but debug metrics not accessible")
-		if debugExists {
-			t.Logf("Zswap debug: StoredPages=%d, PoolTotalSize=%d",
-				mem.Zswap.Debug.StoredPages.ValueOr(0), mem.Zswap.Debug.PoolTotalSize.ValueOr(0))
+	expected, ok := ciExpectations[stepKey]
+	if !ok {
+		t.Fatalf("BUILDKITE_STEP_KEY=%q not found in ciExpectations map - add it or check pipeline.yml", stepKey)
+	}
+
+	// Enforce expectations
+	if expected.zswapExists {
+		assert.True(t, zswapExists, "expected zswap metrics in /proc/meminfo for step %q", stepKey)
+		if zswapExists {
+			assert.True(t, mem.Zswap.Uncompressed.Exists(), "Zswapped should exist when Zswap exists")
 		}
-	case "missing":
-		assert.False(t, debugExists, "EXPECT_ZSWAP_DEBUG=missing but debug metrics found")
-	default:
-		// Empty or unset: don't enforce, just log
-		if debugExists {
-			t.Logf("Zswap debug: StoredPages=%d, PoolTotalSize=%d",
-				mem.Zswap.Debug.StoredPages.ValueOr(0), mem.Zswap.Debug.PoolTotalSize.ValueOr(0))
-		} else {
-			t.Log("Zswap debug metrics not accessible (expected without elevated permissions)")
-		}
+	} else {
+		assert.False(t, zswapExists, "expected NO zswap metrics in /proc/meminfo for step %q", stepKey)
+	}
+
+	if expected.debugExists {
+		assert.True(t, debugExists, "expected debug metrics accessible for step %q", stepKey)
+	} else {
+		assert.False(t, debugExists, "expected NO debug metrics accessible for step %q", stepKey)
+	}
+}
+
+func logZswapStatus(t *testing.T, mem Memory, zswapExists, debugExists bool) {
+	t.Helper()
+	if zswapExists {
+		t.Logf("Zswap: Compressed=%d bytes, Uncompressed=%d bytes",
+			mem.Zswap.Compressed.ValueOr(0), mem.Zswap.Uncompressed.ValueOr(0))
+	} else {
+		t.Log("Zswap is not available on this system")
+	}
+
+	if debugExists {
+		t.Logf("Zswap debug: StoredPages=%d, PoolTotalSize=%d",
+			mem.Zswap.Debug.StoredPages.ValueOr(0), mem.Zswap.Debug.PoolTotalSize.ValueOr(0))
+	} else {
+		t.Log("Zswap debug metrics not accessible")
 	}
 }

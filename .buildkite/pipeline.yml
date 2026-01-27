@@ -4,9 +4,6 @@ env:
   SETUP_GVM_VERSION: 'v0.6.0'
   LINUX_AGENT_IMAGE: "golang:${GO_VERSION}"
   WINDOWS_AGENT_IMAGE: "family/core-windows-2022"
-  # Zswap test expectations:
-  # EXPECT_ZSWAP: "exists" (zswap fields in /proc/meminfo), "missing", or empty (don't enforce)
-  # EXPECT_ZSWAP_DEBUG: "exists" (debugfs accessible), "missing", or empty (don't enforce)
 
 steps:
   - label: ":golangci-lint: Lint"
@@ -20,9 +17,6 @@ steps:
   - label: "Container-System tests; Rhel 9"
     key: linux-container-test-rhel9
     command: ".buildkite/scripts/system-container-tests.sh"
-    env:
-      EXPECT_ZSWAP: "exists"
-      EXPECT_ZSWAP_DEBUG: "missing"
     agents:
       image: "family/platform-ingest-beats-rhel-9"
       provider: "gcp"
@@ -32,10 +26,6 @@ steps:
   - label: "Container-System tests; Old Ubuntu"
     key: linux-container-test-u2004
     command: ".buildkite/scripts/system-container-tests.sh"
-    env:
-      # Ubuntu 20.04: older kernel, no Zswap in /proc/meminfo but debugfs IS accessible
-      EXPECT_ZSWAP: "missing"
-      EXPECT_ZSWAP_DEBUG: "exists"
     agents:
       image: "family/platform-ingest-beats-ubuntu-2004"
       provider: "gcp"
@@ -45,9 +35,6 @@ steps:
   - label: "Container-System tests"
     key: linux-container-test
     command: ".buildkite/scripts/system-container-tests.sh"
-    env:
-      EXPECT_ZSWAP: "exists"
-      EXPECT_ZSWAP_DEBUG: "missing"
     agents:
       image: "family/platform-ingest-beats-ubuntu-2204"
       provider: "gcp"
