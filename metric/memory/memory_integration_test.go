@@ -39,9 +39,9 @@ type zswapExpectation struct {
 // ciExpectations maps BUILDKITE_STEP_KEY to expected zswap behavior.
 // Keys must match the `key` field in .buildkite/pipeline.yml
 var ciExpectations = map[string]zswapExpectation{
+	"linux-container-test":       {zswapExists: true, debugExists: false},  // Ubuntu 22.04: modern kernel, zswap in meminfo, no debugfs
 	"linux-container-test-rhel9": {zswapExists: true, debugExists: false},  // RHEL 9: modern kernel, zswap in meminfo, no debugfs
 	"linux-container-test-u2004": {zswapExists: false, debugExists: true},  // Ubuntu 20.04: older kernel, no meminfo but debugfs accessible
-	"linux-container-test":       {zswapExists: true, debugExists: false},  // Ubuntu 22.04: modern kernel, zswap in meminfo, no debugfs
 	"linux-test":                 {zswapExists: false, debugExists: false}, // Unit tests, unprivileged
 }
 
@@ -75,21 +75,28 @@ func TestMemoryFromContainer(t *testing.T) {
 	}
 
 	expected, ok := ciExpectations[stepKey]
-	if !ok {
-		t.Fatalf("BUILDKITE_STEP_KEY=%q not found in ciExpectations map - add it or check pipeline.yml", stepKey)
-	}
+	require.Truef(t, ok, `BUILDKITE_STEP_KEY=%q not found in ciExpectations map.
+
+To fix this test:
+1. Check the debug output above for "Zswap exists" and "Debug exists" values
+2. Look at the CI debug_system_info() output for kernel config and zswap status
+3. Add an entry to ciExpectations in memory_integration_test.go:
+   %q: {zswapExists: <true|false>, debugExists: <true|false>},
+4. Ensure the key matches the 'key' field in .buildkite/pipeline.yml`,
+		stepKey, stepKey,
+	)
 
 	// Enforce expectations
 	if expected.zswapExists {
 		assert.True(t, zswapExists, "expected zswap metrics in /proc/meminfo for step %q", stepKey)
 		assert.True(t, mem.Zswap.Uncompressed.Exists())
-		assert.NotEmpty(t, os.Getenv("PRIVILEGED"))
 	} else {
 		assert.False(t, zswapExists, "expected NO zswap metrics in /proc/meminfo for step %q", stepKey)
 	}
 
 	if expected.debugExists {
 		assert.True(t, debugExists, "expected debug metrics accessible for step %q", stepKey)
+		assert.NotEmpty(t, os.Getenv("PRIVILEGED"), "debugfs access requires PRIVILEGED")
 	} else {
 		assert.False(t, debugExists, "expected NO debug metrics accessible for step %q", stepKey)
 	}
