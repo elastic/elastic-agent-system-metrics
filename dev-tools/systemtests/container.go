@@ -227,7 +227,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 
 	// set GOCACHE to /tmp to prevent permission issues with non root users
 	containerEnv := []string{fmt.Sprintf("HOSTFS=%s", mountPath), "GOCACHE=/tmp"}
-	// used by a few vendored libaries
+	// used by a few vendored libraries
 	containerEnv = append(containerEnv, "HOST_PROC=%s", mountPath)
 	if tr.Privileged {
 		containerEnv = append(containerEnv, "PRIVILEGED=1")
@@ -239,9 +239,7 @@ func (tr *DockerTestRunner) createTestContainer(ctx context.Context, logger *log
 	}
 
 	// Propagate BUILDKITE_STEP_KEY for CI test expectations
-	if val := os.Getenv("BUILDKITE_STEP_KEY"); val != "" {
-		containerEnv = append(containerEnv, fmt.Sprintf("BUILDKITE_STEP_KEY=%s", val))
-	}
+	containerEnv = append(containerEnv, fmt.Sprintf("BUILDKITE_STEP_KEY=%s", os.Getenv("BUILDKITE_STEP_KEY")))
 
 	gomodcacheCmd := exec.CommandContext(ctx, "go", "env", "GOMODCACHE")
 	gomodcacheValue, err := gomodcacheCmd.CombinedOutput()

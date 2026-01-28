@@ -43,6 +43,10 @@ var ciExpectations = map[string]zswapExpectation{
 	"linux-container-test-rhel9": {zswapExists: true, debugExists: false},  // RHEL 9: modern kernel, zswap in meminfo, no debugfs
 	"linux-container-test-u2004": {zswapExists: false, debugExists: true},  // Ubuntu 20.04: older kernel, no meminfo but debugfs accessible
 	"linux-test":                 {zswapExists: false, debugExists: false}, // Unit tests, unprivileged
+	// Test locally with:
+	// go test -c ./metric/memory -o memory.test
+	// sudo BUILDKITE_STEP_KEY=manual PRIVILEGED=1 ./memory.test -test.run TestMemoryFromContainer
+	"manual": {zswapExists: true, debugExists: true},
 }
 
 // TestMemoryFromContainer tests memory metric collection from inside a container
@@ -81,8 +85,7 @@ To fix this test:
 1. Check the debug output above for "Zswap exists" and "Debug exists" values
 2. Look at the CI print_debug_info() output for kernel config and zswap status
 3. Add an entry to ciExpectations in memory_integration_test.go:
-   %q: {zswapExists: <true|false>, debugExists: <true|false>},
-4. Ensure the key matches the 'key' field in .buildkite/pipeline.yml`,
+   %q: {zswapExists: <true|false>, debugExists: <true|false>}`,
 		stepKey, stepKey,
 	)
 
