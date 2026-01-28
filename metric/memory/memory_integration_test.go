@@ -79,7 +79,7 @@ func TestMemoryFromContainer(t *testing.T) {
 
 To fix this test:
 1. Check the debug output above for "Zswap exists" and "Debug exists" values
-2. Look at the CI debug_system_info() output for kernel config and zswap status
+2. Look at the CI print_debug_info() output for kernel config and zswap status
 3. Add an entry to ciExpectations in memory_integration_test.go:
    %q: {zswapExists: <true|false>, debugExists: <true|false>},
 4. Ensure the key matches the 'key' field in .buildkite/pipeline.yml`,
