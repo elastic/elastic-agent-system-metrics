@@ -39,9 +39,10 @@ type zswapExpectation struct {
 // ciExpectations maps BUILDKITE_STEP_KEY to expected zswap behavior.
 // Keys must match the `key` field in .buildkite/pipeline.yml
 var ciExpectations = map[string]zswapExpectation{
-	"linux-container-test-rhel9": {zswapExists: true, debugExists: false}, // RHEL 9: modern kernel, zswap in meminfo, no debugfs
-	"linux-container-test-u2004": {zswapExists: false, debugExists: true}, // Ubuntu 20.04: older kernel, no meminfo but debugfs accessible
-	"linux-container-test":       {zswapExists: true, debugExists: false}, // Ubuntu 22.04: modern kernel, zswap in meminfo, no debugfs
+	"linux-container-test-rhel9": {zswapExists: true, debugExists: false},  // RHEL 9: modern kernel, zswap in meminfo, no debugfs
+	"linux-container-test-u2004": {zswapExists: false, debugExists: true},  // Ubuntu 20.04: older kernel, no meminfo but debugfs accessible
+	"linux-container-test":       {zswapExists: true, debugExists: false},  // Ubuntu 22.04: modern kernel, zswap in meminfo, no debugfs
+	"linux-test":                 {zswapExists: false, debugExists: false}, // Unit tests, unprivileged
 }
 
 // TestMemoryFromContainer tests memory metric collection from inside a container
@@ -81,9 +82,8 @@ func TestMemoryFromContainer(t *testing.T) {
 	// Enforce expectations
 	if expected.zswapExists {
 		assert.True(t, zswapExists, "expected zswap metrics in /proc/meminfo for step %q", stepKey)
-		if zswapExists {
-			assert.True(t, mem.Zswap.Uncompressed.Exists(), "Zswapped should exist when Zswap exists")
-		}
+		assert.True(t, mem.Zswap.Uncompressed.Exists())
+		assert.NotEmpty(t, os.Getenv("PRIVILEGED"))
 	} else {
 		assert.False(t, zswapExists, "expected NO zswap metrics in /proc/meminfo for step %q", stepKey)
 	}
