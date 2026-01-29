@@ -156,6 +156,11 @@ func TestReaderGetStatsV2(t *testing.T) {
 	require.NotZero(t, stats.Memory.Mem.Usage.Bytes)
 	require.NotZero(t, stats.IO.Pressure["some"].Sixty.Pct)
 
+	// CFS from cpu.max/cpu.weight in testdata: "max 100000" (unlimited quota) and "100" (default weight).
+	require.NotZero(t, stats.CPU.CFS.PeriodMicros.Us, "CFS period should be set from cpu.max")
+	require.Equal(t, uint64(100000), stats.CPU.CFS.PeriodMicros.Us)
+	require.Zero(t, stats.CPU.CFS.QuotaMicros.Us, "CFS quota should be 0 for unlimited (max)")
+	require.Equal(t, uint64(100), stats.CPU.CFS.Weight, "CFS weight should be default 100")
 }
 
 func TestReaderGetStatsHierarchyOverride(t *testing.T) {
