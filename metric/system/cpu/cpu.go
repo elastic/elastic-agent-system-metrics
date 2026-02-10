@@ -20,11 +20,12 @@
 package cpu
 
 import (
-	"github.com/shirou/gopsutil/v4/load"
+	"context"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/numcpu"
+	"github.com/shirou/gopsutil/v4/load"
 )
 
 // Load returns CPU load information for the previous 1, 5, and 15 minute
@@ -38,6 +39,15 @@ func Load() (*LoadMetrics, error) {
 // periods.
 func LoadWithLogger(logger *logp.Logger) (*LoadMetrics, error) {
 	avg, err := load.Avg()
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoadMetrics{avg, logger}, nil
+}
+
+func LoadWithContexAndLogger(ctx context.Context, logger *logp.Logger) (*LoadMetrics, error) {
+	avg, err := load.AvgWithContext(ctx)
 	if err != nil {
 		return nil, err
 	}

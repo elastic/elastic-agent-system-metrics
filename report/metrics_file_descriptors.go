@@ -47,14 +47,14 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 		}
 	}
 	p := psprocess.Process{
-		Pid: 7, //int32(pid),
+		Pid: int32(pid),
 	}
 
 	ctx := context.Background()
-	// if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
-	// 	ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("")})
-	// }
-	ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: "/"})
+	if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
+		ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("/proc")})
+	}
+
 	return func(_ monitoring.Mode, V monitoring.Visitor) {
 		V.OnRegistryStart()
 		defer V.OnRegistryFinished()

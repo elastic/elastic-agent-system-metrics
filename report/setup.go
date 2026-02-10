@@ -21,12 +21,15 @@ package report
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-libs/monitoring"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/process"
+	"github.com/elastic/elastic-agent-system-metrics/metric/system/resolve"
 )
 
 var (
@@ -68,7 +71,11 @@ func SetupMetricsOptions(opts MetricOptions) error {
 		CacheCmdLine: true,
 		IncludeTop:   process.IncludeTopConfig{},
 		Logger:       opts.Logger,
+		Hostfs:       myResolver{},
 	}
+
+	selfPid, serr := process.GetSelfPid(resolve.NewTestResolver("/hostfs"))
+	opts.Logger.Infof("==================== Err: %s. SelfPid: d%, os.GetPid: %d", serr, selfPid, os.Getpid())
 
 	err := processStats.Init()
 	if err != nil {
@@ -83,6 +90,22 @@ func SetupMetricsOptions(opts MetricOptions) error {
 	setupPlatformSpecificMetrics(opts.Logger, processStats, opts.SystemMetrics, opts.ProcessMetrics)
 
 	return nil
+}
+
+type myResolver struct {
+}
+
+func (t myResolver) ResolveHostFS(path string) string {
+	return filepath.Join("/", path)
+}
+
+func (t myResolver) Join(path ...string) string {
+	fullpath := append([]string{"/"}, path...)
+	return filepath.Join(fullpath...)
+}
+
+func (t myResolver) IsSet() bool {
+	return true
 }
 
 // processName truncates the name if it is longer than 15 characters, so we don't fail process checks later on
@@ -153,7 +176,7 @@ func setupPlatformSpecificMetrics(logger *logp.Logger, processStats *process.Sta
 	if isWindows() {
 		SetupWindowsHandlesMetrics(logger, systemMetrics)
 	} else {
-		monitoring.NewFunc(systemMetrics, "load", ReportSystemLoadAverage(logger), monitoring.Report)
+		monitoring.NewFunc(systemMetrics, "load", ReportSystemLoadAverage(logger), monitoring.Report) // Monitored host or Metricbeat host?
 	}
 
 	SetupLinuxBSDFDMetrics(logger, processMetrics, processStats)
