@@ -37,6 +37,7 @@ func SetupLinuxBSDFDMetrics(logger *logp.Logger, reg *monitoring.Registry, proce
 func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ monitoring.Mode, V monitoring.Visitor) {
 	pid, err := process.GetSelfPid(processStats.Hostfs)
 	if err != nil {
+		logger.Error("Error while retrieving pid: %v", err)
 		return func(_ monitoring.Mode, V monitoring.Visitor) {
 			V.OnRegistryStart()
 			V.OnRegistryFinished()
@@ -57,7 +58,7 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 
 		open, err := p.NumFDsWithContext(ctx)
 		if err != nil {
-			logger.Errorf("=== Error while retrieving open FDs information: %v", err)
+			logger.Errorf("Error while retrieving open FDs information: %v", err)
 			return
 		}
 
