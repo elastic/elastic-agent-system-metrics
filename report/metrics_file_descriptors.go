@@ -51,10 +51,10 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 	}
 
 	ctx := context.Background()
-	if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
-		ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("")})
-	}
-
+	// if processStats != nil && processStats.Hostfs != nil && processStats.Hostfs.IsSet() {
+	// 	ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: processStats.Hostfs.ResolveHostFS("")})
+	// }
+	ctx = context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: "/"})
 	return func(_ monitoring.Mode, V monitoring.Visitor) {
 		V.OnRegistryStart()
 		defer V.OnRegistryFinished()
