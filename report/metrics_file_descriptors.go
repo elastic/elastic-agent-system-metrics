@@ -47,7 +47,7 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 		}
 	}
 	p := psprocess.Process{
-		Pid: int32(pid),
+		Pid: 7, //int32(pid),
 	}
 
 	ctx := context.Background()
@@ -61,13 +61,13 @@ func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ mo
 
 		open, err := p.NumFDsWithContext(ctx)
 		if err != nil {
-			logger.Error("Error while retrieving open FDs information: %v", err)
+			logger.Errorf("=== Error while retrieving open FDs information: %v", err)
 			return
 		}
 
 		stats, err := p.RlimitWithContext(ctx)
 		if err != nil {
-			logger.Error("Error while retrieving FD stats information: %v", err)
+			logger.Errorf("Error while retrieving FD stats information: %v", err)
 			return
 		}
 
