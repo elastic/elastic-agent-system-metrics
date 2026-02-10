@@ -21,7 +21,6 @@ package report
 
 import (
 	"context"
-	"os"
 
 	"github.com/shirou/gopsutil/v4/common"
 	psprocess "github.com/shirou/gopsutil/v4/process"
@@ -35,12 +34,9 @@ func SetupLinuxBSDFDMetrics(logger *logp.Logger, reg *monitoring.Registry, proce
 	monitoring.NewFunc(reg, "handles", FDUsageReporter(logger, processStats), monitoring.Report)
 }
 
-func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ monitoring.Mode, V monitoring.Visitor) { // here
+func FDUsageReporter(logger *logp.Logger, processStats *process.Stats) func(_ monitoring.Mode, V monitoring.Visitor) {
 	pid, err := process.GetSelfPid(processStats.Hostfs)
-	logger.Infof("========== hostfs set? %t, processStats.Hostfs: %#v", processStats.Hostfs.IsSet(), processStats.Hostfs)
-	logger.Infof("========== pid: %d, '%s', os.pid: %d", pid, err, os.Getpid())
 	if err != nil {
-		logger.Errorf("========== Error while retrieving pid: %v", err)
 		return func(_ monitoring.Mode, V monitoring.Visitor) {
 			V.OnRegistryStart()
 			V.OnRegistryFinished()
