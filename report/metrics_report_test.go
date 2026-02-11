@@ -18,7 +18,6 @@
 package report
 
 import (
-	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -82,32 +81,13 @@ func TestSystemMetricsReport(t *testing.T) {
 	testSystemMetricsReport(t)
 }
 
+// TestSystemMetricsReportOnlyUseLocalProc ensures the metrics created by
+// [SetupMetricsOptions] are not affected by environment variables setting
+// the hostfs.
 func TestSystemMetricsReportOnlyUseLocalProc(t *testing.T) {
-	toRestore := map[string]string{}
-	toUnset := []string{}
 	for _, key := range []string{"HOST_PROC", "HOST_SYS", "HOST_ETC"} {
-
-		if val, isSet := os.LookupEnv(key); isSet {
-			toRestore[key] = val
-		} else {
-			toUnset = append(toUnset, key)
-		}
-
-		require.NoErrorf(
-			t,
-			os.Setenv(key, "/tmp/foo"),
-			"cannot sent environment variable %q",
-			key)
+		t.Setenv(key, "/a/broken/path") // a inexistent path
 	}
 
-	t.Cleanup(func() {
-		for k, v := range toRestore {
-			require.NoErrorf(t, os.Setenv(k, v), "cannot restore the value of %q", k)
-		}
-
-		for _, k := range toUnset {
-			require.NoError(t, os.Unsetenv(k), "cannot unset env var %q", k)
-		}
-	})
 	testSystemMetricsReport(t)
 }
