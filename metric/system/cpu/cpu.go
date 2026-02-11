@@ -22,10 +22,11 @@ package cpu
 import (
 	"context"
 
+	"github.com/shirou/gopsutil/v4/load"
+
 	"github.com/elastic/elastic-agent-libs/logp"
 	"github.com/elastic/elastic-agent-system-metrics/metric"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/numcpu"
-	"github.com/shirou/gopsutil/v4/load"
 )
 
 // Load returns CPU load information for the previous 1, 5, and 15 minute
