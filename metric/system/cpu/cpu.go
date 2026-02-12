@@ -47,7 +47,7 @@ func LoadWithLogger(logger *logp.Logger) (*LoadMetrics, error) {
 	return &LoadMetrics{avg, logger}, nil
 }
 
-func LoadWithContexAndLogger(ctx context.Context, logger *logp.Logger) (*LoadMetrics, error) {
+func LoadWithContextAndLogger(ctx context.Context, logger *logp.Logger) (*LoadMetrics, error) {
 	avg, err := load.AvgWithContext(ctx)
 	if err != nil {
 		return nil, err

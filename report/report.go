@@ -133,7 +133,7 @@ func ReportSystemLoadAverage(logger *logp.Logger) func(monitoring.Mode, monitori
 		defer V.OnRegistryFinished()
 
 		ctx := context.WithValue(context.Background(), common.EnvKey, common.EnvMap{common.HostProcEnvKey: localProcResolver{}.ResolveHostFS("/proc")})
-		load, err := cpu.LoadWithContexAndLogger(ctx, logger)
+		load, err := cpu.LoadWithContextAndLogger(ctx, logger)
 		if err != nil {
 			logger.Errorf("Error retrieving load average: %v", err)
 			return
