@@ -177,7 +177,7 @@ func setupPlatformSpecificMetrics(logger *logp.Logger, processStats *process.Sta
 type localProcResolver struct{}
 
 func (t localProcResolver) ResolveHostFS(path string) string {
-	return filepath.Join(filepath.Separator, path)
+	return filepath.Join("/", path)
 }
 
 func (t localProcResolver) Join(path ...string) string {
