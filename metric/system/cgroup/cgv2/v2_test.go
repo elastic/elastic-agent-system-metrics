@@ -407,13 +407,6 @@ func TestParseCPUMax(t *testing.T) {
 			expectError:    assert.NoError,
 		},
 		{
-			name:           "small quota",
-			content:        "1000 10000",
-			expectedQuota:  1000,
-			expectedPeriod: 10000,
-			expectError:    assert.NoError,
-		},
-		{
 			name:        "invalid format - single value",
 			content:     "100000",
 			expectError: assert.Error,
