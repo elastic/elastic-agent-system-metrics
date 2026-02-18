@@ -27,7 +27,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/elastic/elastic-agent-libs/mapstr"
 	"github.com/elastic/elastic-agent-libs/opt"
+	"github.com/elastic/elastic-agent-libs/transform/typeconv"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/cgcommon"
 	"github.com/elastic/elastic-agent-system-metrics/metric/system/cgroup/testhelpers"
 )
@@ -299,9 +301,9 @@ func TestGetCPU(t *testing.T) {
 				},
 				CFS: CFS{
 					// cpu.max: "max 100000" => unlimited quota (0)
-					QuotaMicros:  opt.Us{Us: 0},
-					PeriodMicros: opt.Us{Us: 100000},
-					Weight:       100,
+					Quota:  UsOpt{Us: opt.UintWith(0)},
+					Period: UsOpt{Us: opt.UintWith(100000)},
+					Weight: opt.UintWith(100),
 				},
 			},
 		},
@@ -366,9 +368,9 @@ func TestGetCPU(t *testing.T) {
 				Pressure: map[string]cgcommon.Pressure{},
 				Stats:    CPUStats{},
 				CFS: CFS{
-					QuotaMicros:  opt.Us{Us: 50000},
-					PeriodMicros: opt.Us{Us: 100000},
-					Weight:       200,
+					Quota:  UsOpt{Us: opt.UintWith(50000)},
+					Period: UsOpt{Us: opt.UintWith(100000)},
+					Weight: opt.UintWith(200),
 				},
 			},
 		},
@@ -455,9 +457,9 @@ func TestGetCFS(t *testing.T) {
 				"cpu.weight": "150",
 			},
 			expected: CFS{
-				QuotaMicros:  opt.Us{Us: 25000},
-				PeriodMicros: opt.Us{Us: 100000},
-				Weight:       150,
+				Quota:  UsOpt{Us: opt.UintWith(25000)},
+				Period: UsOpt{Us: opt.UintWith(100000)},
+				Weight: opt.UintWith(150),
 			},
 		},
 		{
@@ -466,20 +468,17 @@ func TestGetCFS(t *testing.T) {
 				"cpu.max": "max 100000",
 			},
 			expected: CFS{
-				QuotaMicros:  opt.Us{Us: 0},
-				PeriodMicros: opt.Us{Us: 100000},
-				Weight:       0,
+				Quota:  UsOpt{Us: opt.UintWith(0)},
+				Period: UsOpt{Us: opt.UintWith(100000)},
 			},
 		},
 		{
-			name: "only cpu.weight present",
+			name: "only cpu.weight present - quota/period unset",
 			files: map[string]string{
 				"cpu.weight": "500",
 			},
 			expected: CFS{
-				QuotaMicros:  opt.Us{Us: 0},
-				PeriodMicros: opt.Us{Us: 0},
-				Weight:       500,
+				Weight: opt.UintWith(500),
 			},
 		},
 		{
@@ -498,6 +497,64 @@ func TestGetCFS(t *testing.T) {
 			cfs, err := getCFS(dir)
 			require.NoError(t, err)
 			assert.Equal(t, test.expected, cfs)
+		})
+	}
+}
+
+func TestCFSSerialization(t *testing.T) {
+	tests := []struct {
+		name     string
+		cfs      CFS
+		expected mapstr.M
+	}{
+		{
+			name: "unlimited quota (cpu.max 'max 100000')",
+			cfs: CFS{
+				Quota:  UsOpt{Us: opt.UintWith(0)},
+				Period: UsOpt{Us: opt.UintWith(100000)},
+				Weight: opt.UintWith(100),
+			},
+			expected: mapstr.M{
+				"quota":  map[string]any{"us": uint64(0)},
+				"period": map[string]any{"us": uint64(100000)},
+				"weight": uint64(100),
+			},
+		},
+		{
+			name: "limited quota (cpu.max '50000 100000')",
+			cfs: CFS{
+				Quota:  UsOpt{Us: opt.UintWith(50000)},
+				Period: UsOpt{Us: opt.UintWith(100000)},
+				Weight: opt.UintWith(200),
+			},
+			expected: mapstr.M{
+				"quota":  map[string]any{"us": uint64(50000)},
+				"period": map[string]any{"us": uint64(100000)},
+				"weight": uint64(200),
+			},
+		},
+		{
+			name: "cpu.max missing - quota/period must be absent",
+			cfs: CFS{
+				Weight: opt.UintWith(100),
+			},
+			expected: mapstr.M{
+				"weight": uint64(100),
+			},
+		},
+		{
+			name:     "all files missing - everything omitted",
+			cfs:      CFS{},
+			expected: nil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var got mapstr.M
+			err := typeconv.Convert(&got, test.cfs)
+			require.NoError(t, err)
+			assert.Equal(t, test.expected, got)
 		})
 	}
 }

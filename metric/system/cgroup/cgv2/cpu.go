@@ -46,12 +46,23 @@ type CPUSubsystem struct {
 // This is equivalent to the CFS struct in cgroups v1, but uses Weight instead of Shares.
 type CFS struct {
 	// Period in microseconds for how regularly the cgroup's access to CPU resources is reallocated.
-	PeriodMicros opt.Us `json:"period" struct:"period"`
+	Period UsOpt `json:"period,omitempty" struct:"period,omitempty"`
 	// Quota in microseconds for which all tasks in the cgroup can run during one period.
 	// A value of 0 indicates unlimited (cpu.max "max").
-	QuotaMicros opt.Us `json:"quota" struct:"quota"`
+	Quota UsOpt `json:"quota,omitempty" struct:"quota,omitempty"`
 	// Relative CPU weight (1-10000, default 100). This replaces cpu.shares from cgroups v1.
-	Weight uint64 `json:"weight" struct:"weight"`
+	Weight opt.Uint `json:"weight,omitempty" struct:"weight,omitempty"`
+}
+
+// UsOpt wraps opt.Uint for optional microsecond values.
+// Analogous to opt.BytesOpt; when unset, serializes as nil/omitted rather than 0.
+type UsOpt struct {
+	Us opt.Uint `json:"us" struct:"us"`
+}
+
+// IsZero returns true when the value has not been set.
+func (u UsOpt) IsZero() bool {
+	return u.Us.IsZero()
 }
 
 // CPUStats carries the information from the cpu.stat cgroup file
@@ -182,19 +193,20 @@ func getCFS(path string) (CFS, error) {
 		}
 		// File doesn't exist - continue without it
 	} else {
-		cfs.QuotaMicros.Us = quota
-		cfs.PeriodMicros.Us = period
+		cfs.Quota = UsOpt{Us: opt.UintWith(quota)}
+		cfs.Period = UsOpt{Us: opt.UintWith(period)}
 	}
 
 	// Parse cpu.weight
-	weight, err := cgcommon.ParseUintFromFile(path, "cpu.weight")
-	if err != nil {
-		if !os.IsNotExist(err) {
+	weightPath := filepath.Join(path, "cpu.weight")
+	if _, statErr := os.Stat(weightPath); statErr == nil {
+		weight, err := cgcommon.ParseUintFromFile(weightPath)
+		if err != nil {
 			return cfs, fmt.Errorf("error reading cpu.weight: %w", err)
 		}
-		// File doesn't exist - continue without it
-	} else {
-		cfs.Weight = weight
+		cfs.Weight = opt.UintWith(weight)
+	} else if !os.IsNotExist(statErr) {
+		return cfs, fmt.Errorf("error reading cpu.weight: %w", statErr)
 	}
 
 	return cfs, nil
