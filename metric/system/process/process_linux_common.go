@@ -288,8 +288,8 @@ func getEnvData(hostfs resolve.Resolver, pid int, filter func(string) bool) (map
 	}
 	env := mapstr.M{}
 
-	pairs := bytes.Split(data, []byte{0})
-	for _, kv := range pairs {
+	pairs := bytes.SplitSeq(data, []byte{0})
+	for kv := range pairs {
 		parts := bytes.SplitN(kv, []byte{'='}, 2)
 		if len(parts) != 2 {
 			continue
@@ -349,7 +349,7 @@ func getIOData(hostfs resolve.Resolver, pid int) (ProcIOInfo, error) {
 		return state, fmt.Errorf("error fetching IO metrics: %w", err)
 	}
 
-	for _, metric := range strings.Split(string(data), "\n") {
+	for metric := range strings.SplitSeq(string(data), "\n") {
 		raw := strings.Split(metric, ": ")
 		if len(raw) < 2 {
 			continue
@@ -453,7 +453,7 @@ func getFDStats(hostfs resolve.Resolver, pid int) (ProcFDInfo, error) {
 		return state, fmt.Errorf("error opening file %s: %w", path, err)
 	}
 
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		if strings.HasPrefix(line, "Max open files") {
 			fields := strings.Fields(line)
 			if len(fields) == 6 {
@@ -498,9 +498,9 @@ func getLinuxBootTime(hostfs resolve.Resolver) (uint64, error) {
 		return 0, fmt.Errorf("error opening file %s: %w", path, err)
 	}
 
-	statVals := strings.Split(string(data), "\n")
+	statVals := strings.SplitSeq(string(data), "\n")
 
-	for _, line := range statVals {
+	for line := range statVals {
 		if strings.HasPrefix(line, "btime") {
 			btime, err := strconv.ParseUint(line[6:], 10, 64)
 			if err != nil {
@@ -521,7 +521,7 @@ func getProcStatus(hostfs resolve.Resolver, pid int) (map[string]string, error) 
 	if err != nil {
 		return nil, fmt.Errorf("error opening file %s: %w", path, err)
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		fields := strings.SplitN(line, ":", 2)
 		if len(fields) == 2 {
 			status[fields[0]] = strings.TrimSpace(fields[1])

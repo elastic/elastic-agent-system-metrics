@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -55,7 +56,7 @@ func TestProcessEvent(t *testing.T) {
 	require.Empty(t, proc.Username)
 	require.Empty(t, proc.Args)
 
-	require.NotNil(t, root["process"].(map[string]interface{})["memory"])
+	require.NotNil(t, root["process"].(map[string]any)["memory"])
 }
 
 // BenchmarkGetProcess runs a benchmark of the GetProcess method with caching
@@ -145,7 +146,7 @@ func TestGetOneRoot(t *testing.T) {
 	evt, rootEvt, err := testConfig.GetOneRootEvent(os.Getpid())
 	require.NoError(t, err)
 
-	require.NotEmpty(t, rootEvt["process"].(map[string]interface{})["pid"])
+	require.NotEmpty(t, rootEvt["process"].(map[string]any)["pid"])
 
 	require.NotEmpty(t, evt["cpu"])
 }
@@ -228,7 +229,7 @@ func TestNetworkFilter(t *testing.T) {
 	_, exists := data.GetValue("network.ip.Forwarding")
 	require.NoError(t, exists, "filter did not preserve key")
 	ipMetrics, _ := data.GetValue("network.ip")
-	require.Equal(t, 1, len(ipMetrics.(map[string]interface{})))
+	require.Equal(t, 1, len(ipMetrics.(map[string]any)))
 }
 
 func TestFilter(t *testing.T) {
@@ -751,11 +752,5 @@ func initTestResolver(t testing.TB) (Stats, error) {
 }
 
 func sliceContains(s []string, e string) bool { //nolint:unused // needed by other platforms
-	for _, v := range s {
-		if e == v {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(s, e)
 }
