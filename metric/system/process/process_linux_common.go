@@ -517,7 +517,7 @@ func getLinuxBootTime(hostfs resolve.Resolver) (uint64, error) {
 func getProcStatus(hostfs resolve.Resolver, pid int) (map[string]string, error) {
 	status := make(map[string]string, 42)
 	path := hostfs.Join("proc", strconv.Itoa(pid), "status")
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G703 — path is constructed from an integer PID, no traversal risk
 	if err != nil {
 		return nil, fmt.Errorf("error opening file %s: %w", path, err)
 	}
