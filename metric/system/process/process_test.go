@@ -685,7 +685,7 @@ func runThreads(t *testing.T) *exec.Cmd { //nolint:unused // needed by other pla
 	supportedPlatforms := []string{"linux/amd64", "darwin/amd64", "windows/amd64"}
 
 	platform := fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH)
-	if !sliceContains(supportedPlatforms, platform) {
+	if !slices.Contains(supportedPlatforms, platform) {
 		t.Skipf("not supported for %s/%s. Supported patforms: %v",
 			runtime.GOOS, runtime.GOARCH, supportedPlatforms)
 	}
@@ -749,8 +749,4 @@ func initTestResolver(t testing.TB) (Stats, error) {
 	}
 	err := testConfig.Init()
 	return testConfig, err
-}
-
-func sliceContains(s []string, e string) bool { //nolint:unused // needed by other platforms
-	return slices.Contains(s, e)
 }
