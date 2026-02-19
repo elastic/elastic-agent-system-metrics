@@ -21,6 +21,7 @@ package diskio
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"syscall"
 	"unsafe"
@@ -175,12 +176,7 @@ func getLogicalDriveStrings() ([]logicalDrive, error) {
 }
 
 func containsDrive(devices []string, disk string) bool {
-	for _, vv := range devices {
-		if vv == disk {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(devices, disk)
 }
 
 // isValidLogicalDrive should filter CD-ROM type drives based on https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getdrivetypew
