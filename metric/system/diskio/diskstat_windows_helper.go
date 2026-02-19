@@ -66,7 +66,7 @@ func ioCounters(logger *logp.Logger, names ...string) (map[string]disk.IOCounter
 			continue
 		}
 		// filter by included devices
-		if len(names) > 0 && !containsDrive(names, drive.Name) {
+		if len(names) > 0 && !slices.Contains(names, drive.Name) {
 			continue
 		}
 		var counter diskPerformance
@@ -175,9 +175,6 @@ func getLogicalDriveStrings() ([]logicalDrive, error) {
 	return logicalDrives, nil
 }
 
-func containsDrive(devices []string, disk string) bool {
-	return slices.Contains(devices, disk)
-}
 
 // isValidLogicalDrive should filter CD-ROM type drives based on https://docs.microsoft.com/en-us/windows/desktop/api/fileapi/nf-fileapi-getdrivetypew
 func isValidLogicalDrive(path string) bool {
