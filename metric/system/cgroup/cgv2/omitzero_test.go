@@ -113,6 +113,15 @@ func TestOmitZeroJSON(t *testing.T) {
 			},
 			expected: []string{"period", "quota", "weight"},
 		},
+		{
+			name: "CFS/unlimited quota 0 (max) still present",
+			value: CFS{
+				Period: UsOpt{Us: opt.UintWith(100000)},
+				Quota:  UsOpt{Us: opt.UintWith(0)},
+				Weight: opt.UintWith(200),
+			},
+			expected: []string{"period", "quota", "weight"},
+		},
 	}
 
 	for _, test := range tests {
