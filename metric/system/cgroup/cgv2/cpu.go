@@ -39,19 +39,19 @@ type CPUSubsystem struct {
 	// Stats shows overall counters for the CPU controller
 	Stats CPUStats `json:"stats" struct:"stats"`
 	// CFS contains CPU bandwidth control settings.
-	CFS CFS `json:"cfs,omitempty" struct:"cfs,omitempty"`
+	CFS CFS `json:"cfs,omitzero" struct:"cfs,omitempty"`
 }
 
 // CFS contains CPU bandwidth control settings from cgroup v2 (cpu.max and cpu.weight).
 // This is equivalent to the CFS struct in cgroups v1, but uses Weight instead of Shares.
 type CFS struct {
 	// Period in microseconds for how regularly the cgroup's access to CPU resources is reallocated.
-	Period UsOpt `json:"period,omitempty" struct:"period,omitempty"`
+	Period UsOpt `json:"period,omitzero" struct:"period,omitempty"`
 	// Quota in microseconds for which all tasks in the cgroup can run during one period.
 	// A value of 0 indicates unlimited (cpu.max "max").
-	Quota UsOpt `json:"quota,omitempty" struct:"quota,omitempty"`
+	Quota UsOpt `json:"quota,omitzero" struct:"quota,omitempty"`
 	// Relative CPU weight (1-10000, default 100). This replaces cpu.shares from cgroups v1.
-	Weight opt.Uint `json:"weight,omitempty" struct:"weight,omitempty"`
+	Weight opt.Uint `json:"weight,omitzero" struct:"weight,omitempty"`
 }
 
 // UsOpt wraps opt.Uint for optional microsecond values.
