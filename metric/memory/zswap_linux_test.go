@@ -39,17 +39,17 @@ func TestGetZswapDebugMetrics(t *testing.T) {
 
 	// Write test data
 	testData := map[string]string{
-		"decompress_fail":            "42",
+		"decompress_fail":             "42",
 		"stored_incompressible_pages": "6040",
-		"stored_pages":               "1109442",
-		"pool_total_size":            "3095379968",
-		"written_back_pages":         "2489374",
-		"reject_compress_poor":       "1271198",
-		"reject_compress_fail":       "5531019",
-		"reject_kmemcache_fail":      "0",
-		"reject_alloc_fail":          "0",
-		"reject_reclaim_fail":        "26833",
-		"pool_limit_hit":             "8353",
+		"stored_pages":                "1109442",
+		"pool_total_size":             "3095379968",
+		"written_back_pages":          "2489374",
+		"reject_compress_poor":        "1271198",
+		"reject_compress_fail":        "5531019",
+		"reject_kmemcache_fail":       "0",
+		"reject_alloc_fail":           "0",
+		"reject_reclaim_fail":         "26833",
+		"pool_limit_hit":              "8353",
 	}
 
 	for name, value := range testData {
