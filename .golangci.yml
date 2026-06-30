@@ -13,7 +13,7 @@ linters:
     - errcheck # checking for unchecked errors in go programs
     - errorlint # errorlint is a linter for that can be used to find code that will cause problems with the error wrapping scheme introduced in Go 1.13.
     - forbidigo # forbids identifiers matched by reg exps
-    - gomodguard # check for blocked dependencies
+    - gomodguard_v2 # check for blocked dependencies
     - gosec # inspects source code for security problems
     - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
     - importas # enforces consistent import aliases
@@ -69,31 +69,27 @@ linters:
           msg: "accept a *logp.Logger as a parameter instead of creating one with logp.NewLogger"
         - pattern: ^logp\.L$
           msg: "accept a *logp.Logger as a parameter instead of using the global logp.L()"
-    gomodguard:
-      blocked:
-        # List of blocked modules.
-        modules:
-          # Blocked module.
-          - github.com/pkg/errors:
-              # Recommended modules that should be used instead. (Optional)
-              recommendations:
-                - errors
-                - fmt
-              reason: This package is deprecated, use `fmt.Errorf` with `%w` instead
-          - go.uber.org/multierr:
-              recommendations:
-                - errors
-              reason: This package is deprecated, use `errors.Join` instead
-          - gotest.tools/v3:
-              recommendations:
-                - github.com/stretchr/testify
-              reason: Use one assertion library consistently across the codebase
-          - github.com/google/uuid:
-              recommendations:
-                - github.com/gofrs/uuid/v5
-              reason: Use one uuid library consistently across the codebase
-          - github.com/elastic/beats/v7:
-              reason: There must be no Beats dependency
+    gomodguard_v2:
+     blocked:
+        - module: github.com/pkg/errors
+          recommendations:
+            - errors
+            - fmt
+          reason: This package is deprecated, use `fmt.Errorf` with `%w` instead
+        - module: go.uber.org/multierr
+          recommendations:
+            - errors
+          reason: This package is deprecated, use `errors.Join` instead
+        - module: gotest.tools/v3
+          recommendations:
+            - github.com/stretchr/testify
+          reason: Use one assertion library consistently across the codebase
+        - module: github.com/google/uuid
+          recommendations:
+            - github.com/gofrs/uuid/v5
+          reason: Use one uuid library consistently across the codebase
+        - module: github.com/elastic/beats/v7
+          reason: There must be no Beats dependency
     gosec:
       excludes:
         - G306 # Expect WriteFile permissions to be 0600 or less
