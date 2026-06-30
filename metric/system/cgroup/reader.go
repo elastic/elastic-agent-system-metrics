@@ -390,7 +390,7 @@ func (r *Reader) readControllerList(cgroupsFile string) ([]string, error) {
 		cgFilePath = filepath.Join(r.cgroupMountpoints.V2Loc, r.cgroupMountpoints.ContainerizedRootMount, cgpath, "cgroup.controllers")
 	}
 
-	controllersRaw, err := os.ReadFile(cgFilePath) //nolint:gosec // G703 — path is constructed from cgroup mountpoint and validated cgroup path
+	controllersRaw, err := os.ReadFile(cgFilePath) //nolint:gosec // G304 — path is constructed from cgroup mountpoint and validated cgroup path
 	if err != nil {
 		return nil, fmt.Errorf("error reading cgroup '%s': file %s: %w", cgpath, cgFilePath, err)
 	}
